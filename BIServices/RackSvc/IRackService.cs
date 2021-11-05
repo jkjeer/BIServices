@@ -1,0 +1,47 @@
+﻿using System.ServiceModel;
+using System.ServiceModel.Web;
+using BIServices.Common.Types.Enterprise;
+using SoaCore.Wcf;
+
+namespace BIServices.RackSvc
+{
+        [ServiceContract]
+        public interface IRackService
+        {
+            [OperationContract, OperationInvokerLogger]
+            Racks GetHVRacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            Racks GetStockRacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            Racks GetHVMTORacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            Racks GetPurchasedConfiguredRacks(string plant, int agingDays);
+    }
+
+        [ServiceContract]
+        public interface IRackRestService
+        {
+            [OperationContract, OperationInvokerLogger]
+            [WebGet(UriTemplate = "/GetHVRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
+            Racks GetHVRacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            [WebGet(UriTemplate = "/GetStockRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
+            Racks GetStockRacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            [WebGet(UriTemplate = "/GetHVMTORacksOnHand?Plant={plant}&AgingDays={agingDays}")]
+            Racks GetHVMTORacksOnHand(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            [WebGet(UriTemplate = "/GetPurchasedConfiguredRacks?Plant={plant}&AgingDays={agingDays}")]
+            Racks GetPurchasedConfiguredRacks(string plant, int agingDays);
+
+            [OperationContract, OperationInvokerLogger]
+            [WebGet(UriTemplate = "/GetPurchasedRemakes?Plant={plant}")]
+            RemakeUnits GetPurchasedRemakes(string plant);
+    }
+}
