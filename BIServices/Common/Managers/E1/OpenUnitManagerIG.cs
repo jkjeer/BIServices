@@ -115,7 +115,7 @@ namespace BIServices.Common.Managers.E1
                     CASE WHEN IMSRP4 = 'L' THEN '1' ELSE IMSRP4 END AS IMSRP4,
                     CMCFGID,
                     CPZ58CCV05,
-                    ROW_NUMBER() OVER (PARTITION BY WADOCO, RDZ58SN ORDER BY S1UPMJ DESC, S1TDAY DESC) AS RN
+                    ROW_NUMBER() OVER (PARTITION BY RDZ58SN ORDER BY S1UPMJ DESC, S1TDAY DESC) AS RN
 	            FROM 
                     F580055
                     INNER JOIN F580056
@@ -158,6 +158,7 @@ namespace BIServices.Common.Managers.E1
                         CPSHAN = SDSHAN
 	            WHERE 
                     {0}
+                    RDDOC1 > 0 AND
                     NOT (RDZ58DST IN ('0') AND RHZ58RT <> 'EXCPT') AND
                     WASRST NOT IN ('98','99') ) A
             WHERE A.RN = 1
@@ -764,9 +765,9 @@ namespace BIServices.Common.Managers.E1
                 dt.Columns.Add("UnitId", typeof(int));
                 dt.Columns.Add("UnitIdChar", typeof(string));
                 dt.Columns.Add("WorkOrderNum", typeof(int));
-                //var uniqueUnits = units.GroupBy(unit => unit.UnitId).Select(grp => grp.First());
+                var uniqueUnits = units.GroupBy(unit => unit.UnitId).Select(grp => grp.First());
                 //foreach (GlassUnit unit in uniqueUnits)
-                foreach (GlassUnit unit in units)
+                foreach (GlassUnit unit in uniqueUnits)
                 {
                     DataRow row = dt.NewRow();
                     row["UnitId"] = unit.UnitId;
@@ -784,7 +785,7 @@ namespace BIServices.Common.Managers.E1
             }
             catch (Exception e)
             {
-                throw new FaultException(e.Message);
+                throw new Exception(e.Message);
             }
         }
 
