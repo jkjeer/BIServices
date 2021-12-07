@@ -159,7 +159,7 @@ namespace BIServices.Common.Managers.E1
 	            WHERE 
                     {0}
                     RDDOC1 > 0 AND
-                    NOT (RDZ58DST IN ('0') AND RHZ58RT <> 'EXCPT') AND
+                    --NOT (RDZ58DST IN ('0') AND RHZ58RT <> 'EXCPT') AND
                     WASRST NOT IN ('98','99') ) A
             WHERE A.RN = 1
             ORDER BY RDZ58SN
