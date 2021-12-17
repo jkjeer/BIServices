@@ -368,6 +368,15 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.Units = 1;
 
                         unit.Construction = CastDbNull.To<String>(reader["ProductCode"], String.Empty).Trim();
+                        unit.ProductCode = CastDbNull.To<String>(reader["ProductCode"], String.Empty).Trim();
+                        unit.Glass1Code = CastDbNull.To<String>(reader["Glass1Code"], String.Empty).Trim();
+                        unit.Glass2Code = CastDbNull.To<String>(reader["Glass2Code"], String.Empty).Trim();
+                        unit.Glass3Code = CastDbNull.To<String>(reader["Glass3Code"], String.Empty).Trim();
+                        unit.Glass4Code = CastDbNull.To<String>(reader["Glass4Code"], String.Empty).Trim();
+                        unit.Interlayer1Code = CastDbNull.To<String>(reader["Interlayer1Code"], String.Empty).Trim();
+                        unit.Interlayer2Code = CastDbNull.To<String>(reader["Interlayer2Code"], String.Empty).Trim();
+                        unit.Interlayer3Code = CastDbNull.To<String>(reader["Interlayer3Code"], String.Empty).Trim();
+
                         unit.ShapeNum = CastDbNull.To<int>(reader["ShapeNum"], 0);
                         unit.DimMakeup = CastDbNull.To<String>(reader["Dimension"], String.Empty).Trim();
                         unit.UnitActualSqft = CastDbNull.To<decimal>(reader["UnitActualSqft"], 0);
@@ -497,6 +506,15 @@ namespace BIServices.Common.Managers.ShopFloor
                 UnitOriginCode,
                 Quantity,
                 ProductCode,
+
+                Glass1Code,
+                Glass2Code,
+                Glass3Code,
+                Glass4Code,
+                Interlayer1Code,
+                Interlayer2Code,
+                Interlayer3Code,
+
                 ShapeNum,
                 Dimension,
                 UnitActualSqft,

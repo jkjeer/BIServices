@@ -385,7 +385,11 @@ namespace BIServices.Common.Types.Enterprise
         public string UnitType { get; set; }
 
         // Construction
+
         [DataMember(Order = 550, EmitDefaultValue = true)]
+        public string ProductCode { get; set; }
+
+        [DataMember(Order = 551, EmitDefaultValue = true)]
         public string Construction { get; set; }
 
         [DataMember(Order = 552, EmitDefaultValue = true)]
@@ -436,6 +440,27 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 706, EmitDefaultValue = true)]
         public string IsPurchasedLite { get; set; }
+
+        [DataMember(Order = 710, EmitDefaultValue = true)]
+        public string Glass1Code { get; set; }
+
+        [DataMember(Order = 712, EmitDefaultValue = true)]
+        public string Glass2Code { get; set; }
+
+        [DataMember(Order = 714, EmitDefaultValue = true)]
+        public string Glass3Code { get; set; }
+
+        [DataMember(Order = 716, EmitDefaultValue = true)]
+        public string Glass4Code { get; set; }
+
+        [DataMember(Order = 720, EmitDefaultValue = true)]
+        public string Interlayer1Code { get; set; }
+
+        [DataMember(Order = 722, EmitDefaultValue = true)]
+        public string Interlayer2Code { get; set; }
+
+        [DataMember(Order = 724, EmitDefaultValue = true)]
+        public string Interlayer3Code { get; set; }
 
         // Production State
         [DataMember(Order = 750, EmitDefaultValue = true)]

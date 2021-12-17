@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using BIServices.Common.Utilities;
@@ -113,6 +114,149 @@ namespace BIServices.Common.Managers.Enterprise
                 return true;
             }
             return false;
+        }
+
+
+        public static DateTime GetCodeDate(string code)
+        {
+            var dt = DateTime.Now;
+            try
+            {
+                if (code.StartsWith("CY"))
+                {
+                    if (code.Contains("["))
+                    {
+                        var indexer = code.Substring(code.IndexOf("[") + 1, code.IndexOf("]") - code.IndexOf("[") - 1);
+                        dt = dt.AddYears(int.TryParse(indexer, out var value) ? value : 0);
+                    }
+                    if (code.ToUpper().Contains("START"))
+                    {
+                        return new DateTime(dt.Year, 1, 1);
+                    }
+                    else if (code.ToUpper().Contains("END"))
+                    {
+                        return new DateTime(dt.Year, 12, 31);
+                    }
+                    else
+                    {
+                        return dt;
+                    }
+                }
+                else if (code.StartsWith("CM"))
+                {
+                    if (code.Contains("["))
+                    {
+                        var indexer = code.Substring(code.IndexOf("[") + 1, code.IndexOf("]") - code.IndexOf("[") - 1);
+                        dt = dt.AddMonths(int.TryParse(indexer, out var value) ? value : 0);
+                    }
+                    if (code.ToUpper().Contains("START"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, 1);
+                    }
+                    else if (code.ToUpper().Contains("END"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, DateTime.DaysInMonth(dt.Year, dt.Month));
+                    }
+                    else
+                    {
+                        return dt;
+                    }
+                }
+                else if (code.StartsWith("CW"))
+                {
+                    if (code.Contains("["))
+                    {
+                        var indexer = code.Substring(code.IndexOf("[") + 1, code.IndexOf("]") - code.IndexOf("[") - 1);
+                        dt = dt.AddDays(int.TryParse(indexer, out var value) ? value * 7 : 0);
+                    }
+                    if (code.ToUpper().Contains("START"))
+                    {
+                        return dt.AddDays(-1 * ((7 + (dt.DayOfWeek - DayOfWeek.Sunday)) % 7));
+                    }
+                    else if (code.ToUpper().Contains("END"))
+                    {
+                        return dt.AddDays(-1 * ((7 + (dt.DayOfWeek - DayOfWeek.Saturday)) % 7));
+                    }
+                    else
+                    {
+                        return dt;
+                    }
+                }
+                else if (code.StartsWith("CD"))
+                {
+                    if (code.Contains("["))
+                    {
+                        var indexer = code.Substring(code.IndexOf("[") + 1, code.IndexOf("]") - code.IndexOf("[") - 1);
+                        dt = dt.AddDays(int.TryParse(indexer, out var value) ? value : 0);
+                    }
+                    if (code.ToUpper().Contains("START"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, dt.Day);
+                    }
+                    else if (code.ToUpper().Contains("END"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, dt.Day).AddHours(23).AddMinutes(59).AddSeconds(59);
+                    }
+                    else
+                    {
+                        return dt;
+                    }
+                }
+                else if (code.StartsWith("BD"))
+                {
+                    if (code.Contains("["))
+                    {
+                        var indexer = code.Substring(code.IndexOf("[") + 1, code.IndexOf("]") - code.IndexOf("[") - 1);
+                        dt = AddBusinessDays(dt.Date, int.TryParse(indexer, out var value) ? value : 0);
+                    }
+                    if (code.ToUpper().Contains("START"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, dt.Day);
+                    }
+                    else if (code.ToUpper().Contains("END"))
+                    {
+                        return new DateTime(dt.Year, dt.Month, dt.Day).AddHours(23).AddMinutes(59).AddSeconds(59);
+                    }
+                    else
+                    {
+                        return dt;
+                    }
+                }
+                else if (DateTime.TryParse(code, out var value))
+                {
+                    return value;
+                }
+                else
+                {
+                    throw new Exception($"Invalid Date Format - {code}");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+
+        public static DateTime AddBusinessDays(DateTime pActualDate, int pNumberofWorkDays)
+        {
+            List<DateTime> holidays = new List<DateTime>();
+            holidays.Add(new DateTime(DateTime.Now.Year, 12, 24));
+            holidays.Add(new DateTime(DateTime.Now.Year, 12, 25));
+            holidays.Add(new DateTime(DateTime.Now.Year, 1, 1));
+            holidays.Add(new DateTime(DateTime.Now.Year + 1, 1, 1));
+
+            var multiplier = (pNumberofWorkDays < 0) ? -1 : 1;
+            int i = default(int);
+            while (i < Math.Abs(pNumberofWorkDays))
+            {
+                pActualDate = pActualDate.AddDays(multiplier);
+                if (pActualDate.DayOfWeek == DayOfWeek.Saturday || pActualDate.DayOfWeek == DayOfWeek.Sunday
+                    || (holidays != null && holidays.Contains(pActualDate))) { }
+                else
+                { i++; }
+            }
+            return pActualDate;
         }
     }
 }
