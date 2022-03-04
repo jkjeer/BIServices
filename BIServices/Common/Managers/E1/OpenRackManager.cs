@@ -50,7 +50,6 @@ namespace BIServices.Common.Managers.E1
                     var rack = new GlassRack();
                     var firstUnit = gRack.First();
                     _logger.Trace(gRack.First().RackId);
-
                     rack.Plant = plant.PlantNum;
                     rack.RackId = gRack.Key;
                     rack.AssetId = firstUnit.AssetId;
@@ -95,7 +94,6 @@ namespace BIServices.Common.Managers.E1
                     rack.DeliveryDateTimeHours = gRack.Min(x => x.DeliveryDateTimeHours);
                     rack.IGLineRun = gRack.GroupBy(x => x.IGLineRun).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.IGLineScheduled = gRack.GroupBy(x => x.IGLineScheduled).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
-
                     rack.Units = gRack.Sum(x => x.Units);
                     rack.Tubes = gRack.Sum(x => x.Tubes);
                     rack.Scoring = gRack.Sum(x => x.Scoring);
@@ -108,7 +106,6 @@ namespace BIServices.Common.Managers.E1
                     rack.TareWeight = gRack.First().RackTareWeight;
                     rack.GlassWeight = gRack.Sum(x => x.GlassWeight);
                     rack.TotalWeight = rack.TareWeight + rack.GlassWeight;
-
                     racks.Add(rack);
                 }
 

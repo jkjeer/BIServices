@@ -83,6 +83,7 @@ namespace BIServices.Common.Managers.E1
                 SDUPRC,
                 SDAEXP,
                 SDRCD,
+                SDIR04,
 	            ATZ58PT,
 	            ATZ58CP2,
 	            ATZ58CP3,
@@ -197,6 +198,7 @@ namespace BIServices.Common.Managers.E1
                         SDUPRC,
                         SDAEXP,
                         SDRCD,
+                        SDIR04,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -601,6 +603,8 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["SDIR04"], string.Empty).Trim();
+
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
                         line.TotalCost = CastDbNull.To<decimal>(reader["SDECST"], 0) / 100;
@@ -1004,6 +1008,8 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["SDIR04"], string.Empty).Trim();
+
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
                         line.TotalCost = CastDbNull.To<decimal>(reader["SDECST"], 0) / 100;

@@ -265,6 +265,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 126, EmitDefaultValue = false)]
         public string Reference2 { get; set; }
 
+        [DataMember(Order = 128, EmitDefaultValue = false)]
+        public string AccountManager { get; set; }
+
         [DataMember(Order = 150, EmitDefaultValue = false)]
         public DateTime CreatedDate { get; set; }
 
