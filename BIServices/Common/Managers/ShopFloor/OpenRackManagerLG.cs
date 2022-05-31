@@ -57,6 +57,7 @@ namespace BIServices.Common.Managers.ShopFloor
                     rack.LastUnitId = gRack.Max(x => x.UnitId);
                     rack.UnitType = gRack.GroupBy(x => x.UnitType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.ProductType = gRack.GroupBy(x => x.ProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
+                    rack.CardinalProductType = gRack.GroupBy(x => x.CardinalProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.RackType = firstUnit.RackType;
                     rack.RackLocation = firstUnit.RackLocation;
                     rack.BoxNum = firstUnit.BoxNum;

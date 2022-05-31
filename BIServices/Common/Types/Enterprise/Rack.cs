@@ -79,6 +79,9 @@ namespace BIServices.Common.Types.Enterprise
         public decimal BoxNum { get; set; }
 
         [DataMember(Order = 52)]
+        public decimal SuggestedLoadNum { get; set; }
+
+        [DataMember(Order = 52)]
         public decimal LoadNum { get; set; }
 
         [DataMember(Order = 53)]
@@ -211,6 +214,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 224, EmitDefaultValue = false)]
         public decimal PlannerNum { get; set; }
 
+        [DataMember(Order = 225, EmitDefaultValue = false)]
+        public string PlannerName { get; set; }
+
+        [DataMember(Order = 226)]
+        public string PlanningFamily { get; set; }
+
         [DataMember(Order = 300)]
         public decimal RackSlot { get; set; }
 
@@ -339,6 +348,9 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 120, EmitDefaultValue = false)]
         public decimal PlannerNum { get; set; }
+
+        [DataMember(Order = 122)]
+        public string PlanningFamily { get; set; }
 
         [DataMember(Order = 200)]
         public bool HasGlassAttributes { get; set; }

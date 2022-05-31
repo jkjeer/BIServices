@@ -234,6 +234,15 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 542, EmitDefaultValue = false)]
         public DateTime CurrScheduleDate { get; set; }
 
+        [DataMember(Order = 550, EmitDefaultValue = false)]
+        public int TargetLineId { get; set; }
+
+        [DataMember(Order = 552, EmitDefaultValue = false)]
+        public int TargetShift { get; set; }
+
+        [DataMember(Order = 554, EmitDefaultValue = false)]
+        public DateTime TargetShiftDate { get; set; }
+
         // Boxing
         [DataMember(Order = 600, EmitDefaultValue = false)]
         public string WipRack1 { get; set; }

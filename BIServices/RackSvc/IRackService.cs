@@ -28,6 +28,10 @@ namespace BIServices.RackSvc
             [WebGet(UriTemplate = "/GetHVRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
             Racks GetHVRacksOnHand(string plant, int agingDays);
 
+            //[OperationContract, OperationInvokerLogger]
+            //[WebGet(UriTemplate = "/GetHVRacksOnHandVer1?Plant={plant}&AgingDays={agingDays}")]
+            //Racks GetHVRacksOnHandVer1(string plant, int agingDays);
+
             [OperationContract, OperationInvokerLogger]
             [WebGet(UriTemplate = "/GetStockRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
             Racks GetStockRacksOnHand(string plant, int agingDays);

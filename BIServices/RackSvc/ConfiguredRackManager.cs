@@ -250,13 +250,15 @@ namespace BIServices.RackSvc
                         rack.Dimension = flexDescs[1];
                         rack.Lite1Thickness = itemAtts.GetDecimalAttributeValue("Z58L1TK");
                         rack.OverallThickness = itemAtts.GetDecimalAttributeValue("Z5851705");
-                        rack.PlannerNum = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
+                        var itemBranchAttributes = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
+                        rack.PlannerNum = (decimal)itemBranchAttributes["PlannerNum"];
+                        rack.PlannerName = (string)itemBranchAttributes["PlannerName"];
+                        rack.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
                         racks.Add(rack);
                     }
 
                     reader.Close();
                 }
-
                 GetItemProperties(session, racks);
                 GetManufacturedCost(session, racks);
             }
@@ -479,7 +481,9 @@ namespace BIServices.RackSvc
                     rack.Dimension = flexDescs[1];
                     rack.Lite1Thickness = itemAtts.GetDecimalAttributeValue("Z58L1TK");
                     rack.OverallThickness = itemAtts.GetDecimalAttributeValue("Z5851705");
-                    rack.PlannerNum = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
+                    var itemBranchAttributes = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
+                    rack.PlannerNum = (decimal)itemBranchAttributes["PlannerNum"];
+                    rack.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
                     racks.Add(rack);
                 }
                 GetItemProperties(session, racks);
@@ -756,7 +760,6 @@ namespace BIServices.RackSvc
                             rack.StockType = CastDbNull.To(reader["IBSTKT"], String.Empty).Trim();
                             rack.GlCategory = CastDbNull.To(reader["IBGLPT"], String.Empty).Trim();
                         }
-
                         reader.Close();
                     }
                 }

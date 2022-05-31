@@ -102,6 +102,19 @@ namespace BIServices.RackSvc
             }
         }
 
+        //public Racks GetHVRacksOnHandVer1(string plantCode, int agingDays)
+        //{
+        //    var processor = new RackProcessor();
+        //    try
+        //    {
+        //        return processor.GetHVRacksOnHandVer1(plantCode, agingDays);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new Exception(e.Message);
+        //    }
+        //}
+
         public Racks GetPurchasedConfiguredRacks(string plantCode, int agingDays)
         {
             var processor = new RackProcessor();

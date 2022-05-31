@@ -50,6 +50,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 16, EmitDefaultValue = false)]
         public decimal OrderLineNum { get; set; }
 
+        [DataMember(Order = 18, EmitDefaultValue = false)]
+        public string LineType { get; set; }
+
         [DataMember(Order = 20, EmitDefaultValue = false)]
         public decimal WorkOrderNum { get; set; }
 
@@ -350,6 +353,13 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 250, EmitDefaultValue = false)]
         public string PriceAuditDesc { get; set; }
 
+        // Shipping
+        [DataMember(Order = 260, EmitDefaultValue = false)]
+        public decimal LoadNum { get; set; }
+
+        [DataMember(Order = 262, EmitDefaultValue = false)]
+        public string CarrierFlag { get; set; }
+
         // Metrics
         [DataMember(Order = 300, EmitDefaultValue = false)]
         public decimal OrderQty { get; set; }
@@ -383,6 +393,12 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 340, EmitDefaultValue = false)]
         public int OrderedRacksQty { get; set; }
+
+        [DataMember(Order = 340, EmitDefaultValue = false)]
+        public int OnHandRacksQty { get; set; }
+
+        [DataMember(Order = 340, EmitDefaultValue = false)]
+        public int ReleasedRacksQty { get; set; }
 
         // New Metrics
         [DataMember(Order = 400, EmitDefaultValue = true)]

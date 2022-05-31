@@ -82,6 +82,31 @@ namespace BIServices.RackSvc
             return racks;
         }
 
+        //public Racks GetHVRacksOnHandVer1(string plantCode, int agingDays)
+        //{
+        //    var racks = new Racks();
+        //    var session = new BusinessSystemSession();
+        //    try
+        //    {
+        //        session = BusinessSystemSessionManager.GetBusinessSession();
+        //        var plantList = plantCode.Replace("'", "").Split(',').ToList();
+        //        var mgr1 = new StockRackManager(session);
+        //        racks.AddRange(mgr1.GetStockRacksVer1(session, plantList, agingDays));
+        //        var mgr2 = new ConfiguredRackManager(session);
+        //        racks.AddRange(mgr2.GetHVManufacturedConfiguredRacks(session, plantList, agingDays));
+        //        racks.AddRange(mgr2.GetHVPurchasedConfiguredRacks(session, plantList, agingDays));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        throw new Exception(e.ToString());
+        //    }
+        //    finally
+        //    {
+        //        session.Close();
+        //    }
+        //    return racks;
+        //}
+
         public Racks GetPurchasedConfiguredRacks(string plantCode, int agingDays)
         {
             var racks = new Racks();

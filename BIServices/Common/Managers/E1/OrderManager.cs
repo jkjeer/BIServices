@@ -101,7 +101,8 @@ namespace BIServices.Common.Managers.E1
                 SLUPMJ,
                 SLTDAY,
 				UMCONV,
-                CPZ58CCV05,
+                CP1.CPZ58CCV05,
+                CP2.CPZ58GAL1,
 			    ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY SLUPMJ ASC, SLTDAY ASC) AS RN
             FROM
 	            F4211
@@ -137,9 +138,12 @@ namespace BIServices.Common.Managers.E1
 					UMITM = SDITM AND
 					UMUM = 'EA' AND
 					UMRUM = 'LB'
-                LEFT OUTER JOIN F580375
-                ON  CPMCU = SDMCU AND
-                    CPSHAN = SDSHAN
+                LEFT OUTER JOIN F580375 CP1
+                ON  CP1.CPMCU = SDMCU AND
+                    CP1.CPSHAN = SDSHAN
+				LEFT OUTER JOIN F580430 CP2
+				ON	CP2.CPAN8 = SDSHAN AND
+                    CP2.CPMCU = SDMCU
             WHERE
                 {filterString}
                 SDLNTY != 'W' AND
@@ -292,7 +296,8 @@ namespace BIServices.Common.Managers.E1
                         SAZ5852077,
                         SLUPMJ,
                         SLTDAY,
-                        CPZ58CCV05,
+                        CP1.CPZ58CCV05,
+                        CP2.CPZ58GAL1,
                         COALESCE(CMCFGID, 0) AS CMCFGID,
 			            (	SELECT 
 					            MIN(ROUPMJ) 
@@ -342,14 +347,18 @@ namespace BIServices.Common.Managers.E1
 		                    SLDOCO = SDDOCO AND
 		                    SLDCTO = SDDCTO AND
 		                    SLLNID = SDLNID                    
-                        LEFT OUTER JOIN F580375
-                        ON  CPMCU = SDMCU AND
-                            CPSHAN = SDSHAN
-                        WHERE
-                            {filterString}
-                            SDLNTY = 'W' AND
-                            SDDCTO NOT IN ('SQ') AND
-                            SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')) A
+                        LEFT OUTER JOIN F580375 CP1
+                        ON  CP1.CPMCU = SDMCU AND
+                            CP1.CPSHAN = SDSHAN
+				        LEFT OUTER JOIN F580430 CP2
+				        ON	CP2.CPAN8 = SDSHAN AND
+                            CP2.CPMCU = SDMCU
+                    WHERE
+                        {filterString}
+                        SDLNTY = 'W' AND
+                        SDDCTO NOT IN ('SQ') AND
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
+                        ) A
             WHERE 
 	            A.RN = 1
             ORDER BY
@@ -603,7 +612,7 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
-                        line.AccountManager = CastDbNull.To(reader["SDIR04"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["CPZ58GAL1"], string.Empty).Trim();
 
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
@@ -1008,7 +1017,7 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
-                        line.AccountManager = CastDbNull.To(reader["SDIR04"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["CPZ58GAL1"], string.Empty).Trim();
 
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;

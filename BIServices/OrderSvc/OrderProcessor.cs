@@ -103,6 +103,26 @@ namespace BIServices.OrderSvc
             return lines;
         }
 
+        public SalesOrderLines GetAgcOpenOrders(string plantCodes)
+        {
+            var lines = new SalesOrderLines();
+            var session = new BusinessSystemSession();
+            try
+            {
+                session = BusinessSystemSessionManager.GetBusinessSession();
+                lines.AddRange(AgcOpenOrderManager.GetOpenOrders(session, plantCodes));
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.ToString());
+            }
+            finally
+            {
+                session.Close();
+            }
+            return lines;
+        }
+
         public SalesOrderLines GetCustomerOrderSummary(string plants, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, string dateProperty, string stockTypes, string lastStatusCodes, string nextStatusCodes, string documentTypes, string options)
         {
             Logger.Trace($"/GetOrders?Plant={plants}&CustomerSoldNums={customerSoldNums}&CustomerShipNums={customerShipNums}&DateCode={dateCode}&StartDate={startDate}&EndDate={endDate}&DateProperty={dateProperty}&StockTypes={stockTypes}&LastStatusCodes={lastStatusCodes}&NextStatusCodes={nextStatusCodes}&DocumentTypes={documentTypes}&Options={options}");

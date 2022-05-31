@@ -86,6 +86,7 @@
     <Compile Include="Common\Managers\E1\F4102Manager.cs" />
     <Compile Include="Common\Managers\E1\OpenRackManager.cs" />
     <Compile Include="Common\Managers\E1\OpenUnitManagerIG.cs" />
+    <Compile Include="Common\Managers\Enterprise\AgcOpenOrderManager.cs" />
     <Compile Include="Common\Managers\Enterprise\BulkCopyManager.cs" />
     <Compile Include="Common\Managers\Enterprise\HighWaterMarkManager.cs" />
     <Compile Include="Common\Managers\ShopFloor\OpenOrderManager.cs" />
@@ -198,6 +199,7 @@
     <Compile Include="Common\Utilities\CollectionUtils.cs" />
     <Compile Include="Common\Utilities\Common.cs" />
     <Compile Include="Common\Utilities\Data.cs" />
+    <Compile Include="Common\Utilities\DataReaderExtension.cs" />
     <Compile Include="Common\Utilities\E1DateParms.cs" />
     <Compile Include="Common\Utilities\E1TimeSpan.cs" />
     <Compile Include="Common\Utilities\InExtension.cs" />

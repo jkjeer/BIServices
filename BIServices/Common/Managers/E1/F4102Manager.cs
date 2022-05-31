@@ -6,6 +6,7 @@ using BIServices.Common.Types.E1;
 using BIServices.Common.Utilities;
 using System.Linq;
 using NLog;
+using System.Collections;
 // ReSharper disable InconsistentNaming
 
 namespace BIServices.Common.Managers.E1
@@ -22,7 +23,7 @@ namespace BIServices.Common.Managers.E1
         {
             var hash = new Dictionary<string, iDB2Command>
             {
-                {"F4102Manager.GetCustomerNum", GetPlannerNum()},
+                {"F4102Manager.GetPlannerNum", GetPlannerNum()},
                 {"F4102Manager.GetCustomerPartNum", GetCustomerPartNum()}
             };
             foreach (var keyName in hash.Keys.Where(keyName => !e1Session.DbCommands.ContainsKey(keyName)))
@@ -42,9 +43,12 @@ namespace BIServices.Common.Managers.E1
                 CommandText = @"
                     SELECT
                         IBANPL,
-                        IBPRP4
+                        IBPRP4,
+                        ABALPH AS IBANPLALPH
                     FROM
                         F4102
+                        LEFT OUTER JOIN F0101
+                        ON ABAN8 = IBANPL
                     WHERE
                         IBMCU = ? AND
                         IBITM = ?"
@@ -56,12 +60,13 @@ namespace BIServices.Common.Managers.E1
             return cmd;
         }
 
-        public decimal GetPlannerNum(BusinessSystemSession e1Session, string plantNum, decimal itemNum)
+        public Hashtable GetPlannerNum(BusinessSystemSession e1Session, string plantNum, decimal itemNum)
         {
             decimal customerNum = 0;
+            var table = new Hashtable();
             try
             {
-                var cmd = e1Session.DbCommands["F4102Manager.GetCustomerNum"];
+                var cmd = e1Session.DbCommands["F4102Manager.GetPlannerNum"];
                 cmd.Parameters["MCU"].Value = plantNum.PadLeft(12);
                 cmd.Parameters["ITM"].Value = itemNum;
                 cmd.Connection = e1Session.DbConnection;
@@ -70,14 +75,17 @@ namespace BIServices.Common.Managers.E1
                 {
                     while (reader.Read())
                     {
+                        table.Add("IBPRP4", CastDbNull.To(reader["IBPRP4"], string.Empty).Trim());
+                        table.Add("IBANPL", CastDbNull.To<decimal>(reader["IBANPL"], 0));
                         var family = CastDbNull.To(reader["IBPRP4"], string.Empty).Trim();
                         var planner = CastDbNull.To<decimal>(reader["IBANPL"], 0);
                         if (family == "PLN")
                         {
                             customerNum = planner;
                         }
+                        table.Add("PlannerNum", customerNum);
+                        table.Add("PlannerName", CastDbNull.To(reader["IBANPLALPH"], string.Empty).Trim());
                     }
-
                     reader.Close();
                 }
             }
@@ -86,7 +94,7 @@ namespace BIServices.Common.Managers.E1
                 Logger.Error("ERROR: " + e1Session.DbConnection.ConnectionString + " JobName: " + e1Session.DbConnection.JobName + "  " + e.Message + ": " + e.StackTrace);
                 throw new Exception(e1Session.DbConnection.ConnectionString + "  " + e.Message + ": " + e.StackTrace);
             }
-            return customerNum;
+            return table;
         }
 
         public iDB2Command GetCustomerPartNum()

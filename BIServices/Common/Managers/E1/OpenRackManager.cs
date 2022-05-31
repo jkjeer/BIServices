@@ -44,12 +44,11 @@ namespace BIServices.Common.Managers.E1
 
                 _logger.Trace(units.Count);
 
-                var gRacks = units.GroupBy(x => x.RackId).OrderBy(z => z.Key);
+                var gRacks = units.OrderBy(x => x.UnitId).GroupBy(x => x.RackId);
                 foreach (var gRack in gRacks)
                 {
                     var rack = new GlassRack();
                     var firstUnit = gRack.First();
-                    _logger.Trace(gRack.First().RackId);
                     rack.Plant = plant.PlantNum;
                     rack.RackId = gRack.Key;
                     rack.AssetId = firstUnit.AssetId;
@@ -57,6 +56,7 @@ namespace BIServices.Common.Managers.E1
                     rack.LastUnitId = gRack.Max(x => x.UnitId);
                     rack.UnitType = gRack.GroupBy(x => x.UnitType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.ProductType = gRack.GroupBy(x => x.ProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
+                    rack.CardinalProductType = gRack.GroupBy(x => x.CardinalProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.RackType = firstUnit.RackType;
                     rack.RackLocation = firstUnit.RackLocation;
                     rack.BoxNum = firstUnit.BoxNum;

@@ -107,6 +107,9 @@ namespace BIServices.Common.Managers.ShopFloor
                 BoxingBoxNum,
                 BoxingPosition,
                 BoxingRunSeq,
+                TargetLineId,
+                TargetShift,
+                TargetShiftDate,
                 ProductCode,
                 Construction,
                 Lite1Glass,
@@ -604,6 +607,9 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CurrScheduleNum = (unit.RemakeScheduleNum > 0) ? unit.RemakeScheduleNum : unit.OrigScheduleNum;
                         unit.CurrScheduleDate = unit.RemakeScheduleDate ?? unit.OrigScheduleDate;
                         unit.IsRackOrphan = (unit.RackId != unit.OrigScheduleRackId && unit.OrigScheduleRackStatusCode == "8") ? "Y" : "N";
+                        unit.TargetLineId = CastDbNull.To<int>(reader["TargetLineId"], 0);
+                        unit.TargetShift = CastDbNull.To<int>(reader["TargetShift"], 0);
+                        unit.TargetShiftDate = CastDbNull.To<DateTime>(reader["TargetShiftDate"], DateTime.MinValue);
 
                         unit.ProductCode = CastDbNull.AsString(reader["ProductCode"]);
                         unit.ProductCodeDesc = CastDbNull.AsString(reader["Construction"]);
