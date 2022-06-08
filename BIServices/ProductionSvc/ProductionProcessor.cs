@@ -223,8 +223,8 @@ namespace BIServices.ProductionSvc
                         cn1.Open();
                         cn2.Open();
 
-                        var mgr = new Common.Managers.E1.OpenUnitManagerIG(session);
-                        glassUnits.AddRange(mgr.GetOpenUnits(session,
+                        var mgr = new Common.Managers.ShopFloor.OpenUnitManagerIG(session);
+                        glassUnits.AddRange(mgr.GetOpenUnitsGlassUnit(session,
                             cn1,
                             cn2,
                             cn3,
@@ -246,6 +246,30 @@ namespace BIServices.ProductionSvc
                             orderDateCode,
                             hoursToTruck,
                             rackIdsList));
+
+                        //var mgr = new Common.Managers.E1.OpenUnitManagerIG(session);
+                        //glassUnits.AddRange(mgr.GetOpenUnits(session,
+                        //    cn1,
+                        //    cn2,
+                        //    cn3,
+                        //    plant,
+                        //    maxDateCode,
+                        //    startDate,
+                        //    endDate,
+                        //    custNum,
+                        //    rackType,
+                        //    scheduleType,
+                        //    scheduleNums,
+                        //    igLinesList,
+                        //    rackStatus,
+                        //    unitTypeList,
+                        //    optionsList,
+                        //    customerSoldNum,
+                        //    customerShipNum,
+                        //    boxNum,
+                        //    orderDateCode,
+                        //    hoursToTruck,
+                        //    rackIdsList));
                     }
                     else
                     {

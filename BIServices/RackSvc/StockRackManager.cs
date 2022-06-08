@@ -84,51 +84,14 @@ namespace BIServices.RackSvc
 				AB1.ABALPH AS IBANPLALPH,
 				IMDSC1,
 				IMDSC2,
-				(	SELECT
-						SUM(ILTRQT) AS ILTRQT
-					FROM
-						F4111
-					WHERE
-						ILITM = RDITM AND
-						ILMCU = RHMCU AND
-						ILTRDJ >= 120000 AND
-						ILDCT IN ('2I','IM','1A')
-						)	AS ILTRQT,
-				(	
-					SELECT
-						MIN(HLUPMJ)
-					FROM
-						F580559
-					WHERE
-						HLZ58RID = RHZ58RID AND
-						HLMCU = RHMCU AND
-						HLIOPR = 'Insert'
-						) AS HLUPMJ,
-				(	
-					SELECT
-						SUM(IECSL) AS IECSL
-					FROM
-						F30026
-					WHERE
-						IEITM = RDITM AND
-						IEMMCU = RHMCU AND
-						IELEDG = '07'
-										) AS IECSL,
-				(	
-					SELECT
-						IVCITM
-					FROM
-						F4104 
-						INNER JOIN F0101
-						ON ABAN8 = IVAN8
-					WHERE
-						IVAN8 = IBANPL AND
-						IVITM = IBMCU AND
-						? BETWEEN IVEXDJ AND IVEFTJ AND
-						IVXRT = 'C' AND
-						ABAT1 = 'C'
-						FETCH FIRST 1 ROWS ONLY
-													) AS IVCITM
+				(SELECT
+					MIN(HLUPMJ)
+				FROM
+					F580559
+				WHERE
+					HLZ58RID = RHZ58RID AND
+					HLMCU = RHMCU
+					) AS HLUPMJ
             FROM 
 	            F580055
 	            INNER JOIN F580056
@@ -145,7 +108,8 @@ namespace BIServices.RackSvc
             WHERE
 	            {0}
 				RHZ58HST NOT IN ('0', '8') AND
-                RDLOTN = '' 
+                RDLOTN = '' AND
+                RDPQOH <> 0
             ORDER BY 1	
             FOR READ ONLY", filterString);
             return cmd;
@@ -160,10 +124,10 @@ namespace BIServices.RackSvc
             try
             {
                 // EFFECTIVE DATE
-                parameters.Add(new iDB2Parameter("TDAY", iDB2DbType.iDB2Decimal));
-                parameters.Last().Precision = 6;
-                parameters.Last().Scale = 0;
-                parameters.Last().Value = E1TimeManager.CastToE1Date(DateTime.Now);
+                //parameters.Add(new iDB2Parameter("TDAY", iDB2DbType.iDB2Decimal));
+                //parameters.Last().Precision = 6;
+                //parameters.Last().Scale = 0;
+                //parameters.Last().Value = E1TimeManager.CastToE1Date(DateTime.Now);
 
                 // Plant List
                 if (plantList.Count() > 0)
@@ -248,40 +212,60 @@ namespace BIServices.RackSvc
                         rack.PlannerNum = reader.Get<Decimal>("IBANPL", 0);
                         rack.PlannerName = reader.Get<string>("IBANPLALPH", String.Empty);
                         rack.PlanningFamily = reader.Get<string>("IBPRP4", String.Empty);
-                        rack.UnitCost = reader.Get<Decimal>("IECSL", 0) / 10000;
-                        rack.TotalCost = rack.UnitCost * rack.Quantity;
+                        //rack.UnitCost = reader.Get<Decimal>("IECSL", 0) / 10000;
+                        //rack.TotalCost = rack.UnitCost * rack.Quantity;
                         rack.ReceivedDate = E1TimeManager.CastToDateTime(reader.Get<Decimal>("HLUPMJ"));
+                        rack.ReceivedAgingDays = (DateTime.Now - rack.ReceivedDate.Value).Days;
+                        rack.ReceivedQty = rack.OriginalQuantity;
                         rack.ItemDesc = reader.Get<string>("IMDSC1", String.Empty);
                         rack.StockType = reader.Get<string>("IBSTKT", String.Empty);
                         rack.GlCategory = reader.Get<string>("IBGLPT", String.Empty);
                         rack.ItemConsumptionDays = 90;
-                        rack.ItemConsumptionAmt = reader.Get<Decimal>("ILTRQT", 0) / -1000;
-                        rack.CustomerPartNum = reader.Get<string>("IVCITM", String.Empty);
+                        //rack.ItemConsumptionAmt = reader.Get<Decimal>("ILTRQT", 0) / -1000;
+                        //rack.CustomerPartNum = reader.Get<string>("IVCITM", String.Empty);
                         rack.LoadNum = reader.Get<Decimal>("RHPSN", 0);
                         rack.SuggestedLoadNum = reader.Get<Decimal>("RHZ58SLDN", 0);
                         racks.Add(rack);
                     }
                     reader.Close();
                 }
-                // Item Attributes
-                var items = racks.Select(x => x.ItemNum).Distinct().ToList();
-                var itemDict = new Dictionary<decimal, ItemAttributes>();
+
+                // Item Properties
+                var items = racks.Select(x => new {x.ItemNum, x.PlannerNum, x.CostCenter }).Distinct().ToList();
+
+                // Attributes
+                var itemAttDict = new Dictionary<decimal, ItemAttributes>();
+                var itemCustPartDict = new Dictionary<decimal, string>();
+                var itemCostDict = new Dictionary<decimal, decimal>();
+                var itemConsumptionDict = new Dictionary<decimal, decimal>();
                 foreach (var item in items)
                 {
-                    itemDict.Add(item, _itemAttMgr.GetDiscreteItemAttributes(session, item));
+                    itemAttDict.Add(item.ItemNum, _itemAttMgr.GetDiscreteItemAttributes(session, item.ItemNum));
+                    itemCustPartDict.Add(item.ItemNum, f4102Mgr.GetCustomerPartNum(session, item.PlannerNum, item.ItemNum));
+                    itemCostDict.Add(item.ItemNum, f4102Mgr.GetCost(session, PlantManager.GetPlant(item.CostCenter), item.ItemNum));
+                    itemConsumptionDict.Add(item.ItemNum, f4102Mgr.GetConsumption(session, PlantManager.GetPlant(item.CostCenter), item.ItemNum, 90));
                 }
+
                 // Assign Attributes
                 foreach (var rack in racks)
                 {
-                    var itemAtts = itemDict[rack.ItemNum];
+                    var itemAtts = itemAttDict[rack.ItemNum];
                     rack.UnitActualSqft = itemAtts.GetDecimalAttributeValue("Z58USF");
+                    rack.TotalActualSqft = rack.UnitActualSqft * rack.Quantity;
                     rack.LitesPerRack = itemAtts.GetDecimalAttributeValue("Z58LPR");
                     rack.Lite1Thickness = itemAtts.GetDecimalAttributeValue("Z58L1TK");
                     rack.OverallThickness = itemAtts.GetDecimalAttributeValue("Z5851705");
                     var flexDescs = _flexItemMgr.GetDescription(session, itemAtts);
                     rack.Construction = flexDescs[0];
                     rack.Dimension = flexDescs[1];
+                    rack.CustomerPartNum = itemCustPartDict[rack.ItemNum];
+                    rack.UnitCost = itemCostDict[rack.ItemNum];
+                    rack.TotalCost = rack.UnitCost * rack.Quantity;
+                    rack.ItemConsumptionAmt = itemConsumptionDict[rack.ItemNum];
                 }
+                //GetCost(session, racks);
+                //GetReceivedDate(session, racks);
+                //GetAverageConsumption(session, racks, 90);
             }
             catch (Exception e)
             {
@@ -454,6 +438,7 @@ namespace BIServices.RackSvc
                         var itemAtts = _itemAttMgr.GetDiscreteItemAttributes(session, rack.ItemNum);
                         rack.ItemAttributes = itemAtts;
                         rack.UnitActualSqft = itemAtts.GetDecimalAttributeValue("Z58USF");
+                        rack.TotalActualSqft = rack.UnitActualSqft * rack.Quantity;
                         rack.LitesPerRack = itemAtts.GetDecimalAttributeValue("Z58LPR");
                         rack.TotalActualSqft = rack.UnitActualSqft * rack.Quantity;
                         var flexDescs = _flexItemMgr.GetDescription(session, itemAtts);
@@ -466,13 +451,17 @@ namespace BIServices.RackSvc
                         rack.PlannerName = (string)itemBranchAttributes["PlannerName"];
                         rack.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
                         rack.CustomerPartNum = f4102Mgr.GetCustomerPartNum(session, rack.PlannerNum, rack.ItemNum);
+
+                        rack.ReceivedDate = rack.ProductionDate;
+                        rack.ReceivedAgingDays = (DateTime.Now - rack.ReceivedDate.Value).Days;
+                        rack.ReceivedQty = rack.OriginalQuantity;
                         racks.Add(rack);
                     }
                     reader.Close();
                 }
                 GetItemProperties(session, racks);
                 GetCost(session, racks);
-                GetReceivedDate(session, racks);
+                //GetReceivedDate(session, racks);
                 GetAverageConsumption(session, racks, 90);
             }
             catch (Exception e)

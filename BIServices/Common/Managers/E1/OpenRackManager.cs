@@ -32,12 +32,18 @@ namespace BIServices.Common.Managers.E1
             List<string> productionTypesList = null)
         {
             var racks = new GlassRacks();
-            var openUnitMgr = new E1.OpenUnitManager(session);
+            //var openUnitMgr = new E1.OpenUnitManager(session);
+            var openUnitMgr = new ShopFloor.OpenUnitManagerIG(session);
             try
             {
                 _logger.Trace("Get Open Units");
 
-                var units = openUnitMgr.GetOpenUnits(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
+                //var units = openUnitMgr.GetOpenUnits(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
+                //    endDate, custNum,
+                //    rackType, scheduleType, scheduleNumList, igLinesList, rackStatusList, unitTypeList, optionsList,
+                //    customerSoldNum, customerShipNum, boxNum, orderDateCode, hoursToTruck, rackIdsList);
+
+                var units = openUnitMgr.GetOpenUnitsGlassUnit(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
                     endDate, custNum,
                     rackType, scheduleType, scheduleNumList, igLinesList, rackStatusList, unitTypeList, optionsList,
                     customerSoldNum, customerShipNum, boxNum, orderDateCode, hoursToTruck, rackIdsList);
