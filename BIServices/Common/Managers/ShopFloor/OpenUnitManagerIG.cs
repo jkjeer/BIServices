@@ -243,7 +243,8 @@ namespace BIServices.Common.Managers.ShopFloor
          * Open Units
          *******************************************************************************/
         public ProdUnits GetOpenUnits(BusinessSystemSession session, SqlConnection cnShopFloor, SqlConnection cnDw, Plant plant,
-            string maxDateCode, DateTime? startDate = null, DateTime? endDate = null, decimal custNum = 0, string rackType = null, string scheduleType = null, List<decimal> scheduleNumList = null, List<int> igLinesList = null, List<string> rackStatusList = null, List<string> unitTypeList = null, List<string> optionsList = null, string customerSoldNum = null, string customerShipNum = null, decimal boxNum = 0, string orderDateCode = null, decimal hoursToTruck = 0, List<decimal> rackIdsList = null, List<string> productionTypeList = null)
+            string maxDateCode, DateTime? startDate = null, DateTime? endDate = null, decimal custNum = 0, string rackType = null, string scheduleType = null, List<decimal> scheduleNumList = null, List<int> igLinesList = null, List<string> rackStatusList = null, List<string> unitTypeList = null, 
+            List<string> optionsList = null, string customerSoldNum = null, string customerShipNum = null, decimal boxNum = 0, string orderDateCode = null, decimal hoursToTruck = 0, List<decimal> rackIdsList = null, List<string> productionTypeList = null)
         {
             var units = new ProdUnits();
             var cmd = new SqlCommand();
@@ -593,7 +594,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.UnitTypeCode = CastDbNull.AsString(reader["UnitTypeCode"]);
                         unit.LitesNum = CastDbNull.To<int>(reader["LitesNum"], 0);
 
-                        unit.Attempts = CastDbNull.To<int>(reader["Attempts"], 0);
+                        unit.Attempts = CastDbNull.To<int>(reader["Attempts"], 0);                      
                         unit.OrigScheduleNum = CastDbNull.To<Decimal>(reader["OrigScheduleNum"], 0);
                         unit.OrigScheduleDate = CastDbNull.To<DateTime>(reader["OrigScheduleDate"], DateTime.MinValue);
                         unit.OrigScheduleType = CastDbNull.AsString(reader["OrigScheduleType"]);
@@ -731,6 +732,40 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CategoryCode = CastDbNull.AsString(reader["CategoryCode"]);
 
                         units.Add(unit);
+
+                        // Options
+                        if (optionsList.Contains("MU"))
+                        {
+                            _logger.Info("Local IsMissing Elimination");
+                            var x = units.RemoveAll(a => a.IsRackOrphan == "N");
+                        }
+                        if (optionsList.Contains("XHVMTO"))
+                        {
+                            var x = units.RemoveAll(a => a.OrigScheduleType == "HV MTO");
+                        }
+                        _logger.Debug("Option MP");
+                        if (optionsList.Contains("MP"))
+                        {
+                            var x = units.RemoveAll(a => a.Attempts < 2);
+                        }
+                        _logger.Debug("Option SP");
+                        if (optionsList.Contains("SP"))
+                        {
+                            var x = units.RemoveAll(a => a.Attempts < 1);
+                        }
+                        _logger.Debug("Option RNC/PRNC");
+                        if (optionsList.Contains("RNC") || optionsList.Contains("PRNC"))
+                        {
+                            var x = units.RemoveAll(a => a.Attempts < 1);
+                        }
+                        if (optionsList.Contains("PRNC"))
+                        {
+                            var x = units.RemoveAll(a => a.PurchasedLiteUnits == 0);
+                        }
+                        if (optionsList.Contains("QC"))
+                        {
+                            var x = units.RemoveAll(a => a.QcInspect == "N");
+                        }
                     }
                     reader.Close();
                 }
@@ -793,7 +828,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 // Include Shipped Units
                 if (optionsList.Contains("ADD_SHIP_TODAY"))
                 {
-                    filters.Add("((RackStatusCode IN ('0', '1', '2', '3', '4', '5', '9', 'W') AND DueDate >= @DueDate1 AND DueDate <= @DueDate2) OR (RackStatusCode IN ('7', '8') AND RackTransactionDate = @RackTransactionDate)) AND\r\n");
+                    filters.Add("((RackDetailStatusCode IN ('0', '1', '2', '3', '4', '5', '9', 'W') AND DueDate >= @DueDate1 AND DueDate <= @DueDate2) OR (RackDetailStatusCode IN ('7', '8') AND RackTransactionDate = @RackTransactionDate)) AND\r\n");
                     parameters.Add(new SqlParameter("@DueDate1", SqlDbType.DateTime));
                     parameters.Last().Value = startDateDt;
                     parameters.Add(new SqlParameter("@DueDate2", SqlDbType.DateTime));
@@ -803,7 +838,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 }
                 else
                 {
-                    filters.Add("RackStatusCode IN ('0', '1', '2', '3', '4', '5', '9', 'W') AND DueDate >= @DueDate1 AND DueDate <= @DueDate2 AND\r\n");
+                    filters.Add("RackDetailStatusCode IN ('0', '1', '2', '3', '4', '5', '9', 'W') AND DueDate >= @DueDate1 AND DueDate <= @DueDate2 AND\r\n");
                     parameters.Add(new SqlParameter("@DueDate1", SqlDbType.DateTime));
                     parameters.Last().Value = startDateDt;
                     parameters.Add(new SqlParameter("@DueDate2", SqlDbType.DateTime));
@@ -847,23 +882,25 @@ namespace BIServices.Common.Managers.ShopFloor
                         exclude = true;
                         customerShipNumList = Array
                             .ConvertAll<string, decimal>(
-                                customerShipNum.Substring(1, customerShipNum.Length - 1).Split(','), Convert.ToDecimal)
+                                customerShipNum.Substring(1, customerShipNum.Length - 1).Split(','),
+                                Convert.ToDecimal)
                             .ToList();
                     }
                     else
                     {
-                        customerShipNumList = Array.ConvertAll<string, decimal>(customerShipNum.Split(','), Convert.ToDecimal).ToList();
+                        customerShipNumList =
+                            Array.ConvertAll<string, decimal>(customerShipNum.Split(','), Convert.ToDecimal)
+                                .ToList();
                     }
+
                     string strInClause = "";
                     foreach (decimal customerShip in customerShipNumList)
                     {
-                        strInClause = strInClause + "@CustomerShipNum,";
-                        parameters.Add(new SqlParameter("@CustomerShipNum", SqlDbType.Decimal));
-                        parameters.Last().Precision = 8;
-                        parameters.Last().Scale = 0;
-                        parameters.Last().Value = customerShip;
+                        strInClause = strInClause + $"{customerShip.ToString()},";
                     }
-                    filters.Add($"CustomerShipNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} ) AND\r\n");
+
+                    filters.Add(
+                        $"CustomerShipNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} ) AND\r\n");
                 }
 
                 // Customer Sold Num
@@ -876,23 +913,25 @@ namespace BIServices.Common.Managers.ShopFloor
                         exclude = true;
                         customerSoldNumList = Array
                             .ConvertAll<string, decimal>(
-                                customerSoldNum.Substring(1, customerSoldNum.Length - 1).Split(','), Convert.ToDecimal)
+                                customerShipNum.Substring(1, customerSoldNum.Length - 1).Split(','),
+                                Convert.ToDecimal)
                             .ToList();
                     }
                     else
                     {
-                        customerSoldNumList = Array.ConvertAll<string, decimal>(customerSoldNum.Split(','), Convert.ToDecimal).ToList();
+                        customerSoldNumList =
+                            Array.ConvertAll<string, decimal>(customerSoldNum.Split(','), Convert.ToDecimal)
+                                .ToList();
                     }
+
                     string strInClause = "";
                     foreach (decimal customerSold in customerSoldNumList)
                     {
-                        strInClause = strInClause + "@CustomerSoldNum,";
-                        parameters.Add(new SqlParameter("@CustomerSoldNum", SqlDbType.Decimal));
-                        parameters.Last().Precision = 8;
-                        parameters.Last().Scale = 0;
-                        parameters.Last().Value = customerSold;
+                        strInClause = strInClause + $"{customerSold.ToString()},";
                     }
-                    filters.Add($"CustomerSoldNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} ) AND\r\n");
+
+                    filters.Add(
+                        $"CustomerSoldNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} ) AND\r\n");
                 }
 
                 // Box Num
@@ -921,45 +960,35 @@ namespace BIServices.Common.Managers.ShopFloor
                     parameters.Last().Value = scheduleType;
                 }
 
-                // Unit Type
+                //  Unit Type
                 if (unitTypeList.Count() > 0)
                 {
                     string strInClause = "";
                     foreach (string unitType in unitTypeList)
                     {
-                        strInClause = strInClause + "@UnitTypeCode,";
-                        parameters.Add(new SqlParameter("@UnitTypeCode", SqlDbType.VarChar, 1));
-                        parameters.Last().Value = unitType;
+                        strInClause = strInClause + $"'{unitType}',";
                     }
                     filters.Add("UnitTypeCode IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
                 }
 
-                // Schedule Num
-                if (scheduleNumList.Count() > 0)
+                // Schedule Nums
+                if (rackIdsList.Count > 0)
                 {
                     string strInClause = "";
                     foreach (decimal scheduleNum in scheduleNumList)
                     {
-                        strInClause = strInClause + "@ScheduleNum,";
-                        parameters.Add(new SqlParameter("@ScheduleNum", SqlDbType.Decimal));
-                        parameters.Last().Precision = 5;
-                        parameters.Last().Scale = 0;
-                        parameters.Last().Value = scheduleNum;
+                        strInClause = strInClause + $"{scheduleNum.ToString()},";
                     }
                     filters.Add("CurrScheduleNum IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
                 }
 
                 // Rack Ids
-                if (rackIdsList.Count() > 0)
+                if (rackIdsList.Count > 0)
                 {
                     string strInClause = "";
                     foreach (decimal rackId in rackIdsList)
                     {
-                        strInClause = strInClause + "@RackId,";
-                        parameters.Add(new SqlParameter("@RackId", SqlDbType.Decimal));
-                        parameters.Last().Precision = 15;
-                        parameters.Last().Scale = 0;
-                        parameters.Last().Value = rackId;
+                        strInClause = strInClause + $"{rackId.ToString()},";
                     }
                     filters.Add("RackId IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
                 }
@@ -976,11 +1005,11 @@ namespace BIServices.Common.Managers.ShopFloor
                     string strInClause = "";
                     foreach (string rackStatus in rackStatusList)
                     {
-                        strInClause = strInClause + "@RackStatus,";
-                        parameters.Add(new SqlParameter("@RackStatus", SqlDbType.VarChar, 1));
-                        parameters.Last().Value = rackStatus;
+                        strInClause = strInClause + $"'{rackStatus}',";
                     }
-                    filters.Add("RDZ58DST IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
+
+                    filters.Add("RackDetailStatusCode IN (" + strInClause.Substring(0, strInClause.Length - 1) +
+                                ") AND\r\n");
                 }
 
                 cmd = GetOpenUnits(filters);
@@ -1014,8 +1043,23 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.RackTransactionDate = reader.Get<DateTime>("RackTransactionDate");
                         unit.Status = reader.Get<string>("RackDetailStatusCode");
                         unit.RackDetailStatusCode = reader.Get<string>("RackDetailStatusCode");
-                        unit.ScheduleNum = reader.Get<decimal>("CurrScheduleNum");
-                        unit.ScheduleDate = reader.Get<DateTime>("CurrScheduleDate");
+
+                        unit.ScheduleNum = reader.Get<decimal>("OrigScheduleNum");
+                        unit.ScheduleDate = reader.Get<DateTime>("OrigScheduleDate");
+                        unit.OriginalScheduleNum = reader.Get<Decimal>("OrigScheduleNum");
+                        unit.OriginalScheduleDate = reader.Get<DateTime>("OrigScheduleDate");
+                        unit.RemakeScheduleNum = reader.Get<Decimal>("RemakeScheduleNum");
+                        unit.RemakeInitiateDate = reader.Get<DateTime>("RemakeScheduleDate");
+                        unit.Passes = reader.Get<int>("Attempts");
+                        unit.ScheduledRackId = reader.Get<Decimal>("OrigScheduleRackId");
+                        unit.ScheduledRackStatusCode = reader.Get<String>("OrigScheduleRackStatusCode");
+                        unit.ScheduledLineId = reader.Get<byte>("OrigScheduleProductionLine").ToString();
+                        unit.ScheduledLineNum = reader.Get<byte>("OrigScheduleProductionLine");
+                        unit.IGLineScheduled = reader.Get<byte>("OrigScheduleProductionLine").ToString();
+                        if (unit.RackId != unit.ScheduledRackId && (unit.RackStatusCode == "7" || unit.RackStatusCode == "8"))
+                        {
+                            unit.IsMissing = "Y";
+                        }
                         unit.OrderNum = reader.Get<Decimal>("SOrderNum");
                         unit.OrderType = reader.Get<String>("SOrderType");
                         unit.OrderLineNum = Math.Round(reader.Get<Decimal>("SorderLineNum"), 3);
@@ -1045,11 +1089,15 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerSoldType = reader.Get<String>("CustomerSoldType");
                         unit.CustomerShipNum = reader.Get<Decimal>("CustomerShipNum");
                         unit.CustomerShipName = reader.Get<String>("CustomerShipName");
+                        unit.CustomerPO = reader.Get<String>("CustomerOrderNum");
+                        unit.CustomerPONum = unit.CustomerPO.Split('-').Length == 2 ? Utilities.Data.CastStringToDecimal(unit.CustomerPO.Split('-')[0]) : 0;
+                        unit.CustomerPOLineNum = unit.CustomerPO.Split('-').Length == 2 ? Utilities.Data.CastStringToDecimal(unit.CustomerPO.Split('-')[1]) : 0;
                         unit.CustomerPart1 = reader.Get<String>("CustomerPart1");
                         unit.CustomerPart2 = reader.Get<String>("CustomerPart2");
                         unit.CustomerPart3 = reader.Get<String>("CustomerPart3");
                         unit.PriorityCode = reader.Get<String>("PriorityCode");
                         unit.CustomerSeqNum = reader.Get<String>("CustomerSeqNum");
+                        unit.CustomerSeqPart1 = unit.CustomerSeqNum.Split('/').Length > 0 ? unit.CustomerSeqNum.Split('/')[0] : "";
                         unit.SchedulingMessage = reader.Get<string>("SchedulerMsg1");
                         unit.GenericSeqNum = reader.Get<String>("GenericSeqNum");
                         unit.PickNotes = reader.Get<String>("PickingNotes");
@@ -1059,26 +1107,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.UnitCostAmt = reader.Get<Decimal>("UnitCostAmt");
                         unit.UnitActualPriceAmt = reader.Get<Decimal>("UnitActualPriceAmt");
                         unit.UnitListPriceAmt = reader.Get<Decimal>("UnitListPriceAmt");
-                        unit.CustomerPO = reader.Get<String>("CustomerOrderNum");
-                        //unit.CustomerPONum = reader.Get<Decimal>("CustomerOrderNum");
-                        //unit.CustomerPOLineNum = reader.Get<Decimal>("CustomerOrderNum");
                         unit.ShipDateTime = reader.Get<DateTime>("ShipDate");
-                        unit.IGLineScheduled = "";
-                        unit.IsMissing = "N";
-                        //unit.OnHand = Convert.ToInt16(reader.Get<Decimal>("RackDetailQtyOnHand"));
-                        unit.Passes = reader.Get<int>("Attempts");
-                        unit.ScheduledRackId = reader.Get<Decimal>("OrigScheduleRackId");
-                        unit.ScheduledRackStatusCode = reader.Get<String>("OrigScheduleRackStatusCode");
-                        unit.OriginalScheduleNum = reader.Get<Decimal>("OrigScheduleNum");
-                        unit.OriginalScheduleDate = reader.Get<DateTime>("OrigScheduleDate");
-                        if (unit.RackId != unit.ScheduledRackId && (unit.RackStatusCode == "7" || unit.RackStatusCode == "8"))
-                        {
-                            unit.IsMissing = "Y";
-                        }
-
-                        //unit.RemakeId = (int)remakeRec["RemakesId"];
-                        unit.RemakeScheduleNum = reader.Get<Decimal>("RemakeScheduleNum");
-                        unit.RemakeInitiateDate = reader.Get<DateTime>("RemakeScheduleDate");
                         unit.RemakeReason = reader.Get<String>("RemakeScheduleReason");
                         unit.RemakeComment = reader.Get<String>("RemakeScheduleComments");
                         unit.LastMachineName = reader.Get<String>("LastMachineName");
@@ -1095,8 +1124,8 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.BoxNum = reader.Get<decimal>("RackBoxNum");
                         unit.SlotNum = Convert.ToDecimal(reader.Get<Int16>("Slot"));
                         //unit.RunSequence = reader.Get<int>("RunSequence"], 0);
-                        unit.Construction = reader.Get<String>("Construction");
-                        unit.IsLami = reader.Get<String>("LastMachineName");
+                        unit.Construction = reader.Get<String>("ProductCode");
+                        unit.IsLami = reader.Get<String>("Lite1Lami").Length + reader.Get<String>("Lite2Lami").Length + reader.Get<String>("Lite3Lami").Length > 0 ? "Y" : "N";
                         //unit.BarDescription = reader.Get<String>("LastMachineName"], String.Empty).Trim();
                         unit.BaseDim = (double)reader.Get<decimal>("BaseDim");
                         unit.LeftDim = (double)reader.Get<decimal>("LeftDim");
@@ -1160,189 +1189,47 @@ namespace BIServices.Common.Managers.ShopFloor
                                 unit.PickNotes2 = arrPickNotes[1].Trim();
                             }
                         }
-
                         unit.Units = 1;
-
-
-
-                        //unit.UnitIdChar = CastDbNull.To<int>(reader["UnitId"], 0).ToString().Trim();
-                        //unit.UnitId = Convert.ToDecimal(unit.UnitIdChar);
-                        //unit.RackId = CastDbNull.To<Decimal>(reader["RackId"], 0);
-                        //unit.AssetId = CastDbNull.To<String>(reader["RackAssetId"], String.Empty).Trim();
-                        //unit.RackType = CastDbNull.To<String>(reader["RackType"], String.Empty).Trim();
-                        //unit.RackLocation = CastDbNull.To<String>(reader["RackLocation"], String.Empty).Trim();
-                        //unit.RackSide = CastDbNull.To<String>(reader["Side"], String.Empty).Trim();
-                        //unit.BoxNum = CastDbNull.To<Decimal>(reader["RackBoxNum"], 0);
-                        ////unit.RackTareWeight = CastDbNull.To<Decimal>(reader["RHZ58RTWT"], 0) / 100;
-                        //unit.RackStatus = CastDbNull.To<String>(reader["RackStatusCode"], String.Empty).Trim();
-                        //unit.Status = CastDbNull.To<String>(reader["RackDetailStatusCode"], String.Empty).Trim();
-                        //unit.ScheduleNum = CastDbNull.To<Decimal>(reader["CurrScheduleNum"], 0);
-                        //unit.ScheduleDate = E1TimeManager.CastToDateTime(CastDbNull.To<Decimal>(reader["CurrScheduleDate"], 0));
-                        //unit.OrderCompany = CastDbNull.To<String>(reader["SDKCOO"], String.Empty).Trim();
-                        //unit.OrderNum = CastDbNull.To<Decimal>(reader["SOrderNum"], 0);
-                        //unit.OrderType = CastDbNull.To<String>(reader["SOrderType"], String.Empty).Trim();
-                        //unit.OrderLineNum = Math.Round(CastDbNull.To<Decimal>(reader["SorderLineNum"], 0), 3);
-                        //unit.WorkOrderNum = CastDbNull.To<Decimal>(reader["WOrderNum"], 0);
-                        //unit.WorkOrderStatus = CastDbNull.To<String>(reader["WOrderStatusCode"], String.Empty).Trim();
-                        //unit.ItemNum = CastDbNull.To<Decimal>(reader["ItemNum"], 0);
-                        //unit.ItemStockType = CastDbNull.To<String>(reader["StockTypeCode"], String.Empty).Trim();
-                        //unit.ScheduleType = CastDbNull.To<String>(reader["OrigScheduleType"], String.Empty).Trim();
-                        //unit.ProductType = CastDbNull.To<String>(reader["ProductType"], String.Empty).Trim();
-                        //unit.OrderDate = CastDbNull.To<DateTime>(reader["OrderDate"], DateTime.MinValue);
-                        //unit.RackItemDate = CastDbNull.To<DateTime>(reader["RackDetailTransactionDate"], DateTime.MinValue);
-                        //unit.RequestedDate = CastDbNull.To<DateTime>(reader["DueDate"], DateTime.MinValue);
-                        //unit.PromisedDate = CastDbNull.To<DateTime>(reader["OrigDueDate"], DateTime.MinValue);
-                        //unit.NextStatus = CastDbNull.To<String>(reader["SOrderNextStatusCode"], String.Empty).Trim();
-                        //// Delivery Time per Order Entry
-                        //unit.DeliveryDateTime = CastDbNull.To<DateTime>(reader["DeliveryDateTime"], DateTime.MinValue);
-                        //TimeSpan ts = unit.DeliveryDateTime - DateTime.Now;
-                        //unit.DeliveryDateTimeHours = Math.Round(ts.TotalMinutes / 60.00, 3);
-                        //unit.CustomerTier = CastDbNull.To<String>(reader["CustomerShipPref05"], String.Empty).Trim();
-
-                        //unit.CustomerNum = CastDbNull.To<Decimal>(reader["CustomerSoldNum"], 0);
-                        //unit.CustomerName = CastDbNull.To<String>(reader["CustomerSoldName"], String.Empty).Trim();
-                        //unit.CustomerShipNum = CastDbNull.To<Decimal>(reader["CustomerShipNum"], 0);
-                        //unit.CustomerShipName = CastDbNull.To<String>(reader["CustomerShipName"], String.Empty).Trim();
-                        //unit.CustomerPart1 = CastDbNull.To<String>(reader["CustomerPart1"], String.Empty).Trim();
-                        //unit.CustomerPart2 = CastDbNull.To<String>(reader["CustomerPart2"], String.Empty).Trim();
-                        //unit.CustomerPart3 = CastDbNull.To<String>(reader["CustomerPart3"], String.Empty).Trim();
-                        //unit.PriorityCode = CastDbNull.To<String>(reader["PriorityCode"], String.Empty).Trim();
-                        //unit.CustomerSeqNum = CastDbNull.To<String>(reader["CustomerSeqNum"], String.Empty).Trim();
-                        //unit.SchedulingMessage = CastDbNull.To<string>(reader["SchedulerMsg1"], string.Empty).Trim();
-                        ////var arr = unit.CustomerSeqNum.Split('/');
-                        ////if (arr.Length > 0)
-                        ////{
-                        ////    unit.CustomerSeqPart1 = arr[0];
-                        ////}
-                        //unit.GenericSeqNum = CastDbNull.To<String>(reader["GenericSeqNum"], String.Empty).Trim();
-                        //unit.PickNotes = CastDbNull.To<String>(reader["PickingNotes"], String.Empty).Trim();
-                        //unit.PackNotes = CastDbNull.To<String>(reader["PackingNotes"], String.Empty).Trim();
-                        //unit.UnitActualSqft = CastDbNull.To<Decimal>(reader["UnitActualSqft"], 0);
-                        //unit.UnitBillableSqft = CastDbNull.To<Decimal>(reader["UnitBillableSqft"], 0);
-                        //unit.UnitCostAmt = CastDbNull.To<Decimal>(reader["UnitCostAmt"], 0);
-                        //unit.UnitActualPriceAmt = CastDbNull.To<Decimal>(reader["UnitActualPriceAmt"], 0);
-                        //unit.UnitListPriceAmt = CastDbNull.To<Decimal>(reader["UnitListPriceAmt"], 0);
-
-                        //// PELLA BUCKET SLOT
-                        //if (unit.CustomerNum == 10065870)
-                        //{
-                        //    var arrPickNotes = unit.PickNotes.Split('.');
-                        //    if (arrPickNotes.Length > 1)
-                        //    {
-                        //        unit.PickNotes1 = arrPickNotes[0].Trim();
-                        //        unit.PickNotes2 = arrPickNotes[1].Trim();
-                        //    }
-                        //}
-
-                        //// Customer PO Parsing
-                        //unit.CustomerPO = CastDbNull.To<String>(reader["CustomerOrderNum"], String.Empty).Trim();
-                        //unit.CustomerPONum = CastDbNull.To<Decimal>(reader["CustomerPONum"], 0);
-                        //unit.CustomerPOLineNum = CastDbNull.To<Decimal>(reader["CustomerPOLineNum"], 0);
-
-                        //unit.ShipDateTime = CastDbNull.To<DateTime>(reader["ShipDate"], DateTime.MinValue);
-                        ////var shipDateId = CastDbNull.To<Decimal>(reader["LHADDJ"], 0);
-                        ////var shipTimeId = CastDbNull.To<Decimal>(reader["LHADTM"], 0);
-                        ////if (shipDateId > 0) unit.ShipDateTime = Common.Utilities.Common.CastToDateTime(shipDateId, shipTimeId).AddHours(plant.TimeOffset);
-
-                        //unit.IGLineScheduled = "";
-                        //unit.IsMissing = "N";
-                        //unit.OnHand = Convert.ToInt16(CastDbNull.To<Decimal>(reader["RackDetailQtyOnHand"], 0));
-                        //unit.Units = 1;
-                        ////unit.ConfigId = CastDbNull.To<Decimal>(reader["CMCFGID"], 0);
-
-                        //if (plant.PlantCode == "HRIG")
-                        //{
-                        //    unit.ShipRoute = CastDbNull.To<String>(reader["CustomerShippingLane"], String.Empty).Trim();
-                        //    unit.DeliveryDateTime = unit.RequestedDate.AddHours((double)CastDbNull.To<Decimal>(reader["CustomerShippingOffset"], 0));
-                        //    TimeSpan ts1 = unit.DeliveryDateTime - DateTime.Now.AddHours(plant.TimeOffset);
-                        //    unit.DeliveryDateTimeHours = Math.Round(ts1.TotalMinutes / 60.00, 3);
-                        //}
-
-                        //var rackId = CastDbNull.To<Decimal>(reader["DLZ58RID"], 0);
-                        //var rackStatus = CastDbNull.To<String>(reader["RHZ58HST"], String.Empty).Trim();
-                        //var scheduleNum = CastDbNull.To<Decimal>(reader["S1Z58SCN"], 0);
-                        //var scheduleDate = Timestamp.CastToDateTime(CastDbNull.To<Decimal>(reader["S1Z58SCD"], 0));
-                        //unit.ScheduledRackId = CastDbNull.To<Decimal>(reader["ScheduledRackId"], 0);
-                        //unit.OriginalScheduleNum = CastDbNull.To<Decimal>(reader["OrigScheduleNum"], 0);
-                        //unit.OriginalScheduleDate = CastDbNull.To<DateTime>(reader["OrigScheduleDate"], (DateTime)SqlDateTime.MinValue);
-                        //if (unit.RackId != unit.ScheduledRackId && (unit.RackStatusCode == "7" || unit.RackStatusCode == "8"))
-                        //{
-                        //    unit.IsMissing = "Y";
-                        //}
-
-                        ////unit.RemakeId = (int)remakeRec["RemakesId"];
-                        //unit.RemakeScheduleNum = CastDbNull.To<Decimal>(reader["RemakeScheduleNum"], 0);
-                        //unit.RemakeInitiateDate = CastDbNull.To<DateTime>(reader["RemakeScheduleDate"], (DateTime)SqlDateTime.MinValue);
-                        //unit.RemakeReason = CastDbNull.To<String>(reader["RemakeReason"], String.Empty).Trim();
-                        //unit.RemakeComment = CastDbNull.To<String>(reader["RemakeComments"], String.Empty).Trim();
-
-                        //unit.LastMachineName = CastDbNull.To<String>(reader["LastMachineName"], String.Empty).Trim();
-                        //unit.LastMachineLine = CastDbNull.To<String>(reader["LastMachineLine"], String.Empty).Trim();
-                        //unit.LastMachineDate = CastDbNull.To<DateTime>(reader["LastMachineDate"], (DateTime)SqlDateTime.MinValue);
-                        //unit.LastStationName = CastDbNull.To<String>(reader["LastStationName"], String.Empty).Trim();
-                        //unit.LastStationLine = CastDbNull.To<String>(reader["LastStationLine"], String.Empty).Trim();
-                        //unit.LastStationDate = CastDbNull.To<DateTime>(reader["LastStationDate"], (DateTime)SqlDateTime.MinValue);
-                        //unit.SealerStatus = "N";
-                        //unit.LastProductionLine = CastDbNull.To<String>(reader["LastStationName"], String.Empty).Trim();
-                        //unit.LastLineOperation = CastDbNull.To<String>(reader["LastStationName"], String.Empty).Trim();
-                        //unit.LastLineDate = CastDbNull.To<DateTime>(reader["LastStationDate"], (DateTime)SqlDateTime.MinValue);
-
-                        ////unit.CustomerNameUnitBox = CastDbNull.To<String>(reader["CustomerNameUnitBox"], String.Empty).Trim();
-                        //unit.BoxNum = CastDbNull.To<int>(reader["RackBoxNum"], 0);
-                        //unit.SlotNum = CastDbNull.To<int>(reader["Slot"], 0);
-                        ////unit.RunSequence = CastDbNull.To<int>(reader["RunSequence"], 0);
-                        //unit.Construction = CastDbNull.To<String>(reader["Construction"], String.Empty).Trim();
-                        //unit.IsLami = CastDbNull.To<String>(reader["LastMachineName"], String.Empty).Trim();
-                        ////unit.BarDescription = CastDbNull.To<String>(reader["LastMachineName"], String.Empty).Trim();
-                        //unit.BaseDim = CastDbNull.To<double>(reader["BaseDim"], 0);
-                        //unit.LeftDim = CastDbNull.To<double>(reader["LeftDim"], 0);
-                        //unit.ShapeNum = CastDbNull.To<int>(reader["ShapeNum"], 0);
-                        ////unit.QcInspect = CastDbNull.To<String>(reader["QcInspect"], String.Empty).Trim();
-                        //unit.GlassWeight = CastDbNull.To<Decimal>(reader["GlassWeight"], 0);
-                        //unit.Tubes = CastDbNull.To<int>(reader["Tubes"], 0);
-                        //unit.Shapes = CastDbNull.To<int>(reader["Shapes"], 0);
-                        //unit.Preserve = CastDbNull.To<int>(reader["Preserve"], 0);
-                        //unit.Scoring = CastDbNull.To<int>(reader["Scoring"], 0);
-                        //unit.Bars = CastDbNull.To<int>(reader["Bars"], 0);
-                        //unit.Picks = CastDbNull.To<int>(reader["Picks"], 0);
-                        //unit.Purchases = CastDbNull.To<int>(reader["Purchases"], 0);
-                        //unit.IGLineRun = CastDbNull.To<int>(reader["IGLineRun"], 0);
-                        //unit.LastLine = CastDbNull.To<String>(reader["LastLine"], String.Empty).Trim();
-                        //unit.Lite1Routing = CastDbNull.To<String>(reader["Lite1Routing"], String.Empty).Trim();
-                        //unit.Lite2Routing = CastDbNull.To<String>(reader["Lite2Routing"], String.Empty).Trim();
-                        //unit.Lite3Routing = CastDbNull.To<String>(reader["Lite3Routing"], String.Empty).Trim();
-                        //unit.UnitType = CastDbNull.To<String>(reader["UnitType"], String.Empty).Trim();
-                        //unit.BaseDimChar = CastDbNull.To<String>(reader["BaseDimChar"], String.Empty).Trim();
-                        //unit.LeftDimChar = CastDbNull.To<String>(reader["LeftDimChar"], String.Empty).Trim();
-                        //unit.EndPickItemNum = CastDbNull.To<Decimal>(reader["EndPickItemNum"], 0);
-                        //unit.CardinalProductType = CastDbNull.To<String>(reader["CardinalProductType"], String.Empty).Trim();
-                        //unit.DimMakeup = CastDbNull.To<String>(reader["Dimensions"], String.Empty).Trim();
-
-                        //unit.IsPurchasedLite = "N";
-                        //if (CastDbNull.To<String>(reader["Lite1_RecdStatus"], String.Empty).Trim() != String.Empty)
-                        //{
-                        //    unit.IsPurchasedLite = "Y";
-                        //    unit.Lite1Routing = unit.Lite1Routing + CastDbNull.To<String>(reader["Lite1_RecdStatus"], String.Empty).Trim();
-                        //}
-                        //if (CastDbNull.To<String>(reader["Lite2_RecdStatus"], String.Empty).Trim() != String.Empty)
-                        //{
-                        //    unit.IsPurchasedLite = "Y";
-                        //    unit.Lite1Routing = unit.Lite1Routing + CastDbNull.To<String>(reader["Lite2_RecdStatus"], String.Empty).Trim();
-                        //}
-                        //if (CastDbNull.To<String>(reader["Lite3_RecdStatus"], String.Empty).Trim() != String.Empty)
-                        //{
-                        //    unit.IsPurchasedLite = "Y";
-                        //    unit.Lite1Routing = unit.Lite1Routing + CastDbNull.To<String>(reader["Lite3_RecdStatus"], String.Empty).Trim();
-                        //}
-
-                        //unit.RackCloseDate = CastDbNull.To<DateTime>(reader["RackLockDate"], (DateTime)SqlDateTime.MinValue);
-                        //unit.RackLockDate = CastDbNull.To<DateTime>(reader["RackLockDate"], (DateTime)SqlDateTime.MinValue);
-                        //unit.RackLockLoadDate = CastDbNull.To<DateTime>(reader["RackLockLoadDate"], (DateTime)SqlDateTime.MinValue);
-
                         units.Add(unit);
                     }
-
                     reader.Close();
+                    // Options
+                    if (optionsList.Contains("MU"))
+                    {
+                        _logger.Info("Local IsMissing Elimination");
+                        var x = units.RemoveAll(a => a.IsMissing == "N");
+                    }
+                    if (optionsList.Contains("XHVMTO"))
+                    {
+                        var x = units.RemoveAll(a => a.ScheduleType == "HV MTO");
+                    }
+                    _logger.Debug("Option MP");
+                    if (optionsList.Contains("MP"))
+                    {
+                        var x = units.RemoveAll(a => a.Passes < 2);
+                    }
+                    _logger.Debug("Option SP");
+                    if (optionsList.Contains("SP"))
+                    {
+                        var x = units.RemoveAll(a => a.Passes < 1);
+                    }
+                    _logger.Debug("Option RNC/PRNC");
+                    if (optionsList.Contains("RNC") || optionsList.Contains("PRNC"))
+                    {
+                        var x = units.RemoveAll(a => a.Passes < 1);
+                    }
+                    if (optionsList.Contains("PRNC"))
+                    {
+                        var x = units.RemoveAll(a => a.IsPurchasedLite != "Y");
+                    }
+                    if (optionsList.Contains("QC"))
+                    {
+                        var x = units.RemoveAll(a => a.QcInspect == "N");
+                    }
+                    if (igLinesList.Any())
+                    {
+                        var x = units.RemoveAll(a => !igLinesList.Contains(a.ScheduledLineNum));
+                    }
                 }
                 _logger.Info("Units Returned: " + units.Count);
             }

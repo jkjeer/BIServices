@@ -362,6 +362,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 416, EmitDefaultValue = true)]
         public string ScheduledLineId { get; set; }
 
+        [DataMember(Order = 416, EmitDefaultValue = true)]
+        public int ScheduledLineNum { get; set; }
+
         [DataMember(Order = 418, EmitDefaultValue = true)]
         public decimal ScheduledRackId { get; set; }
 
