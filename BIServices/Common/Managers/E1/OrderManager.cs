@@ -200,6 +200,7 @@ namespace BIServices.Common.Managers.E1
                         SDAEXP,
                         SDRCD,
                         SDIR04,
+                        SDDSC1,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -277,7 +278,7 @@ namespace BIServices.Common.Managers.E1
                         SAZ5840275,
                         SAZ58PT,
                         SAZ5840460,
-                        SAZ58USF,
+                        SAZ58USF / 10000 AS SAZ58USF,
                         SAZ58L1RTG,
                         SAZ58L2RTG,
                         SAZ58L3RTG,
@@ -385,6 +386,7 @@ namespace BIServices.Common.Managers.E1
                         SDAEXP,
                         SDRCD,
                         SDIR04,
+                        SDDSC1,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -462,7 +464,7 @@ namespace BIServices.Common.Managers.E1
                         SAZ5840275,
                         SAZ58PT,
                         SAZ5840460,
-                        SAZ58USF,
+                        SAZ58USF / 10000 AS SAZ58USF,
                         SAZ58L1RTG,
                         SAZ58L2RTG,
                         SAZ58L3RTG,
@@ -954,7 +956,7 @@ namespace BIServices.Common.Managers.E1
 
         public SalesOrderLines GetCustomOrders(BusinessSystemSession session, string plants, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, string dateProperty, string stockTypes, string lastStatusCodes, string nextStatusCodes, string documentTypes, string options, string racks)
         {
-            var lines = new SalesOrderLines(150000);
+            var lines = new SalesOrderLines();
             iDB2Command cmd;
             List<string> filters = new List<string>();
             List<iDB2Parameter> parameters = new List<iDB2Parameter>();
@@ -1202,6 +1204,7 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
                         line.AccountManager = CastDbNull.To(reader["CPZ58GAL1"], string.Empty).Trim();
+                        line.Construction = CastDbNull.To(reader["SDDSC1"], string.Empty).Trim();
 
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
@@ -1290,6 +1293,7 @@ namespace BIServices.Common.Managers.E1
                         attDict.Add("Z58PT", CastDbNull.To<String>(reader["SAZ58PT"], String.Empty).Trim());
                         attDict.Add("Z5840460", CastDbNull.To<String>(reader["SAZ5840460"], String.Empty).Trim());
                         attDict.Add("Z58USF", CastDbNull.To<Decimal>(reader["SAZ58USF"], 0).ToString());
+                        attDict.Add("Z58BSF", CastDbNull.To<Decimal>(reader["SAZ58USF"], 0).ToString());
 
                         attDict.Add("Z58L1RTG", CastDbNull.To<Decimal>(reader["SAZ58L1RTG"], 0).ToString());
                         attDict.Add("Z58L2RTG", CastDbNull.To<Decimal>(reader["SAZ58L2RTG"], 0).ToString());
@@ -1364,7 +1368,7 @@ namespace BIServices.Common.Managers.E1
                             ? itemAtts.GetDecimalAttributeValue("Z58OHA1") * itemAtts.GetDecimalAttributeValue("Z58OWA1") +
                               itemAtts.GetDecimalAttributeValue("Z58OHA2") * itemAtts.GetDecimalAttributeValue("Z58OWA2") : (itemAtts.GetDecimalAttributeValue("Z58OOA1") + itemAtts.GetDecimalAttributeValue("Z58OOA2"));
                     }
-                    line.Construction = _flexItemMgr.GetUnitConstruction(itemAtts);
+                   // line.Construction = _flexItemMgr.GetUnitConstruction(itemAtts);
                     line.Dimension = _flexItemMgr.GetDimension(itemAtts);
                     line.Lite1GlassType = _flexItemMgr.GetLite1GlassType(itemAtts);
                     line.Lite2GlassType = _flexItemMgr.GetLite2GlassType(itemAtts);
@@ -1520,10 +1524,10 @@ namespace BIServices.Common.Managers.E1
                 _logger.Info("End Attributes");
 
                 //GetRelatedOrders(session, lines);
-                //if (!string.IsNullOrEmpty(racks) && racks.ToUpper() == "Y")
-                //{
-                //    GetCustomRacks(session, lines);
-                //}
+                if (!string.IsNullOrEmpty(racks) && racks.ToUpper() == "Y")
+                {
+                    GetCustomRacks(session, lines);
+                }
                 _logger.Info("End Racks");
 
                 //foreach (var line in lines)

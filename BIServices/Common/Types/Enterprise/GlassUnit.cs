@@ -164,6 +164,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 208, EmitDefaultValue = true)]
         public string CustomerShipName { get; set; }
 
+        [DataMember(Order = 209, EmitDefaultValue = true)]
+        public decimal OrigCustomerNum { get; set; }
+
+        [DataMember(Order = 209, EmitDefaultValue = true)]
+        public string OrigCustomerName { get; set; }
+
         [DataMember(Order = 210, EmitDefaultValue = true)]
         public string CustomerNameUnitBox { get; set; }
 
@@ -220,6 +226,9 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 250, EmitDefaultValue = true)]
         public decimal OrigWOrderNum { get; set; }
+
+        [DataMember(Order = 252, EmitDefaultValue = true)]
+        public DateTime CustomerProductionDate { get; set; }
 
         // Related Documents
         [DataMember(Order = 250, EmitDefaultValue = true)]

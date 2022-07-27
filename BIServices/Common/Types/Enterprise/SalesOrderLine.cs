@@ -394,10 +394,25 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 340, EmitDefaultValue = false)]
         public int OrderedRacksQty { get; set; }
 
-        [DataMember(Order = 340, EmitDefaultValue = false)]
+        [DataMember(Order = 342, EmitDefaultValue = false)]
+        public decimal OrderedRacksGlassWeight { get; set; }
+
+        [DataMember(Order = 344, EmitDefaultValue = false)]
+        public decimal OrderedRacksTareWeight { get; set; }
+
+        [DataMember(Order = 350, EmitDefaultValue = false)]
+        public int AllocatedRacksQty { get; set; }
+
+        [DataMember(Order = 352, EmitDefaultValue = false)]
+        public decimal AllocatedRacksGlassWeight { get; set; }
+
+        [DataMember(Order = 354, EmitDefaultValue = false)]
+        public decimal AllocatedRacksTareWeight { get; set; }
+
+        [DataMember(Order = 360, EmitDefaultValue = false)]
         public int OnHandRacksQty { get; set; }
 
-        [DataMember(Order = 340, EmitDefaultValue = false)]
+        [DataMember(Order = 370, EmitDefaultValue = false)]
         public int ReleasedRacksQty { get; set; }
 
         // New Metrics

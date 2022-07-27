@@ -78,6 +78,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 CustomerSeqNum,
                 CustomerShipPref04,
                 CustomerShipPref05,
+                CustomerProductionDate,
                 GenericSeqNum,
                 ProductType,
                 PriorityCode,
@@ -573,6 +574,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerPart2 = CastDbNull.AsString(reader["CustomerPart2"]);
                         unit.CustomerPart3 = CastDbNull.AsString(reader["CustomerPart3"]);
                         unit.CustomerSeqNum = CastDbNull.AsString(reader["CustomerSeqNum"]);
+                        unit.CustomerProductionDate = CastDbNull.To<DateTime>(reader["CustomerProductionDate"], DateTime.MinValue);
                         unit.ShipRoute = CastDbNull.AsString(reader["CustomerShipPref04"]);
                         unit.CustomerTier = CastDbNull.AsString(reader["CustomerShipPref05"]);
                         unit.GenericSeqNum = CastDbNull.AsString(reader["GenericSeqNum"]);
@@ -1056,9 +1058,13 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.ScheduledLineId = reader.Get<byte>("OrigScheduleProductionLine").ToString();
                         unit.ScheduledLineNum = reader.Get<byte>("OrigScheduleProductionLine");
                         unit.IGLineScheduled = reader.Get<byte>("OrigScheduleProductionLine").ToString();
-                        if (unit.RackId != unit.ScheduledRackId && (unit.RackStatusCode == "7" || unit.RackStatusCode == "8"))
+                        if (unit.RackId != unit.ScheduledRackId)
                         {
                             unit.IsMissing = "Y";
+                        }
+                        else 
+                        { 
+                            unit.IsMissing = "N"; 
                         }
                         unit.OrderNum = reader.Get<Decimal>("SOrderNum");
                         unit.OrderType = reader.Get<String>("SOrderType");
@@ -1090,13 +1096,15 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerShipNum = reader.Get<Decimal>("CustomerShipNum");
                         unit.CustomerShipName = reader.Get<String>("CustomerShipName");
                         unit.CustomerPO = reader.Get<String>("CustomerOrderNum");
-                        unit.CustomerPONum = unit.CustomerPO.Split('-').Length == 2 ? Utilities.Data.CastStringToDecimal(unit.CustomerPO.Split('-')[0]) : 0;
-                        unit.CustomerPOLineNum = unit.CustomerPO.Split('-').Length == 2 ? Utilities.Data.CastStringToDecimal(unit.CustomerPO.Split('-')[1]) : 0;
+                        var poArray = unit.CustomerPO.Split('-');
+                        unit.CustomerPONum = poArray.Length > 1 ? Utilities.Data.CastStringToDecimal(poArray.First()) : 0;
+                        unit.CustomerPOLineNum = poArray.Length > 1 ? Utilities.Data.CastStringToDecimal(poArray.Last()) : 0;
                         unit.CustomerPart1 = reader.Get<String>("CustomerPart1");
                         unit.CustomerPart2 = reader.Get<String>("CustomerPart2");
                         unit.CustomerPart3 = reader.Get<String>("CustomerPart3");
                         unit.PriorityCode = reader.Get<String>("PriorityCode");
                         unit.CustomerSeqNum = reader.Get<String>("CustomerSeqNum");
+                        unit.CustomerProductionDate = reader.Get<DateTime>("CustomerProductionDate");
                         unit.CustomerSeqPart1 = unit.CustomerSeqNum.Split('/').Length > 0 ? unit.CustomerSeqNum.Split('/')[0] : "";
                         unit.SchedulingMessage = reader.Get<string>("SchedulerMsg1");
                         unit.GenericSeqNum = reader.Get<String>("GenericSeqNum");
@@ -1285,208 +1293,6 @@ namespace BIServices.Common.Managers.ShopFloor
 
             return dt;
         }
-
-        /*********************************************************************************
-         * Deprecated
-         *******************************************************************************/
-        public SqlCommand GetOpenUnitsShopFloor(List<string> filters)
-        {
-            var filterString = new StringBuilder();
-            foreach (string filter in filters)
-            {
-                filterString.Append(filter);
-            }
-            var cmd = new SqlCommand();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = $@"
-            SELECT
-                WOrderNum,
-                UnitId,
-                SOrderNum,
-                SOrderType,
-                SOrderLineNum,
-                LotNum,
-                SerialNum,
-                WOrderStatusCode,
-                SOrderLastStatusCode,
-                SOrderNextStatusCode,
-                OrderDate,
-                DueDate,
-                OrigDueDate,
-                WOrderDate,
-                WOrderDueDate,
-                DeliveryDateTime,
-                CustomerSoldNum,
-                CustomerSoldName,
-                CustomerSoldType,
-                CustomerShipNum,
-                CustomerShipName,
-                CustomerOrderNum,
-                CustomerPart1,
-                CustomerPart2,
-                CustomerPart3,
-                CustomerSeqNum,
-                GenericSeqNum,
-                ProductType,
-                PriorityCode,
-                ReasonCode,
-                CardinalProductType,
-                CustomerShipPref04,
-                CustomerShipPref05,
-                SchedulerMsg1,
-                PickingNotes,
-                PackingNotes,
-                IsPick,
-                UnitCostAmt,
-                UnitActualPriceAmt,
-                UnitListPriceAmt,
-                ItemNum,
-                VolumeCode,
-                StockTypeCode,
-                UnitTypeCode,
-                LitesNum,
-                Attempts,
-                OrigScheduleNum,
-                OrigScheduleDate,
-                OrigScheduleType,
-                OrigScheduleRackId,
-                OrigScheduleRackStatusCode,
-                OrigScheduleProductionLine,
-                CurrScheduleNum,
-                CurrScheduleDate,
-                RemakeScheduleNum,
-                RemakeScheduleDate,
-                RemakeScheduleReason,
-                RemakeScheduleComments,
-                IGLineRun,
-                BoxingBoxNum,
-                BoxingPosition,
-                BoxingRunSeq,                
-                Construction,
-                ProductCode,
-                SpacerLength,
-                BarDescription,
-                Lite1Glass,
-                Lite2Glass,
-                Lite3Glass,
-                Lite1Furnace,
-                Lite2Furnace,
-                Lite3Furnace,
-                Lite1Routing,
-                Lite2Routing,
-                Lite3Routing,
-                Lite1Lami,
-                Lite2Lami,
-                Lite3Lami,
-                Lite1Holes,
-                Lite2Holes,
-                Lite3Holes,
-                Spacer1,
-                Spacer2,
-                Air1MCode1,
-                GridStyleCode,
-                GridStyleGroupName,
-                RackId,
-                RackStatusCode,
-                RackType,
-                RackLocation,
-                RackAssetId,
-                RackScheduleNum,
-                RackBoxNum,
-                RackTransactionDate,
-                RackLockDate,
-                RackDetailStatusCode,
-                Side,
-                Stack,
-                Row,
-                Slot,
-                Position,
-                RackDetailTransactionDate,
-                Lite1RecdStatus,
-                Lite2RecdStatus,
-                Lite3RecdStatus,
-                LastMachineName,
-                LastMachineLine,
-                LastMachineDate,
-                LastProductionLine,
-                LastOperationCode,
-                LastProductionDate,
-                LastProductionDesc,
-                ShapeNum,
-                ShapeGroupName,
-                BaseDim,
-                LeftDim,
-                RightDim,
-                TopDim,
-                Side1Dim,
-                Side2Dim,
-                BaseDimDesc,
-                LeftDimDesc,
-                RightDimDesc,
-                TopDimDesc,
-                Side1DimDesc,
-                Side2DimDesc,
-                DimensionDesc,
-                UnitWeight,
-                UnitBillableSqft,
-                UnitActualSqft,
-                LoadNum,
-                ShipDate,
-                Units,
-                MonoUnits,
-                DoubleUnits,
-                TripleUnits,
-                PickUnits,
-                PickUnitsAvl,
-                TubeUnits,
-                ShapeUnits,
-                PreserveUnits,
-                ScoringUnits,
-                BarUnits,
-                PurLiteUnits,
-                UnrackedUnits,
-                UncompletedUnits,
-                CompletedUnits,
-                ShippedUnits,
-                CutDemandLites,
-                CutDemandSqft,
-                CutCompletedLites,
-                CutCompletedSqft,
-                Temper1DemandLites,
-                Temper1DemandSqft,
-                Temper1DemandTons,
-                Temper1CompletedLites,
-                Temper1CompletedSqft,
-                Temper1CompletedTons,
-                Temper2DemandLites,
-                Temper2DemandSqft,
-                Temper2DemandTons,
-                Temper2CompletedLites,
-                Temper2CompletedSqft,
-                Temper2CompletedTons,
-                PickDemandLites,
-                PickDemandSqft,
-                PurchDemandLites,
-                PurchDemandSqft,
-                PurchReceivedLites,
-                PurchReceivedSqft,
-                HolesDemandLites,
-                HolesDemandSqft,
-                HolesCompletedLites,
-                HolesCompletedSqft,
-                ChannelDemandAirspaces,
-                ChannelDemandInches,
-                ChannelCompletedAirspaces,
-                ChannelCompletedInches,
-                CategoryCode,
-                WrittenDate
-            FROM
-                PlantReporting.ShopFloor.OpenUnits
-            WHERE
-                {filterString} 1=1";
-            return cmd;
-        }
-
     }
 }
 

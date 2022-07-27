@@ -67,8 +67,59 @@ namespace BIServices.Common.Managers.Enterprise
 				ATZ58CP2,
 				ATZ58CP3,
 				SDUORG,
+
 				ATZ58LPR,
+				ATZ58RT,
 				ATZ58RKS,
+				ATZ58GWTT,
+				(	SELECT 
+						SUM(RTZ58RTWT) AS RTZ58RTWT
+					FROM 
+						F580061
+					WHERE 
+						RTZ58RT = ATZ58RT AND
+							RTMCU = SDMCU AND
+							RTAN8 = 0 and
+							RTSHAN = 0
+					) AS ATZ58RTWT,
+
+				(	SELECT 
+						COUNT(DISTINCT RHZ58RID) AS RHZ58RKS
+					FROM 
+						F580056
+						INNER JOIN F580055
+						ON RHZ58RID = RDZ58RID
+					WHERE 
+						RDDOCO = SDDOCO AND
+						RDDCTO = SDDCTO AND
+						RDLNID = SDLNID AND
+						RDMCU = SDMCU
+					) AS RHZ58RKS,
+				(	SELECT 
+						SUM(RHZ58GWTT) AS RHZ58GWTT
+					FROM 
+						F580056
+						INNER JOIN F580055
+						ON RHZ58RID = RDZ58RID
+					WHERE 
+						RDDOCO = SDDOCO AND
+						RDDCTO = SDDCTO AND
+						RDLNID = SDLNID AND
+						RDMCU = SDMCU
+					) AS RHZ58GWTT,
+				(	SELECT 
+						SUM(RHZ58RTWT) AS RHZ58RTWT
+					FROM 
+						F580056
+						INNER JOIN F580055
+						ON RHZ58RID = RDZ58RID
+					WHERE 
+						RDDOCO = SDDOCO AND
+						RDDCTO = SDDCTO AND
+						RDLNID = SDLNID AND
+						RDMCU = SDMCU
+					) AS RHZ58RTWT,
+
 				(	SELECT 
 						COUNT(*) 
 					FROM 
@@ -241,10 +292,18 @@ namespace BIServices.Common.Managers.Enterprise
                         line.CustomerPart1 = reader.Get<string>("ATZ58CP2");
                         line.CustomerPart2 = reader.Get<string>("ATZ58CP3");
 						line.CarrierFlag = reader.Get<string>("GFLAG1");
-						line.LitesPerRack = reader.Get<decimal>("ATZ58LPR");
+
                         line.OrderQty = reader.Get<decimal>("SDUORG") / 1000;
-                        line.OrderedRacksQty = (line.LitesPerRack > 0) ? (int)Math.Ceiling(line.OrderQty / line.LitesPerRack) : 0;
-						var onHandItemQty = reader.Get<int>("XXSRKQOH");
+                        line.LitesPerRack = reader.Get<decimal>("ATZ58LPR");
+						line.OrderedRacksQty = reader.Get<int>("ATZ58RKS");
+                        //line.OrderedRacksQty = (line.LitesPerRack > 0) ? (int)Math.Ceiling(line.OrderQty / line.LitesPerRack) : 0;
+                        line.OrderedRacksGlassWeight = reader.Get<decimal>("ATZ58GWTT") / 100;
+                        line.OrderedRacksTareWeight = reader.Get<decimal>("ATZ58RTWT") / 100;
+						line.AllocatedRacksQty = reader.Get<int>("RHZ58RKS");
+                        line.AllocatedRacksGlassWeight = reader.Get<decimal>("RHZ58GWTT") / 100;
+                        line.AllocatedRacksTareWeight = reader.Get<decimal>("RHZ58RTWT") / 100;
+
+                        var onHandItemQty = reader.Get<int>("XXSRKQOH");
 						var releasedItemQty = reader.Get<int>("XXSRKREL");
 						line.OnHandRacksQty = line.StockType == "C" ? reader.Get<int>("XXCRKQOH") : reader.Get<int>("XXSRKQOH");
 						line.ReleasedRacksQty = line.StockType == "C" ? reader.Get<int>("XXCRKREL") : reader.Get<int>("XXSRKREL");
