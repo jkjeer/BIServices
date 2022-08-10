@@ -412,6 +412,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 360, EmitDefaultValue = false)]
         public int OnHandRacksQty { get; set; }
 
+        [DataMember(Order = 362, EmitDefaultValue = false)]
+        public decimal OnHandRacksGlassWeight { get; set; }
+
+        [DataMember(Order = 364, EmitDefaultValue = false)]
+        public decimal OnHandRacksTareWeight { get; set; }
+
         [DataMember(Order = 370, EmitDefaultValue = false)]
         public int ReleasedRacksQty { get; set; }
 
@@ -470,6 +476,21 @@ namespace BIServices.Common.Types.Enterprise
         // Racks
         [DataMember(Order = 500, EmitDefaultValue = false)]
         public Racks Racks { get; set; }
+
+
+        // AGC Specific
+        [DataMember(Order = 550, EmitDefaultValue = false)]
+        public string OrderRouting { get; set; }
+
+        [DataMember(Order = 552, EmitDefaultValue = false)]
+        public string RelatedOrderString { get; set; }
+
+        [DataMember(Order = 552, EmitDefaultValue = false)]
+        public string OrderInventoryString { get; set; }
+
+        [DataMember(Order = 554, EmitDefaultValue = false)]
+        public string ItemInventoryString{ get; set; }
+
 
         // Glass
         [DataMember(Order = 600, EmitDefaultValue = false)]

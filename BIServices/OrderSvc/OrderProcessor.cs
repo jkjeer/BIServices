@@ -110,7 +110,8 @@ namespace BIServices.OrderSvc
             try
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
-                lines.AddRange(AgcOpenOrderManager.GetOpenOrders(session, plantCodes));
+                var mgr = new AgcOpenOrderManager(session);
+                lines.AddRange(mgr.GetOpenOrders(session, plantCodes));
             }
             catch (Exception e)
             {
