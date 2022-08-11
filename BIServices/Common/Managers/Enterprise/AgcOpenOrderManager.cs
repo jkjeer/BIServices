@@ -71,6 +71,7 @@ namespace BIServices.Common.Managers.Enterprise
 				WASRST,
 				SDLNTY,
 				IMSTKT,
+                IBANPL,
 				SDITM,
 				SDDSC1,
 				SDDSC2,
@@ -116,6 +117,9 @@ namespace BIServices.Common.Managers.Enterprise
 				ON	SOLD.ABAN8 = SDAN8
 				INNER JOIN F0101 SHIP
 				ON	SHIP.ABAN8 = SDSHAN
+                INNER JOIN F4102
+                ON  IBITM = SDITM AND
+                    IBMCU = SDMCU
 				INNER JOIN F4101
 				ON	IMITM = SDITM
 				LEFT OUTER JOIN F4801
@@ -209,6 +213,7 @@ namespace BIServices.Common.Managers.Enterprise
 						line.OrderedRacksQty = reader.Get<int>("ATZ58RKS");
                         line.OrderedRacksGlassWeight = reader.Get<decimal>("ATZ58GWTT") / 100;
                         line.OrderedRacksTareWeight = reader.Get<decimal>("ATZ58RTWT") / 100;
+                        line.PlannerNum = reader.Get<decimal>("IBANPL");
                         lines.Add(line);
                     }
                     reader.Close();
@@ -217,7 +222,7 @@ namespace BIServices.Common.Managers.Enterprise
                     {
                         GetRelatedRacksBySalesLine(session, line);
                         GetRelatedOrdersBySalesLine(session, line);
-                        if (line.StockType != "C")
+                        if (line.StockType != "C" && line.PlannerNum != 10501718)
                         {
                             GetRelatedRacksByItemNum(session, line);
                         }
@@ -398,7 +403,7 @@ namespace BIServices.Common.Managers.Enterprise
                 var ds = new DataSet();
                 new iDB2DataAdapter(cmd).Fill(ds);
 
-                var rows = ds.Tables[0].AsEnumerable(); 
+                var rows = ds.Tables[0].AsEnumerable();
                 var anons = rows
                   .Select(r => new { 
                       RHMCU = ((string)r["RHMCU"]).Trim(),

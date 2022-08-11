@@ -114,6 +114,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 46, EmitDefaultValue = false)]
         public string ItemDesc2 { get; set; }
 
+        [DataMember(Order = 48, EmitDefaultValue = false)]
+        public decimal PlannerNum { get; set; }
+
         [DataMember(Order = 50, EmitDefaultValue = false)]
         public string UnitType { get; set; }
 
