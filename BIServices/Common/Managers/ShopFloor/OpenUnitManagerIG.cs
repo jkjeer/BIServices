@@ -1134,7 +1134,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         //unit.RunSequence = reader.Get<int>("RunSequence"], 0);
                         unit.Construction = reader.Get<String>("ProductCode");
                         unit.IsLami = reader.Get<String>("Lite1Lami").Length + reader.Get<String>("Lite2Lami").Length + reader.Get<String>("Lite3Lami").Length > 0 ? "Y" : "N";
-                        //unit.BarDescription = reader.Get<String>("LastMachineName"], String.Empty).Trim();
+                        unit.BarDescription = reader.Get<String>("BarDescription");
                         unit.BaseDim = (double)reader.Get<decimal>("BaseDim");
                         unit.LeftDim = (double)reader.Get<decimal>("LeftDim");
                         unit.ShapeNum = reader.Get<int>("ShapeNum");

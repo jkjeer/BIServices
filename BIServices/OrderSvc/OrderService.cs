@@ -77,6 +77,20 @@ namespace BIServices.OrderSvc
                 throw new Exception(e.Message);
             }
         }
+
+        public SalesOrderLines GetAgcOpenOrders(string plants)
+        {
+            var processor = new OrderProcessor();
+            try
+            {
+                return processor.GetAgcOpenOrders(plants);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
     }
 
     [ParameterInspectorLogger, CGIErrorHandler]

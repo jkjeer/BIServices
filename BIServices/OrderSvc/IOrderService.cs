@@ -22,6 +22,9 @@ namespace BIServices.OrderSvc
 
         [OperationContract, OperationInvokerLogger]
         SalesOrderLines GetPriceAuditOrders(string plant);
+
+        [OperationContract, OperationInvokerLogger]
+        SalesOrderLines GetAgcOpenOrders(string plant);
     }
 
     [ServiceContract]
