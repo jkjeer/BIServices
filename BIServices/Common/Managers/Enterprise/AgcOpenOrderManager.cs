@@ -7,9 +7,8 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 
 namespace BIServices.Common.Managers.Enterprise
@@ -21,11 +20,8 @@ namespace BIServices.Common.Managers.Enterprise
         public AgcOpenOrderManager(BusinessSystemSession session)
         {
             var hash = new Dictionary<string, iDB2Command>();
-            //hash.Add("AgcOpenOrderManager.GetRelatedRacksBySalesLine", GetRelatedRacksBySalesLine());
-            //hash.Add("AgcOpenOrderManager.GetRelatedRacksByItemNum", GetRelatedRacksByItemNum());
             hash.Add("AgcOpenOrderManager.GetIntercompanyRelatedOrdersBySalesLine", GetIntercompanyRelatedOrdersBySalesLine());
             hash.Add("AgcOpenOrderManager.GetOutsideRelatedOrdersBySalesLine", GetOutsideRelatedOrdersBySalesLine());
-            //hash.Add("AgcOpenOrderManager.GetLoadRacksBySalesLine", GetLoadRacksBySalesLine());
             hash.Add("AgcOpenOrderManager.GetItemInfo", GetItemInfo());
             foreach (string keyName in hash.Keys)
             {
@@ -83,7 +79,6 @@ namespace BIServices.Common.Managers.Enterprise
 				ATZ58RKS,
 				ATZ58GWTT,
                 RTZ58RTWT,
-				S7Z58L1RG,
 				COALESCE(CP1.CPZ58GAL1, CP2.CPZ58GAL1) AS CPZ58GAL1,
 				RD.RDZ58RIDS,
                 RD.RHZ58GWTT,
@@ -139,7 +134,7 @@ namespace BIServices.Common.Managers.Enterprise
 						INNER JOIN F580150
 						ON	LHLDNM = LPLDNM
 					WHERE
-						LHZ58LDS IN ('1',2','3','4','5') 
+						LHZ58LDS IN ('1','2','3','4','5') 
 					GROUP BY
 						LPMCU,
 						LPKCOO,
@@ -191,7 +186,7 @@ namespace BIServices.Common.Managers.Enterprise
             return cmd;
         }
 
-        public SalesOrderLines GetOpenOrders(BusinessSystemSession session, string plants)
+        public SalesOrderLines GetOpenOrders(BusinessSystemSession session, Dictionary<string, SqlConnection> sqlCns, string plants)
         {
             var lines = new SalesOrderLines();
             iDB2Command cmd;
@@ -259,21 +254,41 @@ namespace BIServices.Common.Managers.Enterprise
                         line.CustomerPart1 = reader.Get<string>("ATZ58CP2");
                         line.CustomerPart2 = reader.Get<string>("ATZ58CP3");
                         line.CarrierFlag = reader.Get<string>("LHGFLAG1");
-                        line.OrderRoutingDesc = reader.Get<string>("S7Z58L1RG");
                         line.OrderQty = reader.Get<decimal>("SDUORG") / 1000;
                         line.LitesPerRack = reader.Get<decimal>("ATZ58LPR");
+
 						line.OrderedRacksQty = reader.Get<int>("ATZ58RKS");
                         line.OrderedGlassWeight = reader.Get<decimal>("ATZ58GWTT") / 100;
                         line.OrderedTareWeight = reader.Get<decimal>("RTZ58RTWT") / 100;
-                        line.OrderOnHandRacksQty = reader.Get<int>("RDZ58RIDS");
-                        line.OrderOnHandGlassWeight = reader.Get<decimal>("RHZ58GWTT") / 100;
-                        line.OrderOnHandTareWeight = reader.Get<decimal>("RHZ58RTWT") / 100;
-                        line.OrderPickedRacksQty = reader.Get<int>("RHZ58SLDNS");
-                        line.OrderPickedGlassWeight = reader.Get<decimal>("RHZ58GWTT_SLDN") / 100;
-                        line.OrderPickedTareWeight = reader.Get<decimal>("RHZ58RTWT_SLDN") / 100;
-                        line.OrderLoadedRacksQty = (int)reader.Get<decimal>("LPZ58RKN");
-                        line.OrderLoadedGlassWeight = reader.Get<decimal>("LPZ58GWTT") / 100;
-                        line.OrderLoadedTareWeight = (reader.Get<decimal>("LPTOWT") / 10000)  - (reader.Get<decimal>("LPZ58GWTT") / 100);
+
+                        line.ScheduledRacksQty = 0;
+                        line.ScheduledGlassWeight = 0;
+                        line.ScheduledTareWeight = 0;
+
+                        line.OnHandToOrderRacksQty = reader.Get<int>("RDZ58RIDS");
+                        line.OnHandToOrderGlassWeight = reader.Get<decimal>("RHZ58GWTT") / 100;
+                        line.OnHandToOrderTareWeight = reader.Get<decimal>("RHZ58RTWT") / 100;
+
+                        line.FGReleasedToOrderRacksQty = 0;
+                        line.FGReleasedToOrderGlassWeight = 0;
+                        line.FGReleasedToOrderTareWeight = 0;
+
+                        line.LoadReleasedToOrderRacksQty = (int)reader.Get<decimal>("LPZ58RKN");
+                        line.LoadReleasedToOrderGlassWeight = reader.Get<decimal>("LPZ58GWTT") / 100;
+                        line.LoadReleasedToOrderTareWeight = (reader.Get<decimal>("LPTOWT") / 10000)  - (reader.Get<decimal>("LPZ58GWTT") / 100);
+
+                        line.OnHandToItemRacksQty = 0;
+                        line.OnHandToItemGlassWeight = 0;
+                        line.OnHandToItemTareWeight = 0;
+
+                        line.FGReleasedToItemRacksQty = 0;
+                        line.FGReleasedToItemGlassWeight = 0;
+                        line.FGReleasedToItemTareWeight = 0;
+
+                        line.LoadReleasedToItemRacksQty = 0;
+                        line.LoadReleasedToItemGlassWeight = 0;
+                        line.LoadReleasedToItemTareWeight = 0;
+
                         line.PlannerNum = reader.Get<decimal>("IBANPL");
                         lines.Add(line);
                     }
@@ -282,6 +297,7 @@ namespace BIServices.Common.Managers.Enterprise
                     GetItemInfo(session, lines.Where(x => x.StockType == "S" && x.PlannerNum != 10501718).ToList());
                     GetIntercompanyRelatedOrders(session, lines.Where(x => x.StockType == "C" && x.OrderType == "ST").ToList());
                     GetOutsideRelatedOrders(session, lines.Where(x => x.StockType == "C" && x.OrderType == "SO").ToList());
+                    GetFGWebData(sqlCns["PLANT.FGWEB"], lines);
                 }
             }
             catch (Exception e)
@@ -289,222 +305,6 @@ namespace BIServices.Common.Managers.Enterprise
                 throw new Exception(e.Message);
             }
             return lines;
-        }
-
-        /*********************************************************************************
-          * Racks by Sales Line
-          *******************************************************************************/
-        public static iDB2Command GetRelatedRacksBySalesLine()
-        {
-            var cmd = new iDB2Command();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = @"
-			SELECT 
-				RHMCU,
-				RHZ58RID,
-				RHZ58HST,
-				RHZ58RT,
-				RHZ58GWTT,
-				RHZ58RTWT,
-				RDITM,
-				RDZ58SN,
-				RDZ58DST,
-				RHPSN,
-				RHZ58SLDN,
-				RDDOCO,
-				RDDCTO,
-				RDLNID
-			FROM 
-				F580056 
-				INNER JOIN F580055
-				ON	RHZ58RID = RDZ58RID
-			WHERE 
-				RDDOCO = ? AND
-                RDDCTO = ? AND
-                RDKCOO = ? AND
-                RDLNID = ? 
-			FOR READ ONLY";
-
-            cmd.Parameters.Add(new iDB2Parameter("DOCO", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["DOCO"].Precision = 8;
-            cmd.Parameters["DOCO"].Scale = 0;
-            cmd.Parameters.Add(new iDB2Parameter("DCTO", iDB2DbType.iDB2Graphic, 2));
-            cmd.Parameters.Add(new iDB2Parameter("KCOO", iDB2DbType.iDB2Graphic, 5));
-            cmd.Parameters.Add(new iDB2Parameter("LNID", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["LNID"].Precision = 6;
-            cmd.Parameters["LNID"].Scale = 0;
-            return cmd;
-        }
-
-
-
-        public void GetRelatedRacksBySalesLine (BusinessSystemSession session, SalesOrderLine line)
-        {
-            var lines = new SalesOrderLines();
-            iDB2Command cmd;
-            List<string> filters = new List<string>();
-            List<iDB2Parameter> parameters = new List<iDB2Parameter>();
-            try
-            {            
-                cmd = session.DbCommands["AgcOpenOrderManager.GetRelatedRacksBySalesLine"];
-                cmd.Parameters["DOCO"].Value = line.OrderNum;
-                cmd.Parameters["DCTO"].Value = line.OrderType;
-                cmd.Parameters["KCOO"].Value = line.OrderCompany;
-                cmd.Parameters["LNID"].Value = line.OrderLineNum * 1000;
-                cmd.Connection = session.DbConnection;
-                cmd.CommandTimeout = 0;
-                _logger.Info(Logging.DbCmdString(cmd));
-
-                using (var reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
-                {
-                    var anons = reader.Cast<IDataRecord>().Select(r => new
-                    {
-                        RHMCU = ((string)r["RHMCU"]).Trim(),
-                        RHZ58RID = (decimal)r["RHZ58RID"],
-                        RHZ58GWTT = (decimal)r["RHZ58GWTT"] / 100,
-                        RHZ58RTWT = (decimal)r["RHZ58RTWT"] / 100,
-                        RHZ58SLDN = (decimal)r["RHZ58SLDN"],
-                        RHZ58HST = (string)r["RHZ58HST"],
-                        RDZ58DST = (string)r["RDZ58DST"]
-                    }).ToList();
-                    reader.Close();
-
-                    line.OrderOnHandRacksQty = anons.Count;
-                    line.OrderOnHandGlassWeight = anons.Sum(x => x.RHZ58GWTT);
-                    line.OrderOnHandTareWeight = anons.Sum(x => x.RHZ58RTWT);
-                    line.OrderPickedRacksQty = anons.Count(x => x.RHZ58SLDN > 0);
-                    line.OrderPickedGlassWeight = anons.Where(x => x.RHZ58SLDN > 0).Sum(x => x.RHZ58GWTT);
-                    line.OrderPickedTareWeight = anons.Where(x => x.RHZ58SLDN > 0).Sum(x => x.RHZ58RTWT);
-
-                    var sb = new StringBuilder();
-                    //sb.AppendLine("");
-                    if (anons.Any())
-                    {
-                        sb.Append($"{line.PlantCode}:[{anons.Count}/{anons.Count(x => x.RHZ58SLDN > 0)}] ");
-                    }
-                    line.OrderInventoryDesc = sb.ToString().Trim();
-                }
-
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-        }
-
-        public static iDB2Command GetRelatedRacksByItemNum()
-        {
-            var cmd = new iDB2Command();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = @"
-			SELECT 
-				RHMCU,
-				RHZ58RID,
-				RHZ58HST,
-				RHZ58RT,
-				RHZ58GWTT,
-				RHZ58RTWT,
-                RHLOCN,
-				RDITM,
-				RDZ58SN,
-				RDZ58DST,
-				RHPSN,
-				RHZ58SLDN,
-				RDDOCO,
-				RDDCTO,
-				RDLNID
-			FROM 
-				F580056 
-				INNER JOIN F580055
-				ON	RHZ58RID = RDZ58RID
-			WHERE 
-                RDPQOH > 0 AND
-                RDZ58DST NOT IN ('0','8') AND
-				RDITM = ? AND
-                RDMCU IN ('          47','          48','          49','          50') AND
-                NOT ( RDDOCO = ? AND RDDCTO = ? AND RDLNID = ? )
-			FOR READ ONLY";
-
-            cmd.Parameters.Add(new iDB2Parameter("ITM", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["ITM"].Precision = 8;
-            cmd.Parameters["ITM"].Scale = 0;
-            cmd.Parameters.Add(new iDB2Parameter("DOCO", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["DOCO"].Precision = 8;
-            cmd.Parameters["DOCO"].Scale = 0;
-            cmd.Parameters.Add(new iDB2Parameter("DCTO", iDB2DbType.iDB2Graphic, 2));
-            cmd.Parameters.Add(new iDB2Parameter("LNID", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["LNID"].Precision = 6;
-            cmd.Parameters["LNID"].Scale = 0;
-            return cmd;
-        }
-
-        public void GetRelatedRacksByItemNum(BusinessSystemSession session, SalesOrderLine line)
-        {
-
-
-            var lines = new SalesOrderLines();
-            iDB2Command cmd;
-            List<string> filters = new List<string>();
-            List<iDB2Parameter> parameters = new List<iDB2Parameter>();
-            try
-            {
-                cmd = session.DbCommands["AgcOpenOrderManager.GetRelatedRacksByItemNum"];
-                cmd.Parameters["ITM"].Value = line.ItemNum;
-                cmd.Parameters["DOCO"].Value = line.OrderNum;
-                cmd.Parameters["DCTO"].Value = line.OrderType;
-                cmd.Parameters["LNID"].Value = line.OrderLineNum * 1000;
-                cmd.Connection = session.DbConnection;
-                cmd.CommandTimeout = 0;
-                _logger.Info(Logging.DbCmdString(cmd));
-
-                using (var reader = cmd.ExecuteReader(CommandBehavior.SingleRow))
-                {
-
-                    var anons = reader.Cast<IDataRecord>().Select(r => new
-                    {
-                        RHMCU = ((string)r["RHMCU"]).Trim(),
-                        RHMCU_CODE = PlantManager.GetPlant(((string)r["RHMCU"]).Trim()).PlantCode,
-                        RHZ58RID = (decimal)r["RHZ58RID"],
-                        RHZ58GWTT = (decimal)r["RHZ58GWTT"] / 100,
-                        RHZ58RTWT = (decimal)r["RHZ58RTWT"] / 100,
-                        RHZ58SLDN = (decimal)r["RHZ58SLDN"],
-                        RHZ58HST = (string)r["RHZ58HST"],
-                        RHLOCN = (string)r["RHLOCN"],
-                        RDZ58DST = (string)r["RDZ58DST"]
-                    }).ToList();
-                    reader.Close();
-
-                    line.ItemOnHandRacksQty = anons.Count;
-                    line.ItemOnHandGlassWeight = anons.Sum(x => x.RHZ58GWTT);
-                    line.ItemOnHandTareWeight = anons.Sum(x => x.RHZ58RTWT);
-                    line.ItemPickedRacksQty = anons.Count(x => x.RHZ58SLDN > 0);
-                    line.ItemPickedGlassWeight = anons.Where(x => x.RHZ58SLDN > 0).Sum(x => x.RHZ58GWTT);
-                    line.ItemPickedTareWeight = anons.Where(x => x.RHZ58SLDN > 0).Sum(x => x.RHZ58RTWT);
-
-                    var abcgInventory = anons.Where(x => x.RHMCU == "50");
-                    var glcgInventory = anons.Where(x => x.RHMCU == "48");
-                    var sellerInventory = anons.Where(x => x.RHMCU == line.PlantNum);
-                    var sb = new StringBuilder();
-                    sb.AppendLine("");
-                    if (abcgInventory.Any())
-                    {
-                        sb.Append($"ABCG [{abcgInventory.Count(x => x.RHZ58HST == "4")}/{abcgInventory.Count(x => x.RHZ58SLDN > 0)}] ");
-                    }
-                    if (glcgInventory.Any())
-                    {
-                        sb.Append($"GLCG [{glcgInventory.Count(x => x.RHZ58HST == "4")}/{glcgInventory.Count(x => x.RHZ58SLDN > 0)}] ");
-                    }
-                    if (sellerInventory.Any())
-                    {
-                        sb.Append($"{line.PlantCode} [{sellerInventory.Count(x => x.RHZ58HST == "4")}/{sellerInventory.Count(x => x.RHZ58SLDN > 0)}] ");
-                    }
-                    line.ItemInventoryDesc = sb.ToString().Trim();
-                }
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
         }
 
         public static iDB2Command GetIntercompanyRelatedOrdersBySalesLine()
@@ -631,7 +431,6 @@ namespace BIServices.Common.Managers.Enterprise
             cmd.Parameters.Add(new iDB2Parameter("LNID", iDB2DbType.iDB2Decimal));
             cmd.Parameters["LNID"].Precision = 6;
             cmd.Parameters["LNID"].Scale = 0;
-
             return cmd;
         }
 
@@ -677,7 +476,6 @@ namespace BIServices.Common.Managers.Enterprise
                         reader.Close();
 
                         var sb = new StringBuilder();
-                        //sb.AppendLine("");
                         if (anons.Count > 0)
                         {
                             sb.Append($"{anons[0].PDMCU_CODE} {anons[0].PDDOCO}-{anons[0].PDDCTO}-{anons[0].PDLNID}[{(anons[0].PDLTTR == "980" ? anons[0].PDLTTR : anons[0].PDNXTR)}] / {anons[0].SDMCU_CODE} {anons[0].SDDOCO}-{anons[0].SDDCTO}-{anons[0].SDLNID}[{(anons[0].SDLTTR == "980" ? anons[0].SDLTTR : anons[0].SDNXTR)}] {anons[0].WADOCO}-WO[{anons[0].WASRST}] ");
@@ -688,14 +486,12 @@ namespace BIServices.Common.Managers.Enterprise
                         }
                         line.RelatedOrderDesc = sb.ToString().Trim();
                     }
-
                 }
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
-
         }
 
         public void GetOutsideRelatedOrders(BusinessSystemSession session, List<SalesOrderLine> lines)
@@ -740,7 +536,6 @@ namespace BIServices.Common.Managers.Enterprise
                         reader.Close();
 
                         var sb = new StringBuilder();
-                        //sb.AppendLine("");
                         if (anons.Count > 0)
                         {
                             sb.Append($"{anons[0].PDMCU_CODE} {anons[0].PDDOCO}-{anons[0].PDDCTO}-{anons[0].PDLNID}[{(anons[0].PDLTTR == "980" ? anons[0].PDLTTR : anons[0].PDNXTR)}] / {anons[0].SDMCU_CODE} {anons[0].SDDOCO}-{anons[0].SDDCTO}-{anons[0].SDLNID}[{(anons[0].SDLTTR == "980" ? anons[0].SDLTTR : anons[0].SDNXTR)}] {anons[0].WADOCO}-WO[{anons[0].WASRST}] ");
@@ -751,66 +546,6 @@ namespace BIServices.Common.Managers.Enterprise
                         }
                         line.RelatedOrderDesc = sb.ToString().Trim();
                     }
-
-                }
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
-
-        }
-
-        public void GetLoadRacksBySalesLine(BusinessSystemSession session, SalesOrderLine line)
-        {
-            var lines = new SalesOrderLines();
-            iDB2Command cmd;
-            List<string> filters = new List<string>();
-            List<iDB2Parameter> parameters = new List<iDB2Parameter>();
-            try
-            {
-                cmd = session.DbCommands["AgcOpenOrderManager.GetLoadRacksBySalesLine"];
-                cmd.Parameters["DOCO"].Value = line.OrderNum;
-                cmd.Parameters["DCTO"].Value = line.OrderType;
-                cmd.Parameters["KCOO"].Value = line.OrderCompany;
-                cmd.Parameters["LNID"].Value = line.OrderLineNum * 1000;
-                cmd.Connection = session.DbConnection;
-                cmd.CommandTimeout = 0;
-                _logger.Info(Logging.DbCmdString(cmd));
-
-                using (var reader = cmd.ExecuteReader(CommandBehavior.SingleRow))
-                {
-                    var anons = reader.Cast<IDataRecord>().Select(r => new
-                    {
-                        LPDOCO = (decimal)r["LPDOCO"],
-                        LPDCTO = ((string)r["LPDCTO"]).Trim(),
-                        LPKCOO = ((string)r["LPKCOO"]).Trim(),
-                        LPLNID = (decimal)r["LPLNID"] / 1000,
-                        LPLDNM = (decimal)r["LPLDNM"],
-                        LPMCU = ((string)r["LPMCU"]).Trim(),
-                        LPITM = (decimal)r["LPITM"],
-                        LPZ58RKN = (decimal)r["LPZ58RKN"],
-                        LPZ58RKL = (decimal)r["LPZ58RKL"],
-                        LPZ58GWTT = (decimal)r["LPZ58GWTT"] / 100,
-                        LPTOWT = (decimal)r["LPTOWT"] / 10000,
-                        LPUSER = (string)r["LPUSER"],
-                        LPUPMJ = (decimal)r["LPUPMJ"],
-                        LPTDAY = (decimal)r["LPTDAY"],
-                        LPUORG = (decimal)r["LPUORG"] / 1000
-                    }).ToList();
-                    reader.Close();
-
-                    line.OrderLoadedRacksQty = (int)anons.Sum(x => x.LPZ58RKN);
-                    line.OrderLoadedGlassWeight = anons.Sum(x => x.LPZ58GWTT);
-                    line.OrderLoadedTareWeight = anons.Sum(x => x.LPTOWT - x.LPZ58GWTT);
-
-                    var sb = new StringBuilder();
-                    //sb.AppendLine("");
-                    if (anons.Any())
-                    {
-                        sb.Append($"{line.PlantCode}:[{anons.Sum(x => x.LPZ58RKN)}/{anons.Sum(x => x.LPZ58RKN)}] ");
-                    }
-                    line.OrderInventoryDesc = sb.ToString().Trim();
                 }
             }
             catch (Exception e)
@@ -818,47 +553,6 @@ namespace BIServices.Common.Managers.Enterprise
                 throw new Exception(e.Message);
             }
         }
-
-        public static iDB2Command GetLoadRacksBySalesLine()
-        {
-            var cmd = new iDB2Command();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = @"
-            SELECT 
-	            LPDOCO,
-	            LPDCTO,
-	            LPKCOO,
-	            LPLNID,
-	            LPLDNM,
-	            LPMCU,
-	            LPITM,
-	            LPZ58RKN,
-	            LPZ58RKL,
-	            LPZ58GWTT,
-	            LPTOWT,
-	            LPUSER,
-	            LPUPMJ,
-	            LPTDAY,
-	            LPUORG
-            from 
-	            F580151 
-            WHERE 
-	            LPDOCO = ? AND
-                LPDCTO = ? AND
-                LPKCOO = ? AND
-                LPLNID = ? 
-            FOR READ ONLY";
-            cmd.Parameters.Add(new iDB2Parameter("DOCO", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["DOCO"].Precision = 8;
-            cmd.Parameters["DOCO"].Scale = 0;
-            cmd.Parameters.Add(new iDB2Parameter("DCTO", iDB2DbType.iDB2Graphic, 2));
-            cmd.Parameters.Add(new iDB2Parameter("KCOO", iDB2DbType.iDB2Graphic, 5));
-            cmd.Parameters.Add(new iDB2Parameter("LNID", iDB2DbType.iDB2Decimal));
-            cmd.Parameters["LNID"].Precision = 6;
-            cmd.Parameters["LNID"].Scale = 0;
-            return cmd;
-        }
-
 
         public static iDB2Command GetItemInfo()
         {
@@ -898,7 +592,7 @@ namespace BIServices.Common.Managers.Enterprise
 		            LP.LPITM = RDITM
             WHERE 
 	            IBMCU IN ('          47','          48','          49','          50')  AND
-	            IBSTKT = 'S'
+	            IBSTKT IN ('S','U','P','O')
             GROUP BY 
 	            IBMCU,
 	            IBITM,
@@ -938,14 +632,14 @@ namespace BIServices.Common.Managers.Enterprise
                     foreach (var line in lines)
                     {
                         var items = anons.Where(x => x.ITM == line.ItemNum);
-                        line.ItemOnHandRacksQty = items.Sum(x => x.PRODUCED);
-                        line.ItemPickedRacksQty = items.Sum(x => x.PICKED);
-                        line.ItemLoadedRacksQty = (int)items.Sum(x => x.LOADED);
+                        line.OnHandToItemRacksQty = items.Sum(x => x.PRODUCED);
+                        line.FGReleasedToItemRacksQty = 0;
+                        line.LoadReleasedToItemRacksQty = (int)items.Sum(x => x.LOADED);
                         var sb = new StringBuilder();
                         //sb.AppendLine("");
                         foreach (var item in items)
                         {
-                            sb.Append($"{item.MCU_CODE} [{item.PRODUCED}/{item.PICKED}/{item.LOADED}] ");
+                            sb.Append($"{item.MCU_CODE} [{item.PRODUCED}/{item.LOADED}] ");
                         }
                         line.ItemInventoryDesc = sb.ToString().Trim();
                     }
@@ -958,6 +652,77 @@ namespace BIServices.Common.Managers.Enterprise
             }
         }
 
+
+        public static SqlCommand GetFGWebData()
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+                salesOrder,
+                salesOrderLine,
+                ISNULL(item, 0) AS item,
+                ISNULL(isStock, 0) AS isStock,
+                ISNULL(racksOnOrder, 0) AS racksOnOrder,
+                ISNULL(racksReleased, 0) AS racksReleased,
+                ISNULL(racksOnLoads, 0) AS racksOnLoads,
+                ISNULL(racksProduced, 0) AS racksProduced,
+                ISNULL(racksScheduled, 0) AS racksScheduled
+            FROM
+                tblSomgrOrders WITH (NOLOCK)
+            WHERE
+                plant IN ( 47, 48, 49, 50 )";
+            return cmd;
+        }
+
+        public void GetFGWebData(SqlConnection cn, List<SalesOrderLine> lines)
+        {
+            var dict = new Dictionary<decimal, object>();
+            SqlCommand cmd;
+            try
+            {
+                cmd = GetFGWebData();
+                cmd.Connection = cn;
+                cmd.CommandTimeout = 0;
+                _logger.Info(Logging.DbCmdString(cmd));
+                using (var reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
+                {
+                    var anons = reader.Cast<IDataRecord>().Select(r => new
+                    {
+                        salesOrder = (int)r["salesOrder"],
+                        salesOrderLine = (decimal)r["salesOrderLine"],
+                        item = (int)r["item"],
+                        isStock = (int)r["isStock"],
+                        racksOnOrder = (int)r["racksOnOrder"],
+                        racksReleased = (int)r["racksReleased"],
+                        racksOnLoads = (int)r["racksOnLoads"],
+                        racksScheduled = (int)r["racksScheduled"]
+                    }).ToList();
+                    reader.Close();
+                    _logger.Info("Reader Closed");
+
+                    foreach (var line in lines)
+                    {
+                        var salesLines = anons.Where(x => x.salesOrder == line.OrderNum && x.salesOrderLine == line.OrderLineNum).ToList();
+                        if (salesLines.Any()) {
+                            line.FGReleasedToOrderRacksQty = salesLines.Sum(x => x.racksReleased);
+                            line.ScheduledRacksQty = salesLines.Max(x => x.racksScheduled);
+                        }
+
+                        var items = anons.Where(x => x.item == line.ItemNum).ToList();
+                        if (items.Any())
+                        {
+                            line.FGReleasedToItemRacksQty = items.Sum(x => x.racksReleased);
+                        }
+                    }
+                    _logger.Info("Collection Closed");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
 
     }
 }

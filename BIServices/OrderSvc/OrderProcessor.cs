@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 using BIServices.Common.Managers.E1;
@@ -107,11 +108,15 @@ namespace BIServices.OrderSvc
         {
             var lines = new SalesOrderLines();
             var session = new BusinessSystemSession();
+            var sqlCns = new Dictionary<string, SqlConnection>();
             try
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
+                var cnPlantDb1 = ConnectionManager.GetSqlConnectionFromKey("PTFG.FGWeb");
+                cnPlantDb1.Open();
+                sqlCns.Add("PLANT.FGWEB", cnPlantDb1);
                 var mgr = new AgcOpenOrderManager(session);
-                lines.AddRange(mgr.GetOpenOrders(session, plantCodes));
+                lines.AddRange(mgr.GetOpenOrders(session, sqlCns, plantCodes));
             }
             catch (Exception e)
             {
@@ -120,6 +125,10 @@ namespace BIServices.OrderSvc
             finally
             {
                 session.Close();
+                foreach (var sqlCn in sqlCns)
+                {
+                    sqlCn.Value.Close();
+                }
             }
             return lines;
         }

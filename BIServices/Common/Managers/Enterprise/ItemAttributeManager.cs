@@ -22,7 +22,8 @@ namespace BIServices.Common.Managers.Enterprise
             {
                 {"ItemAttributeManager.GetDiscreteItemAttributes", GetDiscreteItemAttributes()},
                 {"ItemAttributeManager.GetConfiguredItemAttributesById", GetConfiguredItemAttributesById()},
-                {"ItemAttributeManager.GetConfiguredItemArchiveAttributesById", GetConfiguredItemArchiveAttributesById()}
+                {"ItemAttributeManager.GetConfiguredItemArchiveAttributesById", GetConfiguredItemArchiveAttributesById()},
+                {"ItemAttributeManager.GetConfigIdByLot", GetConfigIdByLot()}
             };
             foreach (var keyName in hash.Keys.Where(keyName => !session.DbCommands.ContainsKey(keyName)))
             {
@@ -246,6 +247,82 @@ namespace BIServices.Common.Managers.Enterprise
             return cmd;
         }
 
+        public iDB2Command GetConfigIdByLot()
+        {
+            var cmd = new iDB2Command
+            {
+                CommandType = CommandType.Text,
+                CommandText = $@"
+                select 
+	                IOLOTN,
+	                COALESCE(SDC.CMCFGID,WAC.CMCFGID,PDC.CMCFGID, 0) AS CMCFGID
+                from 
+	                F4108
+	                LEFT OUTER JOIN F4211
+		                INNER JOIN F3201 SDC
+		                ON	SDC.CMEMCU = SDMCU AND
+			                SDC.CMKCOO = SDKCOO AND
+			                SDC.CMDOCO = SDDOCO AND
+			                SDC.CMDCTO = SDDCTO AND
+			                SDC.CMLNID = SDLNID
+	                ON	SDDOCO = IODOCO AND
+		                SDDCTO = IODCTO AND
+		                SDMCU = IOMCU AND
+		                SDLOTN = IOLOTN
+	                LEFT OUTER JOIN F4801
+		                INNER JOIN F3201 WAC
+		                ON	WAC.CMEMCU = WAMCU AND
+			                WAC.CMDOCO = WADOCO AND
+			                WAC.CMDCTO = WADCTO 
+	                ON	WADOCO = IODOCO AND
+		                WADCTO = IODCTO AND
+		                WAMCU = IOMCU AND
+		                WALOTN = IOLOTN
+	                LEFT OUTER JOIN F4311
+		                INNER JOIN F3201 PDC
+		                ON	PDC.CMEMCU = PDMCU AND
+			                PDC.CMKCOO = PDKCOO AND
+			                PDC.CMDOCO = PDDOCO AND
+			                PDC.CMDCTO = PDDCTO AND
+			                PDC.CMLNID = PDLNID
+	                ON	PDDOCO = IODOCO AND
+		                PDDCTO = IODCTO AND
+		                PDMCU = IOMCU AND
+		                PDLOTN = IOLOTN
+                where
+	                IOLOTN = ?
+                FETCH FIRST 1 ROWS ONLY
+                FOR READ ONLY"
+            };
+            cmd.Parameters.Add(new iDB2Parameter("LOTN", iDB2DbType.iDB2Graphic, 30));
+            return cmd;
+        }
+
+        public decimal GetConfigIdByLot(BusinessSystemSession session, string lotNum)
+        {
+            decimal val = 0;
+            try
+            {
+                var cmd = session.DbCommands["ItemAttributeManager.GetConfigIdByLot"];
+                cmd.Parameters["LOTN"].Value = lotNum;
+                cmd.Connection = session.DbConnection;
+                Logger.Trace(Logging.DbCmdString(cmd));
+                using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                {
+                    while (reader.Read())
+                    {
+                        val = reader.Get<decimal>("CMCFGID");
+                    }
+                    reader.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(session.DbConnection.ConnectionString + "  " + e.Message + ": " + e.StackTrace);
+            }
+            return val;
+        }
+
         /********************************************************************************
         * Methods
         *******************************************************************************/
@@ -299,6 +376,47 @@ namespace BIServices.Common.Managers.Enterprise
                             Desc3 = reader["SPHD"].ToString().Trim()
                         };
                         attributes.Add(attribute);
+                    }
+
+                    reader.Close();
+                }
+
+                Logger.Trace("ROWS: " + attributes.Count);
+            }
+            catch (Exception e)
+            {
+                Logger.Error("ERROR: " + session.DbConnection.ConnectionString + "  " + e.Message + ": " + e.StackTrace);
+                throw new ApplicationException(session.DbConnection.ConnectionString + "  " + e.Message + ": " + e.StackTrace);
+            }
+            return attributes;
+        }
+
+        public ItemAttributes GetDiscreteItemAttributes(BusinessSystemSession session, decimal itemNum, HashSet<string> atnms)
+        {
+            var attributes = new ItemAttributes();
+            try
+            {
+                var cmd = session.DbCommands["ItemAttributeManager.GetDiscreteItemAttributes"];
+                cmd.Parameters["ItemNum"].Value = itemNum;
+                cmd.Connection = session.DbConnection;
+                Logger.Trace(Logging.DbCmdString(cmd));
+                using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
+                {
+                    while (reader.Read())
+                    {
+                        var name = reader["ATNM"].ToString().Trim();
+                        if (atnms.Contains(name))
+                        {
+                            var attribute = new ItemAttribute
+                            {
+                                Name = reader["ATNM"].ToString().Trim(),
+                                Value = reader["SGVL"].ToString().Trim(),
+                                Desc1 = reader["DL01"].ToString().Trim(),
+                                Desc2 = reader["DL02"].ToString().Trim(),
+                                Desc3 = reader["SPHD"].ToString().Trim()
+                            };
+                            attributes.Add(attribute);
+                        }
                     }
 
                     reader.Close();

@@ -44,7 +44,8 @@ namespace BIServices.RackSvc
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var plantList = plantCode.Replace("'", "").Split(',').ToList();
                 var mgr = new ConfiguredRackManager(session);
-                racks = mgr.GetHVManufacturedConfiguredRacks(session, plantList, agingDays);
+                //racks = mgr.GetHVManufacturedConfiguredRacks(session, plantList, agingDays);
+                racks = mgr.GetHVMTORacks(session, plantList, agingDays);
             }
             catch (Exception e)
             {
@@ -68,8 +69,9 @@ namespace BIServices.RackSvc
                 var mgr1 = new StockRackManager(session);
                 racks.AddRange(mgr1.GetStockRacks(session, plantList, agingDays));
                 var mgr2 = new ConfiguredRackManager(session);
-                racks.AddRange(mgr2.GetHVManufacturedConfiguredRacks(session, plantList, agingDays));
-                racks.AddRange(mgr2.GetHVPurchasedConfiguredRacks(session, plantList, agingDays));
+                racks.AddRange(mgr2.GetHVMTORacks(session, plantList, agingDays));
+                //racks.AddRange(mgr2.GetHVManufacturedConfiguredRacks(session, plantList, agingDays));
+                //racks.AddRange(mgr2.GetHVPurchasedConfiguredRacks(session, plantList, agingDays));
             }
             catch (Exception e)
             {

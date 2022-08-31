@@ -454,89 +454,158 @@ namespace BIServices.Common.Types.Enterprise
         public int ClosedUnits { get; set; }
 
         // Racks
-        [DataMember(Order = 500, EmitDefaultValue = false)]
+        [DataMember(Order = 490, EmitDefaultValue = false)]
         public Racks Racks { get; set; }
 
 
         // AGC Specific
-        [DataMember(Order = 502, EmitDefaultValue = true)]
+        [DataMember(Order = 500, EmitDefaultValue = true)]
         public int OrderedRacksQty { get; set; }
 
-        [DataMember(Order = 504, EmitDefaultValue = true)]
+        [DataMember(Order = 502, EmitDefaultValue = true)]
         public decimal OrderedGlassWeight { get; set; }
 
-        [DataMember(Order = 506, EmitDefaultValue = true)]
+        [DataMember(Order = 504, EmitDefaultValue = true)]
         public decimal OrderedTareWeight { get; set; }
 
-        // Ordered
-
-        [DataMember(Order = 508, EmitDefaultValue = true)]
-        public int OrderOnHandRacksQty { get; set; }
-
         [DataMember(Order = 510, EmitDefaultValue = true)]
-        public decimal OrderOnHandGlassWeight { get; set; }
+        public int ScheduledRacksQty { get; set; }
 
         [DataMember(Order = 512, EmitDefaultValue = true)]
-        public decimal OrderOnHandTareWeight { get; set; }
+        public decimal ScheduledGlassWeight { get; set; }
 
         [DataMember(Order = 514, EmitDefaultValue = true)]
-        public int OrderPickedRacksQty { get; set; }
-
-        [DataMember(Order = 516, EmitDefaultValue = true)]
-        public decimal OrderPickedGlassWeight { get; set; }
-
-        [DataMember(Order = 518, EmitDefaultValue = true)]
-        public decimal OrderPickedTareWeight { get; set; }
+        public decimal ScheduledTareWeight { get; set; }
 
         [DataMember(Order = 520, EmitDefaultValue = true)]
-        public int OrderLoadedRacksQty { get; set; }
+        public int OnHandToOrderRacksQty { get; set; }
 
         [DataMember(Order = 522, EmitDefaultValue = true)]
-        public decimal OrderLoadedGlassWeight { get; set; }
+        public decimal OnHandToOrderGlassWeight { get; set; }
 
         [DataMember(Order = 524, EmitDefaultValue = true)]
-        public decimal OrderLoadedTareWeight { get; set; }
-
-        [DataMember(Order = 526, EmitDefaultValue = true)]
-        public string OrderRoutingDesc { get; set; }
-
-        [DataMember(Order = 528, EmitDefaultValue = true)]
-        public string RelatedOrderDesc { get; set; }
+        public decimal OnHandToOrderTareWeight { get; set; }
 
         [DataMember(Order = 530, EmitDefaultValue = true)]
-        public string OrderInventoryDesc { get; set; }
+        public int FGReleasedToOrderRacksQty { get; set; }
 
-        // Item
+        [DataMember(Order = 532, EmitDefaultValue = true)]
+        public decimal FGReleasedToOrderGlassWeight { get; set; }
+
+        [DataMember(Order = 534, EmitDefaultValue = true)]
+        public decimal FGReleasedToOrderTareWeight { get; set; }
 
         [DataMember(Order = 540, EmitDefaultValue = true)]
-        public int ItemOnHandRacksQty { get; set; }
+        public int LoadReleasedToOrderRacksQty { get; set; }
 
         [DataMember(Order = 542, EmitDefaultValue = true)]
-        public decimal ItemOnHandGlassWeight { get; set; }
+        public decimal LoadReleasedToOrderGlassWeight { get; set; }
 
         [DataMember(Order = 544, EmitDefaultValue = true)]
-        public decimal ItemOnHandTareWeight { get; set; }
-
-        [DataMember(Order = 546, EmitDefaultValue = true)]
-        public int ItemPickedRacksQty { get; set; }
-
-        [DataMember(Order = 548, EmitDefaultValue = true)]
-        public decimal ItemPickedGlassWeight { get; set; }
-
-        [DataMember(Order = 548, EmitDefaultValue = true)]
-        public decimal ItemPickedTareWeight { get; set; }
+        public decimal LoadReleasedToOrderTareWeight { get; set; }
 
         [DataMember(Order = 550, EmitDefaultValue = true)]
-        public int ItemLoadedRacksQty { get; set; }
+        public int OnHandToItemRacksQty { get; set; }
 
         [DataMember(Order = 552, EmitDefaultValue = true)]
-        public decimal ItemLoadedGlassWeight { get; set; }
+        public decimal OnHandToItemGlassWeight { get; set; }
 
         [DataMember(Order = 554, EmitDefaultValue = true)]
-        public decimal ItemLoadedTareWeight { get; set; }
+        public decimal OnHandToItemTareWeight { get; set; }
 
-        [DataMember(Order = 558, EmitDefaultValue = true)]
-        public string ItemInventoryDesc{ get; set; }
+        [DataMember(Order = 560, EmitDefaultValue = true)]
+        public int FGReleasedToItemRacksQty { get; set; }
+
+        [DataMember(Order = 562, EmitDefaultValue = true)]
+        public decimal FGReleasedToItemGlassWeight { get; set; }
+
+        [DataMember(Order = 564, EmitDefaultValue = true)]
+        public decimal FGReleasedToItemTareWeight { get; set; }
+
+        [DataMember(Order = 570, EmitDefaultValue = true)]
+        public int LoadReleasedToItemRacksQty { get; set; }
+
+        [DataMember(Order = 572, EmitDefaultValue = true)]
+        public decimal LoadReleasedToItemGlassWeight { get; set; }
+
+        [DataMember(Order = 574, EmitDefaultValue = true)]
+        public decimal LoadReleasedToItemTareWeight { get; set; }
+
+        [DataMember(Order = 590, EmitDefaultValue = true)]
+        public string RelatedOrderDesc { get; set; }
+
+        [DataMember(Order = 592, EmitDefaultValue = true)]
+        public string ItemInventoryDesc { get; set; }
+
+        //// Ordered
+
+        //[DataMember(Order = 508, EmitDefaultValue = true)]
+        //public int OrderOnHandRacksQty { get; set; }
+
+        //[DataMember(Order = 510, EmitDefaultValue = true)]
+        //public decimal OrderOnHandGlassWeight { get; set; }
+
+        //[DataMember(Order = 512, EmitDefaultValue = true)]
+        //public decimal OrderOnHandTareWeight { get; set; }
+
+        //[DataMember(Order = 514, EmitDefaultValue = true)]
+        //public int OrderPickedRacksQty { get; set; }
+
+        //[DataMember(Order = 516, EmitDefaultValue = true)]
+        //public decimal OrderPickedGlassWeight { get; set; }
+
+        //[DataMember(Order = 518, EmitDefaultValue = true)]
+        //public decimal OrderPickedTareWeight { get; set; }
+
+        //[DataMember(Order = 520, EmitDefaultValue = true)]
+        //public int OrderLoadedRacksQty { get; set; }
+
+        //[DataMember(Order = 522, EmitDefaultValue = true)]
+        //public decimal OrderLoadedGlassWeight { get; set; }
+
+        //[DataMember(Order = 524, EmitDefaultValue = true)]
+        //public decimal OrderLoadedTareWeight { get; set; }
+
+        //[DataMember(Order = 526, EmitDefaultValue = true)]
+        //public string OrderRoutingDesc { get; set; }
+
+        //[DataMember(Order = 528, EmitDefaultValue = true)]
+        //public string RelatedOrderDesc { get; set; }
+
+        //[DataMember(Order = 530, EmitDefaultValue = true)]
+        //public string OrderInventoryDesc { get; set; }
+
+        //// Item
+
+        //[DataMember(Order = 540, EmitDefaultValue = true)]
+        //public int ItemOnHandRacksQty { get; set; }
+
+        //[DataMember(Order = 542, EmitDefaultValue = true)]
+        //public decimal ItemOnHandGlassWeight { get; set; }
+
+        //[DataMember(Order = 544, EmitDefaultValue = true)]
+        //public decimal ItemOnHandTareWeight { get; set; }
+
+        //[DataMember(Order = 546, EmitDefaultValue = true)]
+        //public int ItemPickedRacksQty { get; set; }
+
+        //[DataMember(Order = 548, EmitDefaultValue = true)]
+        //public decimal ItemPickedGlassWeight { get; set; }
+
+        //[DataMember(Order = 548, EmitDefaultValue = true)]
+        //public decimal ItemPickedTareWeight { get; set; }
+
+        //[DataMember(Order = 550, EmitDefaultValue = true)]
+        //public int ItemLoadedRacksQty { get; set; }
+
+        //[DataMember(Order = 552, EmitDefaultValue = true)]
+        //public decimal ItemLoadedGlassWeight { get; set; }
+
+        //[DataMember(Order = 554, EmitDefaultValue = true)]
+        //public decimal ItemLoadedTareWeight { get; set; }
+
+        //[DataMember(Order = 558, EmitDefaultValue = true)]
+        //public string ItemInventoryDesc{ get; set; }
 
 
         // Glass

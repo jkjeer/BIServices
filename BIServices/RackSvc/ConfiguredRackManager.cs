@@ -40,6 +40,274 @@ namespace BIServices.RackSvc
         /*********************************************************************************
           * HV Racks - Single Detail with Qty > 1
           *******************************************************************************/
+        public iDB2Command GetHVMTORacks(List<string> filters)
+        {
+
+            var filterString = new StringBuilder();
+            foreach (string filter in filters)
+            {
+                filterString.Append(filter);
+            }
+
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = String.Format(@"
+            SELECT 
+	            RHZ58RID,
+                RHMCU,
+                MCDL01,
+	            RHZ58RT,
+	            RHAN8,
+	            RHSHAN,
+	            RHZ58HST,
+                RHZ58RSDT,
+	            RHLOCN,
+	            RHZ58RTWT,
+	            RHZ58MTRW,
+                RHZ58GWTT,
+	            RHZ58BOX,
+	            RHZ58SCN,
+	            RDLOTN,
+	            RDZ58SN,
+	            RDITM,
+	            RDZ58MDT,
+	            RDZ58PDT,
+	            RDPQOH,
+                RDZ58CQTY,
+	            RDDSC1,
+	            RDDSC2,
+	            RDDOCO,
+	            RDDCTO,
+	            RDLNID,
+	            RDDOC1,
+	            RDXDCTO,
+                RDPKCO,
+	            RDDOC2,
+	            RDXCTO,
+	            RDLNIC,
+                IMDSC1,
+                IBSTKT,
+                IBGLPT,
+                IBPRP4,
+                IBANPL,
+	            (select 
+		            CMCFGID
+	            from 
+		            F3201
+	            where
+		            CMKCOO = RDKCOO AND
+		            CMDOCO = RDDOCO AND
+		            CMDCTO = RDDCTO AND
+		            CMLNID = RDLNID AND
+		            CMDOCO > 0
+		            FETCH FIRST 1 ROWS ONLY) AS CMCFGIDS,
+	            (select 
+		            CMCFGID
+	            from 
+		            F3201
+	            where
+		            CMDOCO = RDDOC1 AND
+		            CMDCTO = RDXDCTO AND
+		            CMDOCO > 0
+		            FETCH FIRST 1 ROWS ONLY) AS CMCFGIDW,
+	            (select 
+		            CMCFGID
+	            from 
+		            F3201
+	            where
+		            CMKCOO = RDPKCO AND
+		            CMDOCO = RDDOC2 AND
+		            CMDCTO = RDXCTO AND
+		            CMLNID = RDLNIC AND
+		            CMDOCO > 0
+		            FETCH FIRST 1 ROWS ONLY) AS CMCFGIDP
+            FROM 
+	            F580055
+	            INNER JOIN F580056
+	            ON  RDZ58RID = RHZ58RID
+                INNER JOIN F0006
+                ON  MCMCU = RHMCU
+                INNER JOIN F4102
+                ON  IBITM = RDITM AND
+                    IBMCU = RDMCU
+	            INNER JOIN F4101
+	            ON	IMITM = RDITM
+            WHERE
+	            {0}
+	            RHZ58HST NOT IN ('0', '8') AND
+                IMSTKT = 'C' AND
+	            (SELECT COUNT(*) FROM F580056 WHERE F580056.RDZ58RID = RHZ58RID) = 1	
+            FOR READ ONLY", filterString);
+            return cmd;
+        }
+
+        public Racks GetHVMTORacks(BusinessSystemSession session, List<string> plantList, int agingDays)
+        {
+            var racks = new Racks();
+            iDB2Command cmd;
+            List<String> filters = new List<string>();
+            List<iDB2Parameter> parameters = new List<iDB2Parameter>();
+            try
+            {
+
+                // Plant List
+                if (plantList.Count() > 0)
+                {
+                    string strInClause = "";
+                    foreach (string plantItem in plantList)
+                    {
+                        var plant = PlantManager.GetPlant(plantItem);
+                        strInClause = strInClause + "?,";
+                        parameters.Add(new iDB2Parameter("MCU", iDB2DbType.iDB2Graphic, 12));
+                        parameters.Last().Value = plant.PlantNum.PadLeft(12);
+                    }
+                    filters.Add("RHMCU IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
+                }
+
+                // Aging Days
+                if (agingDays > 0)
+                {
+                    var dt = E1TimeManager.CastToE1Date(DateTime.Now.AddDays(agingDays * -1));
+                    filters.Add("(RDZ58MDT <= ? OR RDZ58PDT <= ?) AND\r\n");
+                    parameters.Add(new iDB2Parameter("DT1", iDB2DbType.iDB2Decimal));
+                    parameters.Last().Precision = 6;
+                    parameters.Last().Scale = 0;
+                    parameters.Last().Value = dt;
+                    parameters.Add(new iDB2Parameter("DT2", iDB2DbType.iDB2Decimal));
+                    parameters.Last().Precision = 6;
+                    parameters.Last().Scale = 0;
+                    parameters.Last().Value = dt;
+                }
+
+                cmd = GetHVMTORacks(filters);
+                foreach (iDB2Parameter parameter in parameters)
+                {
+                    cmd.Parameters.Add(parameter);
+                }
+                cmd.Connection = session.DbConnection;
+                cmd.CommandTimeout = 0;
+                _logger.Info(Logging.DbCmdString(cmd));
+
+                var ds = new DataSet();
+                var da = new iDB2DataAdapter(cmd).Fill(ds);
+                var rows = ds.Tables[0].AsEnumerable();
+
+                var rackItems = from p in rows
+                                select new
+                                {
+                                    RHZ58RID = p.Field<decimal>("RHZ58RID"),
+                                    RHMCU = p.Field<string>("RHMCU"),
+                                    MCDL01 = p.Field<string>("MCDL01"),
+                                    RHZ58RT = p.Field<string>("RHZ58RT"),
+                                    RHAN8 = p.Field<decimal>("RHAN8"),
+                                    RHSHAN = p.Field<decimal>("RHSHAN"),
+                                    RHZ58HST = p.Field<string>("RHZ58HST"),
+                                    RHZ58RSDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RHZ58RSDT")),
+                                    RHLOCN = p.Field<string>("RHLOCN"),
+                                    RHZ58RTWT = p.Field<decimal>("RHZ58RTWT") / 100,
+                                    RHZ58MTRW = p.Field<decimal>("RHZ58MTRW") / 100,
+                                    RHZ58GWTT = p.Field<decimal>("RHZ58GWTT") / 100,
+                                    RHZ58BOX = p.Field<decimal>("RHZ58BOX"),
+                                    RHZ58SCN = p.Field<decimal>("RHZ58SCN"),
+                                    RDLOTN = p.Field<string>("RDLOTN"),
+                                    RDDOC2 = p.Field<decimal>("RDDOC2"),
+                                    RDXCTO = p.Field<string>("RDXCTO"),
+                                    RDLNIC = p.Field<decimal>("RDLNIC"),
+                                    RDPKCO = p.Field<string>("RDPKCO"),
+                                    RDZ58SN = p.Field<string>("RDZ58SN"),
+                                    RDITM = p.Field<decimal>("RDITM"),
+                                    RDZ58MDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58MDT")),
+                                    RDZ58PDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58PDT")),
+                                    RDPQOH = p.Field<decimal>("RDPQOH") / 1000,
+                                    RDZ58CQTY = p.Field<decimal>("RDZ58CQTY") / 1000,
+                                    CMCFGIDS = p.Field<decimal?>("CMCFGIDS"),
+                                    CMCFGIDW = p.Field<decimal?>("CMCFGIDW"),
+                                    CMCFGIDP = p.Field<decimal?>("CMCFGIDP"),
+                                    IMDSC1 = p.Field<string>("IMDSC1"),
+                                    IBSTKT = p.Field<string>("IBSTKT"),
+                                    IBGLPT = p.Field<string>("IBGLPT"),
+                                    IBPRP4 = p.Field<string>("IBPRP4"),
+                                    IBANPL = p.Field<decimal>("IBANPL")
+                                };
+
+                var rackGroup = from p in rackItems
+                                orderby p.RDZ58SN
+                                group p by p.RHZ58RID
+                    into gr
+                                where gr.Count() == 1 && gr.Sum(x => x.RDPQOH) > 1
+                                select gr;
+
+                var f4102Mgr = new F4102Manager(session);
+                foreach (var g in rackGroup)
+                {
+                    var rack = new Rack();
+                    rack.RackId = g.Key;
+                    rack.ConfigId = g.First().CMCFGIDS ?? g.First().CMCFGIDW ?? g.First().CMCFGIDP ?? 0;
+
+                    ItemAttributes itemAtts;
+                    itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, rack.ConfigId);
+                    if (itemAtts.Count == 0)
+                    {
+                        itemAtts = _itemAttMgr.GetConfiguredItemArchiveAttributes(session, rack.ConfigId);
+                    }
+                    var flexDescs = _flexItemMgr.GetDescription(session, itemAtts);
+
+                    rack.StockSerialNum = g.First().RDZ58SN;
+                    rack.CostCenter = g.First().RHMCU;
+                    rack.PlantNum = g.First().RHMCU;
+                    rack.PlantCode = g.First().MCDL01;
+                    rack.RackType = g.First().RHZ58RT;
+                    rack.Location = g.First().RHLOCN;
+                    rack.HeaderStatus = g.First().RHZ58HST;
+                    rack.HeaderStatusDate = g.First().RHZ58RSDT;
+                    rack.ItemNum = g.First().RDITM;
+                    rack.LotNum = g.First().RDLOTN;
+                    rack.POrderCompany = g.First().RDPKCO;
+                    rack.POrderNum = g.First().RDDOC2;
+                    rack.POrderType = g.First().RDXCTO;
+                    rack.POrderLineNum = g.First().RDLNIC / 1000;
+                    rack.CustomerNum = g.First().RHAN8;
+                    rack.ShipToCustomerNum = g.First().RHSHAN;
+                    rack.ManufacturedDate = g.First().RDZ58MDT;
+                    rack.ProductionDate = g.First().RDZ58PDT;
+                    rack.ManufacturedAgingDays = (DateTime.Now - rack.ManufacturedDate.Value).Days;
+                    rack.ReceivedQty = g.First().RDZ58CQTY;
+                    rack.TareWeight = g.First().RHZ58RTWT;
+                    rack.GlassWeight = g.First().RHZ58GWTT;
+                    rack.GlassWeightTons = g.First().RHZ58GWTT / 2000;
+                    rack.GrossWeight = g.First().RHZ58MTRW;
+                    rack.GrossWeightTons = g.First().RHZ58MTRW / 2000;
+                    rack.Quantity = g.First().RDPQOH;
+                    rack.OriginalQuantity = g.First().RDZ58CQTY;
+                    rack.ItemAttributes = itemAtts;
+                    rack.UnitActualSqft = itemAtts.GetDecimalAttributeValue("Z58USF");
+                    rack.TotalActualSqft = rack.UnitActualSqft * rack.Quantity;
+                    rack.Construction = flexDescs[0];
+                    rack.Dimension = flexDescs[1];
+                    rack.Lite1Thickness = itemAtts.GetDecimalAttributeValue("Z58L1TK");
+                    rack.OverallThickness = itemAtts.GetDecimalAttributeValue("Z5851705");
+                    var itemBranchAttributes = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
+                    rack.PlannerNum = g.First().IBANPL;
+                    rack.PlanningFamily = g.First().IBPRP4;
+                    rack.ItemDesc = g.First().IMDSC1;
+                    rack.StockType = g.First().IBSTKT;
+                    rack.GlCategory = g.First().IBGLPT;
+                    racks.Add(rack);
+                }
+                //GetItemProperties(session, racks);
+                GetReceivedCost(session, racks.Where(x => x.POrderNum > 0).ToList());
+                GetReceivedDate(session, racks);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            return racks;
+        }
+
+        /*********************************************************************************
+          * HV Racks - Single Detail with Qty > 1
+          *******************************************************************************/
         public iDB2Command GetHVManufacturedConfiguredRacks(List<string> filters)
         {
 
@@ -849,7 +1117,7 @@ namespace BIServices.RackSvc
             return cmd;
         }
 
-        public void GetReceivedCost(BusinessSystemSession session, Racks racks)
+        public void GetReceivedCost(BusinessSystemSession session, List<Rack> racks)
         {
             try
             {
