@@ -99,6 +99,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 254, EmitDefaultValue = false)]
         public DateTime CustomerProductionDate { get; set; }
 
+        [DataMember(Order = 256, EmitDefaultValue = false)]
+        public DateTime CustomerOrigProductionDate { get; set; }
+
         // Related Sales Order
         [DataMember(Order = 300, EmitDefaultValue = false)]
         public decimal SOrderNum { get; set; }

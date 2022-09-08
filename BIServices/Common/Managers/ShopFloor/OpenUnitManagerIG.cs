@@ -79,6 +79,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 CustomerShipPref04,
                 CustomerShipPref05,
                 CustomerProductionDate,
+                CustomerOrigProductionDate,
                 GenericSeqNum,
                 ProductType,
                 PriorityCode,
@@ -575,6 +576,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerPart3 = CastDbNull.AsString(reader["CustomerPart3"]);
                         unit.CustomerSeqNum = CastDbNull.AsString(reader["CustomerSeqNum"]);
                         unit.CustomerProductionDate = CastDbNull.To<DateTime>(reader["CustomerProductionDate"], DateTime.MinValue);
+                        unit.CustomerOrigProductionDate = CastDbNull.To<DateTime>(reader["CustomerOrigProductionDate"], DateTime.MinValue);
                         unit.ShipRoute = CastDbNull.AsString(reader["CustomerShipPref04"]);
                         unit.CustomerTier = CastDbNull.AsString(reader["CustomerShipPref05"]);
                         unit.GenericSeqNum = CastDbNull.AsString(reader["GenericSeqNum"]);
@@ -1105,6 +1107,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.PriorityCode = reader.Get<String>("PriorityCode");
                         unit.CustomerSeqNum = reader.Get<String>("CustomerSeqNum");
                         unit.CustomerProductionDate = reader.Get<DateTime>("CustomerProductionDate");
+                        unit.CustomerOrigProductionDate = CastDbNull.To<DateTime>(reader["CustomerOrigProductionDate"], DateTime.MinValue);
                         unit.CustomerSeqPart1 = unit.CustomerSeqNum.Split('/').Length > 0 ? unit.CustomerSeqNum.Split('/')[0] : "";
                         unit.SchedulingMessage = reader.Get<string>("SchedulerMsg1");
                         unit.GenericSeqNum = reader.Get<String>("GenericSeqNum");

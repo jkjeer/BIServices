@@ -220,6 +220,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 226)]
         public string PlanningFamily { get; set; }
 
+        [DataMember(Order = 230)]
+        public string Description1 { get; set; }
+
+        [DataMember(Order = 232)]
+        public string Description2 { get; set; }
+
         [DataMember(Order = 300)]
         public decimal RackSlot { get; set; }
 
@@ -351,6 +357,13 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 122)]
         public string PlanningFamily { get; set; }
+
+        [DataMember(Order = 124)]
+        public string Description1 { get; set; }
+
+        [DataMember(Order = 126)]
+        public string Description2 { get; set; }
+
 
         [DataMember(Order = 200)]
         public bool HasGlassAttributes { get; set; }

@@ -206,6 +206,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 236, EmitDefaultValue = true)]
         public string GenericSeqNum { get; set; }
 
+        [DataMember(Order = 237, EmitDefaultValue = true)]
+        public DateTime CustomerProductionDate { get; set; }
+
+        [DataMember(Order = 237, EmitDefaultValue = true)]
+        public DateTime CustomerOrigProductionDate { get; set; }
+
         [DataMember(Order = 240, EmitDefaultValue = true)]
         public string CardinalProductType { get; set; }
 
@@ -226,9 +232,6 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 250, EmitDefaultValue = true)]
         public decimal OrigWOrderNum { get; set; }
-
-        [DataMember(Order = 252, EmitDefaultValue = true)]
-        public DateTime CustomerProductionDate { get; set; }
 
         // Related Documents
         [DataMember(Order = 250, EmitDefaultValue = true)]

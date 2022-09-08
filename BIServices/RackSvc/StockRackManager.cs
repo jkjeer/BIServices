@@ -78,6 +78,8 @@ namespace BIServices.RackSvc
 				RDZ58PDT,
 				RDPQOH,
                 RDZ58CQTY,
+                RDDSC1,
+                RDDSC2,
 				IBSTKT,
 				IBGLPT,
 				IBANPL,
@@ -244,6 +246,8 @@ namespace BIServices.RackSvc
                         rack.UnitCost = reader.Get<Decimal>("IECSL", 0) / 10000;
                         rack.TotalCost = rack.UnitCost * rack.Quantity;
                         rack.ItemConsumptionAmt = reader.Get<Decimal>("ILTRQT", 0) / 1000;
+                        rack.Description1 = reader.Get<string>("RDDSC1", String.Empty);
+                        rack.Description2 = reader.Get<string>("RDDSC2", String.Empty);
                         racks.Add(rack);
                     }
                     reader.Close();

@@ -85,6 +85,8 @@ namespace BIServices.RackSvc
 	            RDDOC2,
 	            RDXCTO,
 	            RDLNIC,
+                RDDSC1,
+                RDDSC2,
                 IMDSC1,
                 IBSTKT,
                 IBGLPT,
@@ -220,6 +222,8 @@ namespace BIServices.RackSvc
                                     RDZ58PDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58PDT")),
                                     RDPQOH = p.Field<decimal>("RDPQOH") / 1000,
                                     RDZ58CQTY = p.Field<decimal>("RDZ58CQTY") / 1000,
+                                    RDDSC1 = p.Field<string>("RDDSC1"),
+                                    RDDSC2 = p.Field<string>("RDDSC2"),
                                     CMCFGIDS = p.Field<decimal?>("CMCFGIDS"),
                                     CMCFGIDW = p.Field<decimal?>("CMCFGIDW"),
                                     CMCFGIDP = p.Field<decimal?>("CMCFGIDP"),
@@ -292,6 +296,8 @@ namespace BIServices.RackSvc
                     rack.ItemDesc = g.First().IMDSC1;
                     rack.StockType = g.First().IBSTKT;
                     rack.GlCategory = g.First().IBGLPT;
+                    rack.Description1 = g.First().RDDSC1;
+                    rack.Description2 = g.First().RDDSC2;
                     racks.Add(rack);
                 }
                 //GetItemProperties(session, racks);
@@ -522,6 +528,7 @@ namespace BIServices.RackSvc
                         rack.PlannerNum = (decimal)itemBranchAttributes["PlannerNum"];
                         rack.PlannerName = (string)itemBranchAttributes["PlannerName"];
                         rack.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
+
                         racks.Add(rack);
                     }
 
@@ -582,6 +589,8 @@ namespace BIServices.RackSvc
 				        RDZ58PDT,
 				        RDPQOH,
                         RDZ58CQTY,
+                        RDDSC1,
+                        RDDSC2,
 				        COALESCE(CMCFGID, 0) AS CMCFGID,
 				        ROW_NUMBER() OVER (PARTITION BY RHZ58RID, RDLOTN, RDITM ORDER BY CMCFGID ASC) AS CMRN
                     FROM 
@@ -690,6 +699,8 @@ namespace BIServices.RackSvc
                         RDZ58PDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58PDT")),
                         RDPQOH = p.Field<decimal>("RDPQOH") / 1000,
                         RDZ58CQTY = p.Field<decimal>("RDZ58CQTY") / 1000,
+                        RDDSC1 = p.Field<string>("RDDSC1"),
+                        RDDSC2 = p.Field<string>("RDDSC2"),
                         CMCFGID = p.Field<decimal>("CMCFGID")
                     };
 
@@ -752,6 +763,8 @@ namespace BIServices.RackSvc
                     var itemBranchAttributes = f4102Mgr.GetPlannerNum(session, rack.PlantNum, rack.ItemNum);
                     rack.PlannerNum = (decimal)itemBranchAttributes["PlannerNum"];
                     rack.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
+                    rack.Description1 = g.First().RDDSC1;
+                    rack.Description2 = g.First().RDDSC2;
                     racks.Add(rack);
                 }
                 GetItemProperties(session, racks);
