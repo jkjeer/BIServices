@@ -154,7 +154,7 @@ namespace BIServices.RackSvc
             return cmd;
         }
 
-        public Racks GetStockRacks(BusinessSystemSession session, List<string> plantList, int agingDays)
+        public Racks GetStockRacks(BusinessSystemSession session, List<string> plantList, int agingDays, List<string> statusList)
         {
             var racks = new Racks();
             iDB2Command cmd;
@@ -168,12 +168,25 @@ namespace BIServices.RackSvc
                     string strInClause = "";
                     foreach (string plantItem in plantList)
                     {
-                        var plant = PlantManager.GetPlant(plantItem);
+                        var plant = PlantManager.GetPlant(plantItem.Trim());
                         strInClause = strInClause + "?,";
                         parameters.Add(new iDB2Parameter("MCU", iDB2DbType.iDB2Graphic, 12));
                         parameters.Last().Value = plant.PlantNum.PadLeft(12);
                     }
                     filters.Add("RHMCU IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
+                }
+
+                // Status List
+                if (statusList.Count() > 0)
+                {
+                    string strInClause = "";
+                    foreach (string statusItem in statusList)
+                    {
+                        strInClause = strInClause + "?,";
+                        parameters.Add(new iDB2Parameter("HST", iDB2DbType.iDB2Graphic, 12));
+                        parameters.Last().Value = statusItem;
+                    }
+                    filters.Add("RHZ58HST IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
                 }
 
                 // Aging Days

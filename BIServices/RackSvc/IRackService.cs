@@ -9,13 +9,13 @@ namespace BIServices.RackSvc
         public interface IRackService
         {
             [OperationContract, OperationInvokerLogger]
-            Racks GetHVRacksOnHand(string plant, int agingDays);
+            Racks GetHVRacksOnHand(string plant, int agingDays, string status);
 
             [OperationContract, OperationInvokerLogger]
-            Racks GetStockRacksOnHand(string plant, int agingDays);
+            Racks GetStockRacksOnHand(string plant, int agingDays, string status);
 
             [OperationContract, OperationInvokerLogger]
-            Racks GetHVMTORacksOnHand(string plant, int agingDays);
+            Racks GetHVMTORacksOnHand(string plant, int agingDays, string status);
 
             [OperationContract, OperationInvokerLogger]
             Racks GetPurchasedConfiguredRacks(string plant, int agingDays);
@@ -25,20 +25,20 @@ namespace BIServices.RackSvc
         public interface IRackRestService
         {
             [OperationContract, OperationInvokerLogger]
-            [WebGet(UriTemplate = "/GetHVRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
-            Racks GetHVRacksOnHand(string plant, int agingDays);
+            [WebGet(UriTemplate = "/GetHVRacksOnHand?Plant={plant}&AgingDays={agingDays}&Status={status}")]
+            Racks GetHVRacksOnHand(string plant, int agingDays, string status);
 
             //[OperationContract, OperationInvokerLogger]
             //[WebGet(UriTemplate = "/GetHVRacksOnHandVer1?Plant={plant}&AgingDays={agingDays}")]
             //Racks GetHVRacksOnHandVer1(string plant, int agingDays);
 
             [OperationContract, OperationInvokerLogger]
-            [WebGet(UriTemplate = "/GetStockRacksOnHand?Plant={plant}&AgingDays={agingDays}")]
-            Racks GetStockRacksOnHand(string plant, int agingDays);
+            [WebGet(UriTemplate = "/GetStockRacksOnHand?Plant={plant}&AgingDays={agingDays}&Status={status}")]
+            Racks GetStockRacksOnHand(string plant, int agingDays, string status);
 
             [OperationContract, OperationInvokerLogger]
-            [WebGet(UriTemplate = "/GetHVMTORacksOnHand?Plant={plant}&AgingDays={agingDays}")]
-            Racks GetHVMTORacksOnHand(string plant, int agingDays);
+            [WebGet(UriTemplate = "/GetHVMTORacksOnHand?Plant={plant}&AgingDays={agingDays}&Status={status}")]
+            Racks GetHVMTORacksOnHand(string plant, int agingDays, string status);
 
             [OperationContract, OperationInvokerLogger]
             [WebGet(UriTemplate = "/GetPurchasedConfiguredRacks?Plant={plant}&AgingDays={agingDays}")]

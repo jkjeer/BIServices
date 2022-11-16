@@ -233,9 +233,11 @@ namespace BIServices.QuerySvc
                     while (reader.Read())
                     {
                         var custNum = Convert.ToDecimal(CastDbNull.To<decimal>(reader["CUSTOMER_NO"], 0));
-                        var custAttributes = new Hashtable();
-                        custAttributes.Add("ShippingLaneId", CastDbNull.To<int>(reader["SHIPPING_LANE_ID"], 0));
-                        custAttributes.Add("ShippingLaneName", CastDbNull.To<String>(reader["SHIPPING_LANE_NAME"], String.Empty).Trim());
+                        var custAttributes = new Hashtable
+                        {
+                            { "ShippingLaneId", CastDbNull.To<int>(reader["SHIPPING_LANE_ID"], 0) },
+                            { "ShippingLaneName", CastDbNull.To<String>(reader["SHIPPING_LANE_NAME"], String.Empty).Trim() }
+                        };
                         dict.Add(custNum, custAttributes);
                     }
 

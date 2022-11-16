@@ -63,8 +63,14 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 40)]
         public decimal CustomerNum { get; set; }
 
+        [DataMember(Order = 40)]
+        public string SoldToCustomerName { get; set; }
+
         [DataMember(Order = 41)]
         public decimal ShipToCustomerNum { get; set; }
+
+        [DataMember(Order = 41)]
+        public string ShipToCustomerName { get; set; }
 
         [DataMember(Order = 42)]
         public string CustomerPO { get; set; }
