@@ -68,6 +68,7 @@ namespace BIServices.RackSvc
                 RHZ58GWTT,
 	            RHZ58BOX,
 	            RHZ58SCN,
+                RHZ58RCD,
 	            RDLOTN,
 	            RDZ58SN,
 	            RDITM,
@@ -212,39 +213,40 @@ namespace BIServices.RackSvc
                                 select new
                                 {
                                     RHZ58RID = p.Field<decimal>("RHZ58RID"),
-                                    RHMCU = p.Field<string>("RHMCU"),
-                                    MCDL01 = p.Field<string>("MCDL01"),
-                                    RHZ58RT = p.Field<string>("RHZ58RT"),
+                                    RHMCU = p.Field<string>("RHMCU").Trim(),
+                                    MCDL01 = p.Field<string>("MCDL01").Trim(),
+                                    RHZ58RT = p.Field<string>("RHZ58RT").Trim(),
                                     RHAN8 = p.Field<decimal>("RHAN8"),
                                     RHSHAN = p.Field<decimal>("RHSHAN"),
-                                    RHZ58HST = p.Field<string>("RHZ58HST"),
+                                    RHZ58HST = p.Field<string>("RHZ58HST").Trim(),
                                     RHZ58RSDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RHZ58RSDT")),
-                                    RHLOCN = p.Field<string>("RHLOCN"),
+                                    RHLOCN = p.Field<string>("RHLOCN").Trim(),
                                     RHZ58RTWT = p.Field<decimal>("RHZ58RTWT") / 100,
                                     RHZ58MTRW = p.Field<decimal>("RHZ58MTRW") / 100,
                                     RHZ58GWTT = p.Field<decimal>("RHZ58GWTT") / 100,
                                     RHZ58BOX = p.Field<decimal>("RHZ58BOX"),
                                     RHZ58SCN = p.Field<decimal>("RHZ58SCN"),
-                                    RDLOTN = p.Field<string>("RDLOTN"),
+                                    RHZ58RCD = p.Field<string>("RHZ58RCD").Trim(),
+                                    RDLOTN = p.Field<string>("RDLOTN").Trim(),
                                     RDDOC2 = p.Field<decimal>("RDDOC2"),
-                                    RDXCTO = p.Field<string>("RDXCTO"),
+                                    RDXCTO = p.Field<string>("RDXCTO").Trim(),
                                     RDLNIC = p.Field<decimal>("RDLNIC"),
-                                    RDPKCO = p.Field<string>("RDPKCO"),
-                                    RDZ58SN = p.Field<string>("RDZ58SN"),
+                                    RDPKCO = p.Field<string>("RDPKCO").Trim(),
+                                    RDZ58SN = p.Field<string>("RDZ58SN").Trim(),
                                     RDITM = p.Field<decimal>("RDITM"),
                                     RDZ58MDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58MDT")),
                                     RDZ58PDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RDZ58PDT")),
                                     RDPQOH = p.Field<decimal>("RDPQOH") / 1000,
                                     RDZ58CQTY = p.Field<decimal>("RDZ58CQTY") / 1000,
-                                    RDDSC1 = p.Field<string>("RDDSC1"),
-                                    RDDSC2 = p.Field<string>("RDDSC2"),
+                                    RDDSC1 = p.Field<string>("RDDSC1").Trim(),
+                                    RDDSC2 = p.Field<string>("RDDSC2").Trim(),
                                     CMCFGIDS = p.Field<decimal?>("CMCFGIDS"),
                                     CMCFGIDW = p.Field<decimal?>("CMCFGIDW"),
                                     CMCFGIDP = p.Field<decimal?>("CMCFGIDP"),
-                                    IMDSC1 = p.Field<string>("IMDSC1"),
-                                    IBSTKT = p.Field<string>("IBSTKT"),
-                                    IBGLPT = p.Field<string>("IBGLPT"),
-                                    IBPRP4 = p.Field<string>("IBPRP4"),
+                                    IMDSC1 = p.Field<string>("IMDSC1").Trim(),
+                                    IBSTKT = p.Field<string>("IBSTKT").Trim(),
+                                    IBGLPT = p.Field<string>("IBGLPT").Trim(),
+                                    IBPRP4 = p.Field<string>("IBPRP4").Trim(),
                                     IBANPL = p.Field<decimal>("IBANPL")
                                 };
 
@@ -278,6 +280,7 @@ namespace BIServices.RackSvc
                     rack.Location = g.First().RHLOCN;
                     rack.HeaderStatus = g.First().RHZ58HST;
                     rack.HeaderStatusDate = g.First().RHZ58RSDT;
+                    rack.ReasonCode = g.First().RHZ58RCD;
                     rack.ItemNum = g.First().RDITM;
                     rack.LotNum = g.First().RDLOTN;
                     rack.POrderCompany = g.First().RDPKCO;
@@ -356,6 +359,7 @@ namespace BIServices.RackSvc
 		        A.RHZ58GWTT,
 		        A.RHZ58BOX,
 		        A.RHZ58SCN,
+                A.RHZ58RCD,
 		        MIN(A.RDDOC1) AS RDDOC1,
 		        MIN(A.RDLOTN) AS RDLOTN,
 		        MIN(A.RDZ58SN) AS RDZ58SN,
@@ -381,6 +385,7 @@ namespace BIServices.RackSvc
                         RHZ58GWTT,
 				        RHZ58BOX,
 				        RHZ58SCN,
+                        RHZ58RCD,
 				        RDLOTN,
                         RDDOC1,
 				        RDZ58SN,
@@ -423,7 +428,8 @@ namespace BIServices.RackSvc
 		        A.RHZ58MTRW,
 		        A.RHZ58GWTT,
 		        A.RHZ58BOX,
-		        A.RHZ58SCN
+		        A.RHZ58SCN,
+                A.RHZ58RCD
             HAVING
                 SUM(A.RDPQOH) > 1000 AND
                 COUNT(*) = 1
@@ -506,6 +512,7 @@ namespace BIServices.RackSvc
                         rack.RackType = CastDbNull.To(reader["RHZ58RT"], String.Empty).Trim();
                         rack.Location = CastDbNull.To(reader["RHLOCN"], String.Empty).Trim();
                         rack.HeaderStatus = CastDbNull.To(reader["RHZ58HST"], String.Empty).Trim();
+                        rack.ReasonCode = CastDbNull.To(reader["RHZ58RCD"], String.Empty).Trim();
                         rack.HeaderStatusDate = E1TimeManager.CastToDateTime(CastDbNull.To<Decimal>(reader["RHZ58RSDT"], 0));
                         rack.ItemNum = CastDbNull.To<Decimal>(reader["RDITM"], 0);
                         rack.LotNum = CastDbNull.To(reader["RDLOTN"], String.Empty).Trim();
@@ -593,6 +600,7 @@ namespace BIServices.RackSvc
                         RHZ58GWTT,
 				        RHZ58BOX,
 				        RHZ58SCN,
+                        RHZ58RCD,
 				        RDLOTN,
                         RDDOC2,
                         RDXCTO,
@@ -698,6 +706,7 @@ namespace BIServices.RackSvc
                         RHZ58HST = p.Field<string>("RHZ58HST"),
                         RHZ58RSDT = E1TimeManager.CastToDateTime(p.Field<decimal>("RHZ58RSDT")),
                         RHLOCN = p.Field<string>("RHLOCN"),
+                        RHZ58RCD = p.Field<string>("RHZ58RCD"),
                         RHZ58RTWT = p.Field<decimal>("RHZ58RTWT") / 100,
                         RHZ58MTRW = p.Field<decimal>("RHZ58MTRW") / 100,
                         RHZ58GWTT = p.Field<decimal>("RHZ58GWTT") / 100,
@@ -748,6 +757,7 @@ namespace BIServices.RackSvc
                     rack.Location = g.First().RHLOCN;
                     rack.HeaderStatus = g.First().RHZ58HST;
                     rack.HeaderStatusDate = g.First().RHZ58RSDT;
+                    rack.ReasonCode = g.First().RHZ58RCD;
                     rack.ItemNum = g.First().RDITM;
                     rack.LotNum = g.First().RDLOTN;
                     rack.POrderCompany = g.First().RDPKCO;

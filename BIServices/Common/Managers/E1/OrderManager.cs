@@ -838,6 +838,12 @@ namespace BIServices.Common.Managers.E1
                     line.Lite1HeatTreatment = itemAtts.GetStringAttributeValue("Z58L1HT");
                     line.Lite2HeatTreatment = itemAtts.GetStringAttributeValue("Z58L2HT");
                     line.Lite3HeatTreatment = itemAtts.GetStringAttributeValue("Z58L3HT");
+
+                    line.ExtPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587569");
+                    line.IntPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587581");
+                    line.ExtPrsvCB = itemAtts.GetStringAttributeValue("Z587563");
+                    line.IntPrsvCB = itemAtts.GetStringAttributeValue("Z587575");
+
                     line.TotalActualSqft = line.OrderQty * itemAtts.GetDecimalAttributeValue("Z58USF");
                     line.TotalBillableSqft = line.OrderQty * itemAtts.GetDecimalAttributeValue("Z58BSF");
                     //line.TotalGlassWeight = itemAtts.GetDecimalAttributeValue("Z58GLWT");
@@ -1343,6 +1349,10 @@ namespace BIServices.Common.Managers.E1
                     line.Lite1HeatTreatment = itemAtts.GetStringAttributeValue("Z58L1HT");
                     line.Lite2HeatTreatment = itemAtts.GetStringAttributeValue("Z58L2HT");
                     line.Lite3HeatTreatment = itemAtts.GetStringAttributeValue("Z58L3HT");
+                    line.ExtPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587569");
+                    line.IntPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587581");
+                    line.ExtPrsvCB = itemAtts.GetStringAttributeValue("Z587563");
+                    line.IntPrsvCB = itemAtts.GetStringAttributeValue("Z587575");
                     line.Lite1Routing = itemAtts.GetStringAttributeValue("Z58L1RTG");
                     line.Lite2Routing = itemAtts.GetStringAttributeValue("Z58L2RTG");
                     line.Lite3Routing = itemAtts.GetStringAttributeValue("Z58L3RTG");

@@ -65,6 +65,8 @@ namespace BIServices.Common.Managers.Enterprise
                 WADOCO,
 				WASRST,
 				SDLNTY,
+                SHDEL1,
+                SHDEL2,
 				IMSTKT,
                 IBANPL,
 				SDITM,
@@ -92,6 +94,10 @@ namespace BIServices.Common.Managers.Enterprise
 				LP.LHGFLAG1
 			FROM 
 				F4211 
+                INNER JOIN F4201
+                ON  SHKCOO = SDKCOO AND
+                    SHDOCO = SDDOCO AND
+                    SHDCTO = SDDCTO
 				INNER JOIN F580032
 				ON	ATKCOO = SDKCOO AND
 					ATDOCO = SDDOCO AND
@@ -229,6 +235,8 @@ namespace BIServices.Common.Managers.Enterprise
                         line.PlantNum = reader.Get<string>("SDMCU");
                         line.PlantCode = PlantManager.GetPlant(line.PlantNum).PlantCode;
                         line.AccountManager = reader.Get<string>("CPZ58GAL1");
+                        line.DeliveryInstruction1 = reader.Get<string>("SHDEL1");
+                        line.DeliveryInstruction2 = reader.Get<string>("SHDEL2");
                         line.CustomerNum = CastDbNull.To<decimal>(reader["SDAN8"], 0);
                         line.CustomerName = CastDbNull.To(reader["SDAN8_NAME"], string.Empty).Trim();
 						line.CustomerShipNum = CastDbNull.To<decimal>(reader["SDSHAN"], 0);

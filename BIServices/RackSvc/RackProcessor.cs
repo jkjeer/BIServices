@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using BIServices.Common.Managers.E1;
@@ -21,7 +22,7 @@ namespace BIServices.RackSvc
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var plantList = plantCode.Replace("'", "").Split(',').ToList();
-                var statusList = status.Replace("'", "").Split(',').ToList();
+                var statusList = String.IsNullOrEmpty(status) ? new List<string>() : status.Replace("'", "").Split(',').ToList();
                 var mgr = new StockRackManager(session);
                 racks = mgr.GetStockRacks(session, plantList, agingDays, statusList);
             }
@@ -44,7 +45,7 @@ namespace BIServices.RackSvc
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var plantList = plantCode.Replace("'", "").Split(',').ToList();
-                var statusList = status.Replace("'", "").Split(',').ToList();
+                var statusList = String.IsNullOrEmpty(status) ? new List<string>() : status.Replace("'", "").Split(',').ToList();
                 var mgr = new ConfiguredRackManager(session);
                 //racks = mgr.GetHVManufacturedConfiguredRacks(session, plantList, agingDays);
                 racks = mgr.GetHVMTORacks(session, plantList, agingDays, statusList);
@@ -68,7 +69,7 @@ namespace BIServices.RackSvc
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var plantList = plantCode.Replace("'", "").Split(',').ToList();
-                var statusList = status.Replace("'", "").Split(',').ToList();
+                var statusList = String.IsNullOrEmpty(status) ? new List<string>() : status.Replace("'", "").Split(',').ToList();
                 var mgr1 = new StockRackManager(session);
                 racks.AddRange(mgr1.GetStockRacks(session, plantList, agingDays, statusList));
                 var mgr2 = new ConfiguredRackManager(session);

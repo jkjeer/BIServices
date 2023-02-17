@@ -71,6 +71,7 @@ namespace BIServices.RackSvc
                 RHURRF,
                 RHPSN,
                 RHZ58SLDN,
+                RHZ58RCD,
 				RDLOTN,
 				RDZ58SN,
 				RDITM,
@@ -249,6 +250,7 @@ namespace BIServices.RackSvc
                         rack.ReceivedDate = E1TimeManager.CastToDateTime(reader.Get<Decimal>("HLUPMJ"));
                         rack.ReceivedAgingDays = (DateTime.Now - rack.ReceivedDate.Value).Days;
                         rack.ReceivedQty = rack.OriginalQuantity;
+                        rack.ReasonCode = reader.Get<string>("RHZ58RCD", String.Empty);
                         rack.ItemDesc = reader.Get<string>("IMDSC1", String.Empty);
                         rack.StockType = reader.Get<string>("IBSTKT", String.Empty);
                         rack.GlCategory = reader.Get<string>("IBGLPT", String.Empty);

@@ -56,6 +56,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 18, EmitDefaultValue = false)]
         public string LineType { get; set; }
 
+        [DataMember(Order = 18, EmitDefaultValue = false)]
+        public string DeliveryInstruction1 { get; set; }
+
+        [DataMember(Order = 18, EmitDefaultValue = false)]
+        public string DeliveryInstruction2 { get; set; }
+
         [DataMember(Order = 20, EmitDefaultValue = false)]
         public decimal WorkOrderNum { get; set; }
 
@@ -186,6 +192,18 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 84, EmitDefaultValue = false)]
         public string GridStyle { get; set; }
+
+        [DataMember(Order = 85, EmitDefaultValue = false)]
+        public string ExtPrsvCB { get; set; }
+
+        [DataMember(Order = 85, EmitDefaultValue = false)]
+        public string IntPrsvCB { get; set; }
+
+        [DataMember(Order = 85, EmitDefaultValue = false)]
+        public decimal ExtPrsvScoring { get; set; }
+
+        [DataMember(Order = 85, EmitDefaultValue = false)]
+        public decimal IntPrsvScoring { get; set; }
 
         [DataMember(Order = 86, EmitDefaultValue = true)]
         public decimal ShapeNum { get; set; }

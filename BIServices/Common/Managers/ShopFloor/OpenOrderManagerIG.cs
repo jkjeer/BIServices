@@ -67,6 +67,10 @@ namespace BIServices.Common.Managers.ShopFloor
                 CAST(ord.ShapeNum AS INT) AS ShapeNum,
                 ord.CardinalProductType,
                 ord.MCode1_Air1,
+                ord.ExtPrsvCB, 
+                ord.IntPrsvCB, 
+                ord.ExtPrsvScoring, 
+                ord.IntPrsvScoring,
                 sl.ProductType,
                 sl.ReasonCode,
                 sl.Priority                     AS PriorityCode,
@@ -316,6 +320,12 @@ namespace BIServices.Common.Managers.ShopFloor
                         line.Description2 = CastDbNull.To(reader["Description2"], string.Empty).Trim();
                         line.ShapeNum = CastDbNull.To<int>(reader["ShapeNum"], 0);
                         line.MCode = CastDbNull.To<decimal>(reader["MCode1_Air1"], 0);
+
+                        line.ExtPrsvCB = CastDbNull.To<string>(reader["ExtPrsvCB"], String.Empty);
+                        line.IntPrsvCB = CastDbNull.To<string>(reader["IntPrsvCB"], String.Empty);
+                        line.ExtPrsvScoring = CastDbNull.To<decimal>(reader["ExtPrsvScoring"], 0);
+                        line.IntPrsvScoring = CastDbNull.To<decimal>(reader["IntPrsvScoring"], 0);
+
                         //line.CustomerPOHdr = CastDbNull.To(reader["SHVR01"], string.Empty).Trim();
                         line.CustomerPO = CastDbNull.To(reader["CustomerPO"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ProductType"], string.Empty).Trim();
