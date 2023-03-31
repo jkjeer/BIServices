@@ -951,8 +951,8 @@ namespace BIServices.Common.Managers.ShopFloor
                 // Rack Type
                 if (!String.IsNullOrEmpty(rackType))
                 {
-                    filters.Add("RackTypeCode = @RackTypeCode AND\r\n");
-                    parameters.Add(new SqlParameter("@RackTypeCode", SqlDbType.VarChar, 10));
+                    filters.Add("RackType = @RackType AND\r\n");
+                    parameters.Add(new SqlParameter("@RackType", SqlDbType.VarChar, 10));
                     parameters.Last().Value = rackType;
                 }
 
