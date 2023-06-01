@@ -24,7 +24,7 @@ namespace BIServices.OrderSvc
         SalesOrderLines GetPriceAuditOrders(string plant);
 
         [OperationContract, OperationInvokerLogger]
-        SalesOrderLines GetAgcOpenOrders(string plant);
+        SalesOrderLines GetAgcOpenOrders(string plant, string customerSoldNums);
     }
 
     [ServiceContract]
@@ -55,8 +55,8 @@ namespace BIServices.OrderSvc
         SalesOrderLines GetStaleOrders(string plant, string dateProperty, string dateCode, string startDate, string endDate);
 
         [OperationContract, OperationInvokerLogger]
-        [WebGet(UriTemplate = "/GetAgcOpenOrders?Plant={plant}")]
-        SalesOrderLines GetAgcOpenOrders(string plant);
+        [WebGet(UriTemplate = "/GetAgcOpenOrders?Plant={plant}&CustomerSoldNum={customerSoldNums}")]
+        SalesOrderLines GetAgcOpenOrders(string plant, string customerSoldNums);
 
         [OperationContract, OperationInvokerLogger]
         [WebGet(UriTemplate = "/GetPriceAuditOrders?Plant={plant}")]

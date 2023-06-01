@@ -78,12 +78,12 @@ namespace BIServices.OrderSvc
             }
         }
 
-        public SalesOrderLines GetAgcOpenOrders(string plants)
+        public SalesOrderLines GetAgcOpenOrders(string plants, string customerSoldNums)
         {
             var processor = new OrderProcessor();
             try
             {
-                return processor.GetAgcOpenOrders(plants);
+                return processor.GetAgcOpenOrders(plants, customerSoldNums);
             }
             catch (Exception e)
             {
@@ -179,12 +179,12 @@ namespace BIServices.OrderSvc
             }
         }
 
-        public SalesOrderLines GetAgcOpenOrders(string plants)
+        public SalesOrderLines GetAgcOpenOrders(string plants, string customerSoldNums)
         {
             var processor = new OrderProcessor();
             try
             {
-                return processor.GetAgcOpenOrders(plants);
+                return processor.GetAgcOpenOrders(plants, customerSoldNums);
             }
             catch (Exception e)
             {

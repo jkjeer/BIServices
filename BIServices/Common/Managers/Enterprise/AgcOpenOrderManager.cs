@@ -192,7 +192,7 @@ namespace BIServices.Common.Managers.Enterprise
             return cmd;
         }
 
-        public SalesOrderLines GetOpenOrders(BusinessSystemSession session, Dictionary<string, SqlConnection> sqlCns, string plants)
+        public SalesOrderLines GetOpenOrders(BusinessSystemSession session, Dictionary<string, SqlConnection> sqlCns, string plants, string customerSoldNums)
         {
             var lines = new SalesOrderLines();
             iDB2Command cmd;
@@ -214,6 +214,22 @@ namespace BIServices.Common.Managers.Enterprise
                         parameters.Last().Value = plant.PlantNum.PadLeft(12);
                     }
                     filters.Add("SDMCU IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
+                }
+
+                // Customer Sold Num
+                if (!string.IsNullOrEmpty(customerSoldNums))
+                {
+                    var customerSoldNumsList = Array.ConvertAll(customerSoldNums.Split(','), Convert.ToDecimal).ToList();
+                    string strInClause = "";
+                    foreach (decimal customerSoldNum in customerSoldNumsList)
+                    {
+                        strInClause = strInClause + "?,";
+                        parameters.Add(new iDB2Parameter("AN8", iDB2DbType.iDB2Decimal));
+                        parameters.Last().Precision = 8;
+                        parameters.Last().Scale = 0;
+                        parameters.Last().Value = customerSoldNum;
+                    }
+                    filters.Add("SDAN8 IN (" + strInClause.Substring(0, strInClause.Length - 1) + ") AND\r\n");
                 }
 
                 // Command
@@ -259,7 +275,7 @@ namespace BIServices.Common.Managers.Enterprise
                         line.Construction = reader.Get<string>("SDDSC1");
                         line.Dimension = reader.Get<string>("SDDSC2");
                         line.CustomerPO = reader.Get<string>("SDVR01");
-                        line.CustomerPart1 = reader.Get<string>("ATZ58CP2");
+                        line.CustomerPart1 = reader.Get<string>("ATZ58CP2").Replace("\u0002", "");
                         line.CustomerPart2 = reader.Get<string>("ATZ58CP3");
                         line.CarrierFlag = reader.Get<string>("LHGFLAG1");
                         line.OrderQty = reader.Get<decimal>("SDUORG") / 1000;

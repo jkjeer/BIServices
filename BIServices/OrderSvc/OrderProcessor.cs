@@ -104,7 +104,7 @@ namespace BIServices.OrderSvc
             return lines;
         }
 
-        public SalesOrderLines GetAgcOpenOrders(string plantCodes)
+        public SalesOrderLines GetAgcOpenOrders(string plantCodes, string customerSoldNums)
         {
             var lines = new SalesOrderLines();
             var session = new BusinessSystemSession();
@@ -116,7 +116,7 @@ namespace BIServices.OrderSvc
                 cnPlantDb1.Open();
                 sqlCns.Add("PLANT.FGWEB", cnPlantDb1);
                 var mgr = new AgcOpenOrderManager(session);
-                lines.AddRange(mgr.GetOpenOrders(session, sqlCns, plantCodes));
+                lines.AddRange(mgr.GetOpenOrders(session, sqlCns, plantCodes, customerSoldNums));
             }
             catch (Exception e)
             {
