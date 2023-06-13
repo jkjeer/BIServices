@@ -239,6 +239,9 @@ namespace BIServices.Common.Types.Enterprise
         public decimal UnitActualSqft { get; set; }
 
         [DataMember(Order = 99, EmitDefaultValue = false)]
+        public decimal UnitBillableSqft { get; set; }
+
+        [DataMember(Order = 99, EmitDefaultValue = false)]
         public string InterlayerCode { get; set; }
 
         // Customer References

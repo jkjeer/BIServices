@@ -87,8 +87,10 @@ namespace BIServices.Common.Managers.ShopFloor
                 sl.LastStatus,
                 sl.NextStatus,
                 sl.UnitActualSqft,
+                sl.UnitBillableSqft,
                 gi.UnitType,
                 sl.UnitActualSqft * sl.Quantity AS TotalActualSqft,
+                sl.UnitBillableSqft * sl.Quantity AS TotalBillableSqft,
 	            ScheduledUnits = CAST(ISNULL((SELECT SUM(rd.QtyRecd) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '1'), 0) AS INT), 
 	            CompletedUnits = CAST(ISNULL((SELECT SUM(rd.QtyOnHand) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '4'), 0) AS INT), 
 	            ClosedUnits = CAST(ISNULL((SELECT SUM(rd.QtyOnHand) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '5'), 0) AS INT),
@@ -349,6 +351,8 @@ namespace BIServices.Common.Managers.ShopFloor
                         line.ScheduleNum = CastDbNull.To<decimal>(reader["ScheduleNum"], 0);
                         line.UnitActualSqft = CastDbNull.To<decimal>(reader["UnitActualSqft"], 0);
                         line.TotalActualSqft = CastDbNull.To<decimal>(reader["TotalActualSqft"], 0);
+                        line.UnitBillableSqft = CastDbNull.To<decimal>(reader["UnitBillableSqft"], 0);
+                        line.TotalBillableSqft = CastDbNull.To<decimal>(reader["TotalBillableSqft"], 0);
                         line.ScheduledUnits = CastDbNull.To<int>(reader["ScheduledUnits"], 0);
                         line.CompletedUnits = CastDbNull.To<int>(reader["CompletedUnits"], 0);
                         line.ClosedUnits = CastDbNull.To<int>(reader["ClosedUnits"], 0);
