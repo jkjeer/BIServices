@@ -1551,7 +1551,7 @@ namespace BIServices.Common.Managers.E1
                                         break;
                                 }
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                             }
 

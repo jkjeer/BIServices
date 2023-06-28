@@ -44,8 +44,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\IBM\Client Access\IBM.Data.DB2.iSeries.dll</HintPath>
     </Reference>
-    <Reference Include="SoaCore">
-      <HintPath>..\..\..\repos\SoaCore\SoaCore\bin\Debug\SoaCore.dll</HintPath>
+    <Reference Include="SoaCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SoaCore\SoaCore\bin\Debug\SoaCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -61,27 +62,13 @@
       <HintPath>..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.ServiceModel.Web.dll</HintPath>
     </Reference>
     <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArchieSvc\APInvoiceProcessor.cs" />
-    <Compile Include="ArchieSvc\ArchieProcessor.cs" />
-    <Compile Include="ArchieSvc\ArchieService.cs" />
-    <Compile Include="ArchieSvc\IArchieService.cs" />
-    <Compile Include="ArchieSvc\TCCProcessor.cs" />
     <Compile Include="CgHvSvc\CgHvProcessor.cs" />
     <Compile Include="CgHvSvc\CgHvService.cs" />
-    <Compile Include="Common\Managers\Archie\APInvoiceManager.cs" />
-    <Compile Include="Common\Managers\Archie\ArchieLogManager.cs" />
-    <Compile Include="Common\Managers\Archie\ArchiveTableManager.cs" />
-    <Compile Include="Common\Managers\Archie\BackupTableManager.cs" />
-    <Compile Include="Common\Managers\Archie\DeleteIISLogFileManager.cs" />
-    <Compile Include="Common\Managers\Archie\DeleteNLogFileManager.cs" />
-    <Compile Include="Common\Managers\Archie\DeletePSLogFileManager.cs" />
-    <Compile Include="Common\Managers\Archie\DeleteSOALogFileManager.cs" />
-    <Compile Include="Common\Managers\Archie\DeleteSvcLogFileManager.cs" />
-    <Compile Include="Common\Managers\Archie\LogDeleteManager.cs" />
     <Compile Include="Common\Managers\E1\CustomerOrderManager.cs" />
     <Compile Include="Common\Managers\E1\F4102Manager.cs" />
     <Compile Include="Common\Managers\E1\OpenRackManager.cs" />
@@ -97,8 +84,6 @@
     <Compile Include="Common\Managers\ShopFloor\OrderManager.cs" />
     <Compile Include="Common\Managers\ShopFloor\SalesManagerLG.cs" />
     <Compile Include="Common\Managers\ShopFloor\SalvagedGlassManager.cs" />
-    <Compile Include="Common\Types\Archie\APInvoice.cs" />
-    <Compile Include="Common\Managers\Archie\TCCManager.cs" />
     <Compile Include="Common\Managers\E1\F0005Manager.cs" />
     <Compile Include="Common\Managers\E1\F580030AManager.cs" />
     <Compile Include="Common\Managers\E1\F580030Manager.cs" />
@@ -106,16 +91,6 @@
     <Compile Include="Common\Managers\Enterprise\InterlayerLotManager.cs" />
     <Compile Include="Common\Managers\Enterprise\RemakeUnitsManager.cs" />
     <Compile Include="Common\Managers\E1\OpenUnitManagerLG.cs" />
-    <Compile Include="Common\Types\Archie\ArchieLog.cs" />
-    <Compile Include="Common\Types\Archie\ArchieLogDetail.cs" />
-    <Compile Include="Common\Types\Archie\ArchiveTableConfig.cs" />
-    <Compile Include="Common\Types\Archie\BackupTableConfig.cs" />
-    <Compile Include="Common\Types\Archie\Server.cs" />
-    <Compile Include="Common\Types\Archie\TailTableConfig.cs" />
-    <Compile Include="Common\Types\Archie\TCCConfiguration.cs" />
-    <Compile Include="Common\Types\Archie\TCCResult.cs" />
-    <Compile Include="Common\Types\Archie\TCCUnion.cs" />
-    <Compile Include="Common\Types\Archie\TruncateTableConfig.cs" />
     <Compile Include="Common\Types\E1\BusinessSystemSession.cs" />
     <Compile Include="Common\Managers\Enterprise\PriceAuditManager.cs" />
     <Compile Include="Common\Managers\Enterprise\SSISLogManager.cs" />
@@ -142,9 +117,6 @@
     <Compile Include="CgiisSvc\CgiisService.cs" />
     <Compile Include="CgiisSvc\ICgiisService.cs" />
     <Compile Include="Common\Types\Response\SubmitResponse.cs" />
-    <Compile Include="Common\Managers\Archie\TableManager.cs" />
-    <Compile Include="Common\Managers\Archie\TailDataTableManager.cs" />
-    <Compile Include="Common\Managers\Archie\TruncateLedgerTableManager.cs" />
     <Compile Include="Common\Managers\E1\BusinessSystemSessionManager.cs" />
     <Compile Include="Common\Managers\E1\CalendarManager.cs" />
     <Compile Include="Common\Managers\E1\E1TimeManager.cs" />
@@ -162,7 +134,6 @@
     <Compile Include="Common\Managers\Enterprise\ShippingLaneManager.cs" />
     <Compile Include="Common\Managers\Enterprise\SqlBulkCopyManager.cs" />
     <Compile Include="Common\Managers\Enterprise\UdcItemManager.cs" />
-    <Compile Include="Common\Types\Archie\Table.cs" />
     <Compile Include="Common\Types\Configuration\PlantConfiguration.cs" />
     <Compile Include="Common\Types\E1\F580020.cs" />
     <Compile Include="Common\Types\E1\ItemConfiguration.cs" />
@@ -261,6 +232,9 @@
     <Compile Include="Common\Managers\ShopFloor\ScheduleManagerShopFloor.cs" />
     <Compile Include="QuerySvc\HttpClientTest.cs" />
     <Compile Include="QuerySvc\RackEventManagerLG.cs" />
+    <Compile Include="ReportSvc\IReportService.cs" />
+    <Compile Include="ReportSvc\ReportProcessor.cs" />
+    <Compile Include="ReportSvc\ReportService.cs" />
     <Compile Include="SalesSvc\ISalesService.cs" />
     <Compile Include="SalesSvc\SalesProcessor.cs" />
     <Compile Include="SalesSvc\SalesService.cs" />
@@ -344,6 +318,13 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Common\Xslt\ResetPYHighWaterMarks.xslt" />
+    <EmbeddedResource Include="Common\Xslt\UpdateReportParameterResponseBody.xslt">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\Xslt\PublishReportResponseBody.xslt">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Common\Xslt\PublishFileResponseBody.xslt" />
     <Content Include="NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -359,17 +340,20 @@
     <Folder Include="Properties\DataSources\" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.PowerBI.Api">
+      <Version>4.14.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies">
+      <Version>1.1.0</Version>
+    </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>13.0.1</Version>
+      <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>4.7.12</Version>
+      <Version>4.0.0</Version>
     </PackageReference>
     <PackageReference Include="NLog.Config">
-      <Version>4.7.12</Version>
-    </PackageReference>
-    <PackageReference Include="NLog.Schema">
-      <Version>4.7.12</Version>
+      <Version>4.7.15</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -1547,7 +1547,7 @@ namespace BIServices.Common.Managers.ShopFloor
                                         break;
                                 }
                             }
-                            catch (Exception e)
+                            catch (Exception)
                             {
                             }
 

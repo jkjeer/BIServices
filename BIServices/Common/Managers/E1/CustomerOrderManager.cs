@@ -444,7 +444,6 @@ namespace BIServices.Common.Managers.E1
 
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
-                    int i = 0;
                     while (reader.Read())
                     {
                         var line = new SalesOrderLine();
@@ -711,7 +710,6 @@ namespace BIServices.Common.Managers.E1
 
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
-                    int i = 0;
                     while (reader.Read())
                     {
                         var line = new SalesOrderLine();
