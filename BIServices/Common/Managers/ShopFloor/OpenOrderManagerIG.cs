@@ -67,6 +67,10 @@ namespace BIServices.Common.Managers.ShopFloor
                 CAST(ord.ShapeNum AS INT) AS ShapeNum,
                 ord.CardinalProductType,
                 ord.MCode1_Air1,
+                ord.ExtPrsvCB, 
+                ord.IntPrsvCB, 
+                ord.ExtPrsvScoring, 
+                ord.IntPrsvScoring,
                 sl.ProductType,
                 sl.ReasonCode,
                 sl.Priority                     AS PriorityCode,
@@ -83,8 +87,10 @@ namespace BIServices.Common.Managers.ShopFloor
                 sl.LastStatus,
                 sl.NextStatus,
                 sl.UnitActualSqft,
+                sl.UnitBillableSqft,
                 gi.UnitType,
                 sl.UnitActualSqft * sl.Quantity AS TotalActualSqft,
+                sl.UnitBillableSqft * sl.Quantity AS TotalBillableSqft,
 	            ScheduledUnits = CAST(ISNULL((SELECT SUM(rd.QtyRecd) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '1'), 0) AS INT), 
 	            CompletedUnits = CAST(ISNULL((SELECT SUM(rd.QtyOnHand) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '4'), 0) AS INT), 
 	            ClosedUnits = CAST(ISNULL((SELECT SUM(rd.QtyOnHand) FROM EBS.RackDetail rd WHERE rd.SOrderNum = sl.OrderNum AND rd.SOrderType = sl.OrderType AND rd.SOrderLineNum = sl.OrderLineNum AND rd.StatusCode = '5'), 0) AS INT),
@@ -316,6 +322,12 @@ namespace BIServices.Common.Managers.ShopFloor
                         line.Description2 = CastDbNull.To(reader["Description2"], string.Empty).Trim();
                         line.ShapeNum = CastDbNull.To<int>(reader["ShapeNum"], 0);
                         line.MCode = CastDbNull.To<decimal>(reader["MCode1_Air1"], 0);
+
+                        line.ExtPrsvCB = CastDbNull.To<string>(reader["ExtPrsvCB"], String.Empty);
+                        line.IntPrsvCB = CastDbNull.To<string>(reader["IntPrsvCB"], String.Empty);
+                        line.ExtPrsvScoring = CastDbNull.To<decimal>(reader["ExtPrsvScoring"], 0);
+                        line.IntPrsvScoring = CastDbNull.To<decimal>(reader["IntPrsvScoring"], 0);
+
                         //line.CustomerPOHdr = CastDbNull.To(reader["SHVR01"], string.Empty).Trim();
                         line.CustomerPO = CastDbNull.To(reader["CustomerPO"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ProductType"], string.Empty).Trim();
@@ -339,6 +351,8 @@ namespace BIServices.Common.Managers.ShopFloor
                         line.ScheduleNum = CastDbNull.To<decimal>(reader["ScheduleNum"], 0);
                         line.UnitActualSqft = CastDbNull.To<decimal>(reader["UnitActualSqft"], 0);
                         line.TotalActualSqft = CastDbNull.To<decimal>(reader["TotalActualSqft"], 0);
+                        line.UnitBillableSqft = CastDbNull.To<decimal>(reader["UnitBillableSqft"], 0);
+                        line.TotalBillableSqft = CastDbNull.To<decimal>(reader["TotalBillableSqft"], 0);
                         line.ScheduledUnits = CastDbNull.To<int>(reader["ScheduledUnits"], 0);
                         line.CompletedUnits = CastDbNull.To<int>(reader["CompletedUnits"], 0);
                         line.ClosedUnits = CastDbNull.To<int>(reader["ClosedUnits"], 0);

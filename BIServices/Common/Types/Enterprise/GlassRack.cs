@@ -164,6 +164,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 118)]
         public string ProductType { get; set; }
 
+        [DataMember(Order = 119)]
+        public string CardinalProductType { get; set; }
+
         [DataMember(Order = 120)]
         public string UnitType { get; set; }
 

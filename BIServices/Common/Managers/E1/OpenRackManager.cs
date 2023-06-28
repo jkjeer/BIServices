@@ -32,25 +32,29 @@ namespace BIServices.Common.Managers.E1
             List<string> productionTypesList = null)
         {
             var racks = new GlassRacks();
-            var openUnitMgr = new E1.OpenUnitManager(session);
+            //var openUnitMgr = new E1.OpenUnitManager(session);
+            var openUnitMgr = new ShopFloor.OpenUnitManagerIG(session);
             try
             {
                 _logger.Trace("Get Open Units");
 
-                var units = openUnitMgr.GetOpenUnits(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
+                //var units = openUnitMgr.GetOpenUnits(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
+                //    endDate, custNum,
+                //    rackType, scheduleType, scheduleNumList, igLinesList, rackStatusList, unitTypeList, optionsList,
+                //    customerSoldNum, customerShipNum, boxNum, orderDateCode, hoursToTruck, rackIdsList);
+
+                var units = openUnitMgr.GetOpenUnitsGlassUnit(session, cnShopFloorRpt, cnShopFloor, cnDw, plant, maxDateCode, startDate,
                     endDate, custNum,
                     rackType, scheduleType, scheduleNumList, igLinesList, rackStatusList, unitTypeList, optionsList,
                     customerSoldNum, customerShipNum, boxNum, orderDateCode, hoursToTruck, rackIdsList);
 
                 _logger.Trace(units.Count);
 
-                var gRacks = units.GroupBy(x => x.RackId).OrderBy(z => z.Key);
+                var gRacks = units.OrderBy(x => x.UnitId).GroupBy(x => x.RackId);
                 foreach (var gRack in gRacks)
                 {
                     var rack = new GlassRack();
                     var firstUnit = gRack.First();
-                    _logger.Trace(gRack.First().RackId);
-
                     rack.Plant = plant.PlantNum;
                     rack.RackId = gRack.Key;
                     rack.AssetId = firstUnit.AssetId;
@@ -58,6 +62,7 @@ namespace BIServices.Common.Managers.E1
                     rack.LastUnitId = gRack.Max(x => x.UnitId);
                     rack.UnitType = gRack.GroupBy(x => x.UnitType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.ProductType = gRack.GroupBy(x => x.ProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
+                    rack.CardinalProductType = gRack.GroupBy(x => x.CardinalProductType).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.RackType = firstUnit.RackType;
                     rack.RackLocation = firstUnit.RackLocation;
                     rack.BoxNum = firstUnit.BoxNum;
@@ -95,7 +100,6 @@ namespace BIServices.Common.Managers.E1
                     rack.DeliveryDateTimeHours = gRack.Min(x => x.DeliveryDateTimeHours);
                     rack.IGLineRun = gRack.GroupBy(x => x.IGLineRun).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
                     rack.IGLineScheduled = gRack.GroupBy(x => x.IGLineScheduled).OrderByDescending(z => z.Sum(t => t.Units)).First().Key;
-
                     rack.Units = gRack.Sum(x => x.Units);
                     rack.Tubes = gRack.Sum(x => x.Tubes);
                     rack.Scoring = gRack.Sum(x => x.Scoring);
@@ -108,7 +112,6 @@ namespace BIServices.Common.Managers.E1
                     rack.TareWeight = gRack.First().RackTareWeight;
                     rack.GlassWeight = gRack.Sum(x => x.GlassWeight);
                     rack.TotalWeight = rack.TareWeight + rack.GlassWeight;
-
                     racks.Add(rack);
                 }
 

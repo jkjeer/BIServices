@@ -44,6 +44,7 @@ namespace BIServices.Common.Managers.Enterprise
             }
             var cmd = new iDB2Command();
             cmd.CommandType = CommandType.Text;
+			cmd.CommandTimeout = 0;
             cmd.CommandText = $@"
             SELECT 
                 SDMCU,

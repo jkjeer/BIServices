@@ -164,6 +164,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 208, EmitDefaultValue = true)]
         public string CustomerShipName { get; set; }
 
+        [DataMember(Order = 209, EmitDefaultValue = true)]
+        public decimal OrigCustomerNum { get; set; }
+
+        [DataMember(Order = 209, EmitDefaultValue = true)]
+        public string OrigCustomerName { get; set; }
+
         [DataMember(Order = 210, EmitDefaultValue = true)]
         public string CustomerNameUnitBox { get; set; }
 
@@ -199,6 +205,12 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 236, EmitDefaultValue = true)]
         public string GenericSeqNum { get; set; }
+
+        [DataMember(Order = 237, EmitDefaultValue = true)]
+        public DateTime CustomerProductionDate { get; set; }
+
+        [DataMember(Order = 237, EmitDefaultValue = true)]
+        public DateTime CustomerOrigProductionDate { get; set; }
 
         [DataMember(Order = 240, EmitDefaultValue = true)]
         public string CardinalProductType { get; set; }
@@ -361,6 +373,9 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 416, EmitDefaultValue = true)]
         public string ScheduledLineId { get; set; }
+
+        [DataMember(Order = 416, EmitDefaultValue = true)]
+        public int ScheduledLineNum { get; set; }
 
         [DataMember(Order = 418, EmitDefaultValue = true)]
         public decimal ScheduledRackId { get; set; }

@@ -96,6 +96,12 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 252, EmitDefaultValue = false)]
         public string ShipRoute { get; set; }
 
+        [DataMember(Order = 254, EmitDefaultValue = false)]
+        public DateTime CustomerProductionDate { get; set; }
+
+        [DataMember(Order = 256, EmitDefaultValue = false)]
+        public DateTime CustomerOrigProductionDate { get; set; }
+
         // Related Sales Order
         [DataMember(Order = 300, EmitDefaultValue = false)]
         public decimal SOrderNum { get; set; }
@@ -233,6 +239,15 @@ namespace BIServices.Common.Types.Enterprise
 
         [DataMember(Order = 542, EmitDefaultValue = false)]
         public DateTime CurrScheduleDate { get; set; }
+
+        [DataMember(Order = 550, EmitDefaultValue = false)]
+        public int TargetLineId { get; set; }
+
+        [DataMember(Order = 552, EmitDefaultValue = false)]
+        public int TargetShift { get; set; }
+
+        [DataMember(Order = 554, EmitDefaultValue = false)]
+        public DateTime TargetShiftDate { get; set; }
 
         // Boxing
         [DataMember(Order = 600, EmitDefaultValue = false)]

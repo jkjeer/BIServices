@@ -156,7 +156,7 @@ namespace BIServices.QuerySvc
                   PD.WrittenDate ,
                   ROW_NUMBER() OVER ( PARTITION BY rt.RackId ORDER BY PD.WrittenDate DESC ) AS ROW_NUM
                 FROM
-                  Rawtags rt WITH (NOLOCK)
+                  EBS.RackDetail rt WITH (NOLOCK)
                   INNER JOIN UnitBox ub WITH (NOLOCK)
                   ON ub.UnitIDtxt = rt.SerialNum
                   INNER JOIN ProdData PD WITH ( NOLOCK )
@@ -219,7 +219,7 @@ namespace BIServices.QuerySvc
               PD.ProductionLineCode ,
               COUNT(DISTINCT ub.UnitID) AS Units
             FROM
-              Rawtags rt WITH (NOLOCK)
+              EBS.RackDetail rt WITH (NOLOCK)
               INNER  JOIN UnitBox ub WITH (NOLOCK)
               ON ub.UnitIDtxt = rt.SerialNum
               INNER JOIN ProdData PD WITH ( NOLOCK )
@@ -301,7 +301,7 @@ namespace BIServices.QuerySvc
               SUM(CASE WHEN ub.MCode > 0 THEN 1 ELSE 0 END) AS Bars,
               SUM(CASE WHEN ub.PickUnit > 0 THEN 1 ELSE 0 END) AS Picks
             FROM
-              Rawtags rt
+              EBS.RackDetail rt
               INNER  JOIN UnitBox ub
               ON ub.UnitIDtxt = rt.SerialNum
             WHERE

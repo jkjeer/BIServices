@@ -83,6 +83,7 @@ namespace BIServices.Common.Managers.E1
                 SDUPRC,
                 SDAEXP,
                 SDRCD,
+                SDIR04,
 	            ATZ58PT,
 	            ATZ58CP2,
 	            ATZ58CP3,
@@ -100,7 +101,8 @@ namespace BIServices.Common.Managers.E1
                 SLUPMJ,
                 SLTDAY,
 				UMCONV,
-                CPZ58CCV05,
+                CP1.CPZ58CCV05,
+                CP2.CPZ58GAL1,
 			    ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY SLUPMJ ASC, SLTDAY ASC) AS RN
             FROM
 	            F4211
@@ -136,9 +138,12 @@ namespace BIServices.Common.Managers.E1
 					UMITM = SDITM AND
 					UMUM = 'EA' AND
 					UMRUM = 'LB'
-                LEFT OUTER JOIN F580375
-                ON  CPMCU = SDMCU AND
-                    CPSHAN = SDSHAN
+                LEFT OUTER JOIN F580375 CP1
+                ON  CP1.CPMCU = SDMCU AND
+                    CP1.CPSHAN = SDSHAN
+				LEFT OUTER JOIN F580430 CP2
+				ON	CP2.CPAN8 = SDSHAN AND
+                    CP2.CPMCU = SDMCU
             WHERE
                 {filterString}
                 SDLNTY != 'W' AND
@@ -166,9 +171,6 @@ namespace BIServices.Common.Managers.E1
             var cmd = new iDB2Command();
             cmd.CommandType = CommandType.Text;
             cmd.CommandText = $@"
-            SELECT 
-	            *
-            FROM (
                     SELECT
 	                    SDMCU,
 	                    SDAN8,
@@ -197,6 +199,8 @@ namespace BIServices.Common.Managers.E1
                         SDUPRC,
                         SDAEXP,
                         SDRCD,
+                        SDIR04,
+                        SDDSC1,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -274,7 +278,7 @@ namespace BIServices.Common.Managers.E1
                         SAZ5840275,
                         SAZ58PT,
                         SAZ5840460,
-                        SAZ58USF,
+                        SAZ58USF / 10000 AS SAZ58USF,
                         SAZ58L1RTG,
                         SAZ58L2RTG,
                         SAZ58L3RTG,
@@ -288,19 +292,207 @@ namespace BIServices.Common.Managers.E1
                         SAZ5852075,
                         SAZ5852076,
                         SAZ5852077,
-                        SLUPMJ,
-                        SLTDAY,
-                        CPZ58CCV05,
+                        SDUPMJ AS SLUPMJ,
+                        SDTDAY AS SLTDAY,
+                        CP1.CPZ58CCV05,
+                        CP2.CPZ58GAL1
+                    FROM
+	                    F4211
+                        INNER JOIN F4201
+                        ON  SHKCOO = SDKCOO AND
+                            SHDOCO = SDDOCO AND
+                            SHDCTO = SDDCTO
+	                    INNER JOIN F4102 
+	                    INNER JOIN F4101
+	                    ON  IMITM = IBITM
+	                    ON	IBMCU = SDMCU AND
+		                    IBITM = SDITM
+	                    INNER JOIN F0101 AB1
+	                    ON	AB1.ABAN8 = SDAN8
+	                    INNER JOIN F0101 AB2
+	                    ON	AB2.ABAN8 = SDSHAN
+	                    INNER JOIN F580032
+	                    ON	ATKCOO = SDKCOO AND
+		                    ATDOCO = SDDOCO AND
+		                    ATDCTO = SDDCTO AND
+		                    ATLNID = SDLNID 
+						INNER JOIN F5834A15
+							ON SADOCO = SDDOCO AND
+							SADCTO = SDDCTO AND
+							SALNID = SDLNID AND
+							SAKCOO = SDKCOO
+                        LEFT OUTER JOIN {ConfigurationManager.AppSettings["ControlLib"]}.F0005
+                            ON  DRSY = '42' 
+                            AND DRRT = 'RC' 
+                            AND TRIM(DRKY) = SDRCD                  
+                        LEFT OUTER JOIN F580375 CP1
+                        ON  CP1.CPMCU = SDMCU AND
+                            CP1.CPSHAN = SDSHAN
+				        LEFT OUTER JOIN F580430 CP2
+				        ON	CP2.CPAN8 = SDSHAN AND
+                            CP2.CPMCU = SDMCU
+                    WHERE
+                        {filterString}
+                        SDLNTY = 'W' AND
+                        SDDCTO NOT IN ('SQ') AND
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
+                        
+            ORDER BY
+	            1,2
+            FOR READ ONLY";
+            return cmd;
+        }
+
+        public iDB2Command GetCustomOrders0(List<string> filters)
+        {
+            var filterString = new StringBuilder();
+            foreach (string filter in filters)
+            {
+                filterString.Append(filter);
+            }
+
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+            SELECT 
+	            *
+            FROM (
+                    SELECT
+	                    SDMCU,
+	                    SDAN8,
+	                    AB1.ABALPH AS SDAN8ALPH,
+	                    SDSHAN,
+	                    AB2.ABALPH AS SDSHANALPH,
+                        SDITWT,
+                        SDPPDJ,
+	                    SDDRQJ,
+                        SDTRDJ,
+	                    SDIVD,
+	                    SDLTTR,
+	                    SDNXTR,
+                        SDKCOO,
+	                    SDDOCO,
+	                    SDDCTO,
+	                    SDLNID,
+                        SDRORN,
+                        SHVR01,
+	                    SDVR01,
+	                    SDURCD,
+	                    SDITM,
+	                    SDUORG,
+                        SDUNCS,
+                        SDECST,
+                        SDUPRC,
+                        SDAEXP,
+                        SDRCD,
+                        SDIR04,
+                        SDDSC1,
+	                    ATZ58PT,
+	                    ATZ58CP2,
+	                    ATZ58CP3,
+	                    ATZ58CP4,
+                        ATZ58CSQNO,
+	                    ATZ58LPR,
+	                    ATZ58RT,
+                        ATZ5840460,
+                        ATZ58WODC,
+	                    IBSTKT,
+	                    IBGLPT,
+                        IBSRP4,
+	                    IMDSC1,
+	                    IMDSC2,
+                        DRDL01,
+                        SAZ58L1TK,
+                        SAZ58L11C,
+                        SAZ58L1CL,
+                        SAZ58L1HT,
+                        SAZ58L12C,
+                        SAZ58L1PX,
+                        SAZ5800495,
+                        SAZ58L1LPT,
+                        SAZ5800522,
+                        SAZ5800524,
+                        SAZ5800536,
+                        SAZ5800537,
+                        SAZ5800538,
+                        SAZ5800539,
+                        SAZ58SHAPE,
+                        SAZ58L1BDM,
+                        SAZ58L1BNM,
+                        SAZ58L1BDN,
+                        SAZ58L1LDM,
+                        SAZ58L1LNM,
+                        SAZ58L1LDN,
+                        SAZ58L1RDM,
+                        SAZ58L1RNM,
+                        SAZ58L1RDN,
+                        SAZ58L1VG,
+                        SAZ58L1HL,
+                        SAZ58L1EW,
+                        SAZ58L1PQL,
+                        SADRQJ,
+                        SAZ58L1SSZ,
+                        SAZ58L1STP,
+                        SAZ58L2TK,
+                        SAZ58L23C,
+                        SAZ58L2CL,
+                        SAZ58L2HT,
+                        SAZ58L24C,
+                        SAZ58L2PX,
+                        SAZ58L2LPT,
+                        SAZ58L2VG,
+                        SAZ58L2HL,
+                        SAZ58L3TK,
+                        SAZ58L35C,
+                        SAZ58L3CL,
+                        SAZ58L3HT,
+                        SAZ58L36C,
+                        SAZ58L3PX,
+                        SAZ58L3LPT,
+                        SAZ58L3VG,
+                        SAZ58L3HL,
+                        SAZ58L3EW,
+                        SAZ58M1A1,
+                        SAZ58OOA1,
+                        SAZ58CCA1,
+                        SAZ58GSS1,
+                        SAZ58RT,
+                        SAZ587563,
+                        SAZ587569,
+                        SAZ587575,
+                        SAZ587581,
+                        SAZ5840275,
+                        SAZ58PT,
+                        SAZ5840460,
+                        SAZ58USF / 10000 AS SAZ58USF,
+                        SAZ58L1RTG,
+                        SAZ58L2RTG,
+                        SAZ58L3RTG,
+                        SAAN8DR,
+                        SAZ5852020,
+                        SAZ5852021,
+                        SAZ5852022,
+                        SAZ5852060,
+                        SAZ5852061,
+                        SAZ5852062,
+                        SAZ5852075,
+                        SAZ5852076,
+                        SAZ5852077,
+                        SDUPMJ AS SLUPMJ,
+                        SDTDAY AS SLTDAY,
+                        CP1.CPZ58CCV05,
+                        CP2.CPZ58GAL1,
                         COALESCE(CMCFGID, 0) AS CMCFGID,
-			            (	SELECT 
-					            MIN(ROUPMJ) 
-				            FROM 
-					            F580400 where ROKCOO = SDKCOO AND
-					            RODOCO = SDDOCO AND
-					            RODCTO = SDDCTO AND
-					            ROLNID = SDLNID AND
-					            ROEDTR = 'S') AS ROUPMJ,
-			            ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY CMUPMJ DESC, SLUPMJ ASC, SLTDAY ASC) AS RN
+                        CAST(0 AS DECIMAL(6,0)) AS ROUPMJ,
+			            --(	SELECT 
+					    --        MIN(ROUPMJ) 
+				        --    FROM 
+					    --        F580400 where ROKCOO = SDKCOO AND
+					    --        RODOCO = SDDOCO AND
+					    --        RODCTO = SDDCTO AND
+					    --        ROLNID = SDLNID AND
+					    --        ROEDTR = 'S') AS ROUPMJ,
+			            ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY CMUPMJ DESC, SDUPMJ ASC, SDTDAY ASC) AS RN
                     FROM
 	                    F4211
                         INNER JOIN F4201
@@ -335,19 +527,23 @@ namespace BIServices.Common.Managers.E1
                             ON  DRSY = '42' 
                             AND DRRT = 'RC' 
                             AND TRIM(DRKY) = SDRCD
-                        LEFT OUTER JOIN F42199
-	                    ON	SLKCOO = SDKCOO AND
-		                    SLDOCO = SDDOCO AND
-		                    SLDCTO = SDDCTO AND
-		                    SLLNID = SDLNID                    
-                        LEFT OUTER JOIN F580375
-                        ON  CPMCU = SDMCU AND
-                            CPSHAN = SDSHAN
-                        WHERE
-                            {filterString}
-                            SDLNTY = 'W' AND
-                            SDDCTO NOT IN ('SQ') AND
-                            SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')) A
+                        --LEFT OUTER JOIN F42199
+	                    --ON	SLKCOO = SDKCOO AND
+		                --    SLDOCO = SDDOCO AND
+		                --    SLDCTO = SDDCTO AND
+		                --    SLLNID = SDLNID                    
+                        LEFT OUTER JOIN F580375 CP1
+                        ON  CP1.CPMCU = SDMCU AND
+                            CP1.CPSHAN = SDSHAN
+				        LEFT OUTER JOIN F580430 CP2
+				        ON	CP2.CPAN8 = SDSHAN AND
+                            CP2.CPMCU = SDMCU
+                    WHERE
+                        {filterString}
+                        SDLNTY = 'W' AND
+                        SDDCTO NOT IN ('SQ') AND
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
+                        ) A
             WHERE 
 	            A.RN = 1
             ORDER BY
@@ -601,6 +797,8 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["CPZ58GAL1"], string.Empty).Trim();
+
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
                         line.TotalCost = CastDbNull.To<decimal>(reader["SDECST"], 0) / 100;
@@ -640,6 +838,12 @@ namespace BIServices.Common.Managers.E1
                     line.Lite1HeatTreatment = itemAtts.GetStringAttributeValue("Z58L1HT");
                     line.Lite2HeatTreatment = itemAtts.GetStringAttributeValue("Z58L2HT");
                     line.Lite3HeatTreatment = itemAtts.GetStringAttributeValue("Z58L3HT");
+
+                    line.ExtPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587569");
+                    line.IntPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587581");
+                    line.ExtPrsvCB = itemAtts.GetStringAttributeValue("Z587563");
+                    line.IntPrsvCB = itemAtts.GetStringAttributeValue("Z587575");
+
                     line.TotalActualSqft = line.OrderQty * itemAtts.GetDecimalAttributeValue("Z58USF");
                     line.TotalBillableSqft = line.OrderQty * itemAtts.GetDecimalAttributeValue("Z58BSF");
                     //line.TotalGlassWeight = itemAtts.GetDecimalAttributeValue("Z58GLWT");
@@ -673,7 +877,7 @@ namespace BIServices.Common.Managers.E1
                     line.PreserveProcessing = _flexItemMgr.GetPreserveProcessing(itemAtts, true);
                     line.EdgeProcessing = _flexItemMgr.GetEdgeProcessing(itemAtts, true);
                     line.HoleProcessing = _flexItemMgr.GetHoleProcessing(itemAtts, true);
-                    line.ConfigHash = _flexItemMgr.GetHashValue(itemAtts);
+                    //line.ConfigHash = _flexItemMgr.GetHashValue(itemAtts);
 
                     // New Metrics
                     int lite1Routing;
@@ -730,24 +934,24 @@ namespace BIServices.Common.Managers.E1
                 }
                 _logger.Info("End Racks");
 
-                foreach (var line in lines)
-                {
-                    var configLines = lines.Where(x => x.ConfigHash == line.ConfigHash);
-                    var configLinesList = configLines as IList<SalesOrderLine> ?? configLines.ToList();
-                    var cfgAgg = new ConfigAggregate();
-                    cfgAgg.ConfigHashCount = configLinesList.Count();
-                    cfgAgg.Lite1TotalWeightAggregate = configLinesList.Sum(x => x.Lite1TotalWeight);
-                    cfgAgg.Lite2TotalWeightAggregate = configLinesList.Sum(x => x.Lite2TotalWeight);
-                    cfgAgg.Lite3TotalWeightAggregate = configLinesList.Sum(x => x.Lite3TotalWeight);
-                    cfgAgg.TotalGlassWeightAggregate = configLinesList.Sum(x => x.TotalGlassWeight);
-                    cfgAgg.AllLitesPurchased = configLinesList.Min(x => x.LitesPurchased);
-                    line.ConfigAggregate = cfgAgg;
-                    if (line.TotalGlassPounds <= 0)
-                    {
-                        line.TotalGlassPounds = cfgAgg.TotalGlassWeightAggregate;
-                        line.TotalGlassTons = cfgAgg.TotalGlassWeightAggregate / 2000;
-                    }
-                }
+                //foreach (var line in lines)
+                //{
+                //    var configLines = lines.Where(x => x.ConfigHash == line.ConfigHash);
+                //    var configLinesList = configLines as IList<SalesOrderLine> ?? configLines.ToList();
+                //    var cfgAgg = new ConfigAggregate();
+                //    cfgAgg.ConfigHashCount = configLinesList.Count();
+                //    cfgAgg.Lite1TotalWeightAggregate = configLinesList.Sum(x => x.Lite1TotalWeight);
+                //    cfgAgg.Lite2TotalWeightAggregate = configLinesList.Sum(x => x.Lite2TotalWeight);
+                //    cfgAgg.Lite3TotalWeightAggregate = configLinesList.Sum(x => x.Lite3TotalWeight);
+                //    cfgAgg.TotalGlassWeightAggregate = configLinesList.Sum(x => x.TotalGlassWeight);
+                //    cfgAgg.AllLitesPurchased = configLinesList.Min(x => x.LitesPurchased);
+                //    line.ConfigAggregate = cfgAgg;
+                //    if (line.TotalGlassPounds <= 0)
+                //    {
+                //        line.TotalGlassPounds = cfgAgg.TotalGlassWeightAggregate;
+                //        line.TotalGlassTons = cfgAgg.TotalGlassWeightAggregate / 2000;
+                //    }
+                //}
             }
             catch (Exception e)
             {
@@ -971,6 +1175,7 @@ namespace BIServices.Common.Managers.E1
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
                     int i = 0;
+                    _logger.Info("reader start");
                     while (reader.Read())
                     {
                         var line = new SalesOrderLine();
@@ -985,7 +1190,7 @@ namespace BIServices.Common.Managers.E1
                         line.RequestedDate = E1TimeManager.CastToDateTime(CastDbNull.To<decimal>(reader["SDDRQJ"], 0));
                         line.ReasonCode = CastDbNull.To(reader["SDRCD"], string.Empty).Trim();
                         line.ReasonCodeDescription = CastDbNull.To(reader["DRDL01"], string.Empty).Trim();
-                        line.PurchaseDate = E1TimeManager.CastToDateTime(CastDbNull.To<decimal>(reader["ROUPMJ"], 0));
+                        //line.PurchaseDate = E1TimeManager.CastToDateTime(CastDbNull.To<decimal>(reader["ROUPMJ"], 0));
                         line.OrderCompany = CastDbNull.To(reader["SDKCOO"], string.Empty).Trim();
                         line.OrderNum = CastDbNull.To<decimal>(reader["SDDOCO"], 0);
                         line.OrderType = CastDbNull.To(reader["SDDCTO"], string.Empty).Trim();
@@ -1004,6 +1209,9 @@ namespace BIServices.Common.Managers.E1
                         line.CustomerPO = CastDbNull.To(reader["SDVR01"], string.Empty).Trim();
                         line.CustomerTier = CastDbNull.To(reader["CPZ58CCV05"], string.Empty).Trim();
                         line.ProductType = CastDbNull.To(reader["ATZ58PT"], string.Empty).Trim();
+                        line.AccountManager = CastDbNull.To(reader["CPZ58GAL1"], string.Empty).Trim();
+                        line.Construction = CastDbNull.To(reader["SDDSC1"], string.Empty).Trim();
+
                         line.OrderQty = CastDbNull.To<decimal>(reader["SDUORG"], 0) / 1000;
                         line.UnitCost = CastDbNull.To<decimal>(reader["SDUNCS"], 0) / 10000;
                         line.TotalCost = CastDbNull.To<decimal>(reader["SDECST"], 0) / 100;
@@ -1018,98 +1226,103 @@ namespace BIServices.Common.Managers.E1
                         line.StockType = CastDbNull.To(reader["IBSTKT"], string.Empty).Trim();
                         line.GlCategory = CastDbNull.To(reader["IBGLPT"], string.Empty).Trim();
                         line.OrderedRacksQty = (line.LitesPerRack > 0) ? (int) Math.Ceiling(line.OrderQty / line.LitesPerRack) : 0;
-                        line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
+                        //line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.HvLv = CastDbNull.To(reader["ATZ5840460"], string.Empty).Trim();
 
-                        //var attDict = new Dictionary<string, string>();
-                        //attDict.Add("Z58L1TK", (CastDbNull.To<Decimal>(reader["SAZ58L1TK"], 0) / 10).ToString());
-                        //attDict.Add("Z58L11C", CastDbNull.To<String>(reader["SAZ58L11C"], String.Empty).Trim());
-                        //attDict.Add("Z58L1CL", CastDbNull.To<String>(reader["SAZ58L1CL"], String.Empty).Trim());
-                        //attDict.Add("Z58L1HT", CastDbNull.To<String>(reader["SAZ58L1HT"], String.Empty).Trim());
-                        //attDict.Add("Z58L12C", CastDbNull.To<String>(reader["SAZ58L12C"], String.Empty).Trim());
-                        //attDict.Add("Z58L1PX", CastDbNull.To<String>(reader["SAZ58L1PX"], String.Empty).Trim());
-                        //attDict.Add("Z5800495", CastDbNull.To<String>(reader["SAZ5800495"], String.Empty).Trim());
-                        //attDict.Add("Z58L1LPT", CastDbNull.To<String>(reader["SAZ58L1LPT"], String.Empty).Trim());
-                        //attDict.Add("Z5800522", CastDbNull.To<String>(reader["SAZ5800522"], String.Empty).Trim());
-                        //attDict.Add("Z5800524", CastDbNull.To<String>(reader["SAZ5800524"], String.Empty).Trim());
+                        var attDict = new Dictionary<string, string>();
+                        attDict.Add("Z58L1TK", (CastDbNull.To<Decimal>(reader["SAZ58L1TK"], 0) / 10).ToString());
+                        attDict.Add("Z58L11C", CastDbNull.To<String>(reader["SAZ58L11C"], String.Empty).Trim());
+                        attDict.Add("Z58L1CL", CastDbNull.To<String>(reader["SAZ58L1CL"], String.Empty).Trim());
+                        attDict.Add("Z58L1HT", CastDbNull.To<String>(reader["SAZ58L1HT"], String.Empty).Trim());
+                        attDict.Add("Z58L12C", CastDbNull.To<String>(reader["SAZ58L12C"], String.Empty).Trim());
+                        attDict.Add("Z58L1PX", CastDbNull.To<String>(reader["SAZ58L1PX"], String.Empty).Trim());
+                        attDict.Add("Z5800495", CastDbNull.To<String>(reader["SAZ5800495"], String.Empty).Trim());
+                        attDict.Add("Z58L1LPT", CastDbNull.To<String>(reader["SAZ58L1LPT"], String.Empty).Trim());
+                        attDict.Add("Z5800522", CastDbNull.To<String>(reader["SAZ5800522"], String.Empty).Trim());
+                        attDict.Add("Z5800524", CastDbNull.To<String>(reader["SAZ5800524"], String.Empty).Trim());
 
-                        //attDict.Add("Z5800536", CastDbNull.To<Decimal>(reader["SAZ58L2TK"], 0).ToString());
-                        //attDict.Add("Z5800537", CastDbNull.To<Decimal>(reader["SAZ5800537"], 0).ToString());
-                        //attDict.Add("Z5800538", CastDbNull.To<Decimal>(reader["SAZ5800538"], 0).ToString());
-                        //attDict.Add("Z5800539", CastDbNull.To<Decimal>(reader["SAZ5800539"], 0).ToString());
+                        attDict.Add("Z5800536", CastDbNull.To<Decimal>(reader["SAZ58L2TK"], 0).ToString());
+                        attDict.Add("Z5800537", CastDbNull.To<Decimal>(reader["SAZ5800537"], 0).ToString());
+                        attDict.Add("Z5800538", CastDbNull.To<Decimal>(reader["SAZ5800538"], 0).ToString());
+                        attDict.Add("Z5800539", CastDbNull.To<Decimal>(reader["SAZ5800539"], 0).ToString());
 
-                        //attDict.Add("Z58SHAPE", CastDbNull.To<String>(reader["SAZ58SHAPE"], String.Empty).Trim());
-                        //attDict.Add("Z58L1BDM", CastDbNull.To<Decimal>(reader["SAZ58L1BDM"], 0).ToString());
-                        //attDict.Add("Z58L1BNM", CastDbNull.To<Decimal>(reader["SAZ58L1BNM"], 0).ToString());
-                        //attDict.Add("Z58L1BDN", CastDbNull.To<Decimal>(reader["SAZ58L1BDN"], 0).ToString());
-                        //attDict.Add("Z58L1LDM", CastDbNull.To<Decimal>(reader["SAZ58L1LDM"], 0).ToString());
-                        //attDict.Add("Z58L1LNM", CastDbNull.To<Decimal>(reader["SAZ58L1LNM"], 0).ToString());
-                        //attDict.Add("Z58L1LDN", CastDbNull.To<Decimal>(reader["SAZ58L1LDN"], 0).ToString());
-                        //attDict.Add("Z58L1RDM", CastDbNull.To<Decimal>(reader["SAZ58L1RDM"], 0).ToString());
-                        //attDict.Add("Z58L1RNM", CastDbNull.To<Decimal>(reader["SAZ58L1RNM"], 0).ToString());
-                        //attDict.Add("Z58L1RDN", CastDbNull.To<Decimal>(reader["SAZ58L1RDN"], 0).ToString());
+                        attDict.Add("Z58SHAPE", CastDbNull.To<String>(reader["SAZ58SHAPE"], String.Empty).Trim());
+                        attDict.Add("Z58L1BDM", CastDbNull.To<Decimal>(reader["SAZ58L1BDM"], 0).ToString());
+                        attDict.Add("Z58L1BNM", CastDbNull.To<Decimal>(reader["SAZ58L1BNM"], 0).ToString());
+                        attDict.Add("Z58L1BDN", CastDbNull.To<Decimal>(reader["SAZ58L1BDN"], 0).ToString());
+                        attDict.Add("Z58L1LDM", CastDbNull.To<Decimal>(reader["SAZ58L1LDM"], 0).ToString());
+                        attDict.Add("Z58L1LNM", CastDbNull.To<Decimal>(reader["SAZ58L1LNM"], 0).ToString());
+                        attDict.Add("Z58L1LDN", CastDbNull.To<Decimal>(reader["SAZ58L1LDN"], 0).ToString());
+                        attDict.Add("Z58L1RDM", CastDbNull.To<Decimal>(reader["SAZ58L1RDM"], 0).ToString());
+                        attDict.Add("Z58L1RNM", CastDbNull.To<Decimal>(reader["SAZ58L1RNM"], 0).ToString());
+                        attDict.Add("Z58L1RDN", CastDbNull.To<Decimal>(reader["SAZ58L1RDN"], 0).ToString());
 
-                        //attDict.Add("Z58L1VG", CastDbNull.To<String>(reader["SAZ58L1VG"], String.Empty).Trim());
-                        //attDict.Add("Z58L1HL", CastDbNull.To<String>(reader["SAZ58L1HL"], String.Empty).Trim());
-                        //attDict.Add("Z58L1EW", CastDbNull.To<String>(reader["SAZ58L1EW"], String.Empty).Trim());
-                        //attDict.Add("Z58L1PQL", CastDbNull.To<String>(reader["SAZ58L1PQL"], String.Empty).Trim());
-                        //attDict.Add("Z58L1SSZ", CastDbNull.To<Decimal>(reader["SAZ58L1SSZ"], 0).ToString());
+                        attDict.Add("Z58L1VG", CastDbNull.To<String>(reader["SAZ58L1VG"], String.Empty).Trim());
+                        attDict.Add("Z58L1HL", CastDbNull.To<String>(reader["SAZ58L1HL"], String.Empty).Trim());
+                        attDict.Add("Z58L1EW", CastDbNull.To<String>(reader["SAZ58L1EW"], String.Empty).Trim());
+                        attDict.Add("Z58L1PQL", CastDbNull.To<String>(reader["SAZ58L1PQL"], String.Empty).Trim());
+                        attDict.Add("Z58L1SSZ", CastDbNull.To<Decimal>(reader["SAZ58L1SSZ"], 0).ToString());
 
-                        //attDict.Add("Z58L1STP", CastDbNull.To<String>(reader["SAZ58L1STP"], String.Empty).Trim());
-                        //attDict.Add("Z58L2TK", (CastDbNull.To<Decimal>(reader["SAZ58L2TK"], 0) / 10).ToString());
-                        //attDict.Add("Z58L23C", CastDbNull.To<String>(reader["SAZ58L23C"], String.Empty).Trim());
-                        //attDict.Add("Z58L2CL", CastDbNull.To<String>(reader["SAZ58L2CL"], String.Empty).Trim());
-                        //attDict.Add("Z58L2HT", CastDbNull.To<String>(reader["SAZ58L2HT"], String.Empty).Trim());
-                        //attDict.Add("Z58L24C", CastDbNull.To<String>(reader["SAZ58L24C"], String.Empty).Trim());
-                        //attDict.Add("Z58L2PX", CastDbNull.To<String>(reader["SAZ58L2PX"], String.Empty).Trim());
-                        //attDict.Add("Z58L2LPT", CastDbNull.To<String>(reader["SAZ58L2LPT"], String.Empty).Trim());
-                        //attDict.Add("Z58L2VG", CastDbNull.To<String>(reader["SAZ58L2VG"], String.Empty).Trim());
-                        //attDict.Add("Z58L2HL", CastDbNull.To<String>(reader["SAZ58L2HL"], String.Empty).Trim());
-                        //attDict.Add("Z58L3TK", (CastDbNull.To<Decimal>(reader["SAZ58L3TK"], 0) / 10).ToString());
-                        //attDict.Add("Z58L35C", CastDbNull.To<String>(reader["SAZ58L35C"], String.Empty).Trim());
-                        //attDict.Add("Z58L3CL", CastDbNull.To<String>(reader["SAZ58L3CL"], String.Empty).Trim());
-                        //attDict.Add("Z58L3HT", CastDbNull.To<String>(reader["SAZ58L3HT"], String.Empty).Trim());
-                        //attDict.Add("Z58L36C", CastDbNull.To<String>(reader["SAZ58L36C"], String.Empty).Trim());
-                        //attDict.Add("Z58L3PX", CastDbNull.To<String>(reader["SAZ58L3PX"], String.Empty).Trim());
-                        //attDict.Add("Z58L3LPT", CastDbNull.To<String>(reader["SAZ58L3LPT"], String.Empty).Trim());
-                        //attDict.Add("Z58L3VG", CastDbNull.To<String>(reader["SAZ58L3VG"], String.Empty).Trim());
-                        //attDict.Add("Z58L3HL", CastDbNull.To<String>(reader["SAZ58L3HL"], String.Empty).Trim());
-                        //attDict.Add("Z58L3EW", CastDbNull.To<String>(reader["SAZ58L3EW"], String.Empty).Trim());
+                        attDict.Add("Z58L1STP", CastDbNull.To<String>(reader["SAZ58L1STP"], String.Empty).Trim());
+                        attDict.Add("Z58L2TK", (CastDbNull.To<Decimal>(reader["SAZ58L2TK"], 0) / 10).ToString());
+                        attDict.Add("Z58L23C", CastDbNull.To<String>(reader["SAZ58L23C"], String.Empty).Trim());
+                        attDict.Add("Z58L2CL", CastDbNull.To<String>(reader["SAZ58L2CL"], String.Empty).Trim());
+                        attDict.Add("Z58L2HT", CastDbNull.To<String>(reader["SAZ58L2HT"], String.Empty).Trim());
+                        attDict.Add("Z58L24C", CastDbNull.To<String>(reader["SAZ58L24C"], String.Empty).Trim());
+                        attDict.Add("Z58L2PX", CastDbNull.To<String>(reader["SAZ58L2PX"], String.Empty).Trim());
+                        attDict.Add("Z58L2LPT", CastDbNull.To<String>(reader["SAZ58L2LPT"], String.Empty).Trim());
+                        attDict.Add("Z58L2VG", CastDbNull.To<String>(reader["SAZ58L2VG"], String.Empty).Trim());
+                        attDict.Add("Z58L2HL", CastDbNull.To<String>(reader["SAZ58L2HL"], String.Empty).Trim());
+                        attDict.Add("Z58L3TK", (CastDbNull.To<Decimal>(reader["SAZ58L3TK"], 0) / 10).ToString());
+                        attDict.Add("Z58L35C", CastDbNull.To<String>(reader["SAZ58L35C"], String.Empty).Trim());
+                        attDict.Add("Z58L3CL", CastDbNull.To<String>(reader["SAZ58L3CL"], String.Empty).Trim());
+                        attDict.Add("Z58L3HT", CastDbNull.To<String>(reader["SAZ58L3HT"], String.Empty).Trim());
+                        attDict.Add("Z58L36C", CastDbNull.To<String>(reader["SAZ58L36C"], String.Empty).Trim());
+                        attDict.Add("Z58L3PX", CastDbNull.To<String>(reader["SAZ58L3PX"], String.Empty).Trim());
+                        attDict.Add("Z58L3LPT", CastDbNull.To<String>(reader["SAZ58L3LPT"], String.Empty).Trim());
+                        attDict.Add("Z58L3VG", CastDbNull.To<String>(reader["SAZ58L3VG"], String.Empty).Trim());
+                        attDict.Add("Z58L3HL", CastDbNull.To<String>(reader["SAZ58L3HL"], String.Empty).Trim());
+                        attDict.Add("Z58L3EW", CastDbNull.To<String>(reader["SAZ58L3EW"], String.Empty).Trim());
 
-                        //attDict.Add("Z58M1A1", CastDbNull.To<Decimal>(reader["SAZ58M1A1"], 0).ToString());
-                        //attDict.Add("Z58OOA1", CastDbNull.To<Decimal>(reader["SAZ58OOA1"], 0).ToString());
-                        //attDict.Add("Z58CCA1", CastDbNull.To<Decimal>(reader["SAZ58CCA1"], 0).ToString());
+                        attDict.Add("Z58M1A1", CastDbNull.To<Decimal>(reader["SAZ58M1A1"], 0).ToString());
+                        attDict.Add("Z58OOA1", CastDbNull.To<Decimal>(reader["SAZ58OOA1"], 0).ToString());
+                        attDict.Add("Z58CCA1", CastDbNull.To<Decimal>(reader["SAZ58CCA1"], 0).ToString());
 
-                        //attDict.Add("Z58GSS1", CastDbNull.To<String>(reader["SAZ58GSS1"], String.Empty).Trim());
-                        //attDict.Add("Z58RT", CastDbNull.To<String>(reader["SAZ58RT"], String.Empty).Trim());
-                        //attDict.Add("Z587563", CastDbNull.To<String>(reader["SAZ587563"], String.Empty).Trim());
-                        //attDict.Add("Z587569", CastDbNull.To<Decimal>(reader["SAZ587569"], 0).ToString());
-                        //attDict.Add("Z587575", CastDbNull.To<String>(reader["SAZ587575"], String.Empty).Trim());
-                        //attDict.Add("Z587581", CastDbNull.To<Decimal>(reader["SAZ587581"], 0).ToString());
+                        attDict.Add("Z58GSS1", CastDbNull.To<String>(reader["SAZ58GSS1"], String.Empty).Trim());
+                        attDict.Add("Z58RT", CastDbNull.To<String>(reader["SAZ58RT"], String.Empty).Trim());
+                        attDict.Add("Z587563", CastDbNull.To<String>(reader["SAZ587563"], String.Empty).Trim());
+                        attDict.Add("Z587569", CastDbNull.To<Decimal>(reader["SAZ587569"], 0).ToString());
+                        attDict.Add("Z587575", CastDbNull.To<String>(reader["SAZ587575"], String.Empty).Trim());
+                        attDict.Add("Z587581", CastDbNull.To<Decimal>(reader["SAZ587581"], 0).ToString());
 
-                        //attDict.Add("Z5840275", CastDbNull.To<String>(reader["SAZ5840275"], String.Empty).Trim());
-                        //attDict.Add("Z58PT", CastDbNull.To<String>(reader["SAZ58PT"], String.Empty).Trim());
-                        //attDict.Add("Z5840460", CastDbNull.To<String>(reader["SAZ5840460"], String.Empty).Trim());
-                        //attDict.Add("Z58USF", CastDbNull.To<Decimal>(reader["SAZ58USF"], 0).ToString());
+                        attDict.Add("Z5840275", CastDbNull.To<String>(reader["SAZ5840275"], String.Empty).Trim());
+                        attDict.Add("Z58PT", CastDbNull.To<String>(reader["SAZ58PT"], String.Empty).Trim());
+                        attDict.Add("Z5840460", CastDbNull.To<String>(reader["SAZ5840460"], String.Empty).Trim());
+                        attDict.Add("Z58USF", CastDbNull.To<Decimal>(reader["SAZ58USF"], 0).ToString());
+                        attDict.Add("Z58BSF", CastDbNull.To<Decimal>(reader["SAZ58USF"], 0).ToString());
 
-                        //attDict.Add("Z58L1RTG", CastDbNull.To<Decimal>(reader["SAZ58L1RTG"], 0).ToString());
-                        //attDict.Add("Z58L2RTG", CastDbNull.To<Decimal>(reader["SAZ58L2RTG"], 0).ToString());
-                        //attDict.Add("Z58L3RTG", CastDbNull.To<Decimal>(reader["SAZ58L3RTG"], 0).ToString());
-                        //attDict.Add("AN8DR", CastDbNull.To<Decimal>(reader["SAAN8DR"], 0).ToString());
-                        //attDict.Add("Z5852020", CastDbNull.To<String>(reader["SAZ5852020"], String.Empty).Trim());
-                        //attDict.Add("Z5852021", CastDbNull.To<String>(reader["SAZ5852021"], String.Empty).Trim());
-                        //attDict.Add("Z5852022", CastDbNull.To<String>(reader["SAZ5852022"], String.Empty).Trim());
-                        //attDict.Add("Z5852060", CastDbNull.To<String>(reader["SAZ5852060"], String.Empty).Trim());
-                        //attDict.Add("Z5852061", CastDbNull.To<String>(reader["SAZ5852061"], String.Empty).Trim());
-                        //attDict.Add("Z5852062", CastDbNull.To<String>(reader["SAZ5852062"], String.Empty).Trim());
+                        attDict.Add("Z58L1RTG", CastDbNull.To<Decimal>(reader["SAZ58L1RTG"], 0).ToString());
+                        attDict.Add("Z58L2RTG", CastDbNull.To<Decimal>(reader["SAZ58L2RTG"], 0).ToString());
+                        attDict.Add("Z58L3RTG", CastDbNull.To<Decimal>(reader["SAZ58L3RTG"], 0).ToString());
+                        attDict.Add("AN8DR", CastDbNull.To<Decimal>(reader["SAAN8DR"], 0).ToString());
+                        attDict.Add("Z5852020", CastDbNull.To<String>(reader["SAZ5852020"], String.Empty).Trim());
+                        attDict.Add("Z5852021", CastDbNull.To<String>(reader["SAZ5852021"], String.Empty).Trim());
+                        attDict.Add("Z5852022", CastDbNull.To<String>(reader["SAZ5852022"], String.Empty).Trim());
+                        attDict.Add("Z5852060", CastDbNull.To<String>(reader["SAZ5852060"], String.Empty).Trim());
+                        attDict.Add("Z5852061", CastDbNull.To<String>(reader["SAZ5852061"], String.Empty).Trim());
+                        attDict.Add("Z5852062", CastDbNull.To<String>(reader["SAZ5852062"], String.Empty).Trim());
 
-                        //attDict.Add("Z5852075", CastDbNull.To<Decimal>(reader["SAZ5852075"], 0).ToString());
-                        //attDict.Add("Z5852076", CastDbNull.To<Decimal>(reader["SAZ5852076"], 0).ToString());
-                        //attDict.Add("Z5852077", CastDbNull.To<Decimal>(reader["SAZ5852077"], 0).ToString());
+                        attDict.Add("Z5852075", CastDbNull.To<Decimal>(reader["SAZ5852075"], 0).ToString());
+                        attDict.Add("Z5852076", CastDbNull.To<Decimal>(reader["SAZ5852076"], 0).ToString());
+                        attDict.Add("Z5852077", CastDbNull.To<Decimal>(reader["SAZ5852077"], 0).ToString());
 
-                        //line.AttributesDict = attDict;
+                        line.AttributesDict = attDict;
                         lines.Add(line);
                         i++;
+                        if (i % 10000 == 0)
+                        {
+                            _logger.Info($"Reader {i}");
+                        }
                     }
 
                     reader.Close();
@@ -1126,16 +1339,20 @@ namespace BIServices.Common.Managers.E1
                         _logger.Info($"Attributes {j}");
                     }
 
-                    var itemAtts = _itemAttMgr.GetItemAttributes(session, 0, line.ConfiguratorId);
+                    //var itemAtts = _itemAttMgr.GetItemAttributes(session, 0, line.ConfiguratorId);
 
-                    //var f5834A15mgr = new F5834A15Manager(session);
-                    //var itemAtts = f5834A15mgr.GetItemAttributes(session, line.AttributesDict);
+                    var f5834A15mgr = new F5834A15Manager(session);
+                    var itemAtts = f5834A15mgr.GetItemAttributes(session, line.AttributesDict);
 
                     line.QCInspectFlag = itemAtts.GetStringAttributeValue("Z5801840");
                     line.Lite1Thickness = itemAtts.GetDecimalAttributeValue("Z58L1TK");
                     line.Lite1HeatTreatment = itemAtts.GetStringAttributeValue("Z58L1HT");
                     line.Lite2HeatTreatment = itemAtts.GetStringAttributeValue("Z58L2HT");
                     line.Lite3HeatTreatment = itemAtts.GetStringAttributeValue("Z58L3HT");
+                    line.ExtPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587569");
+                    line.IntPrsvScoring = itemAtts.GetDecimalAttributeValue("Z587581");
+                    line.ExtPrsvCB = itemAtts.GetStringAttributeValue("Z587563");
+                    line.IntPrsvCB = itemAtts.GetStringAttributeValue("Z587575");
                     line.Lite1Routing = itemAtts.GetStringAttributeValue("Z58L1RTG");
                     line.Lite2Routing = itemAtts.GetStringAttributeValue("Z58L2RTG");
                     line.Lite3Routing = itemAtts.GetStringAttributeValue("Z58L3RTG");
@@ -1161,7 +1378,7 @@ namespace BIServices.Common.Managers.E1
                             ? itemAtts.GetDecimalAttributeValue("Z58OHA1") * itemAtts.GetDecimalAttributeValue("Z58OWA1") +
                               itemAtts.GetDecimalAttributeValue("Z58OHA2") * itemAtts.GetDecimalAttributeValue("Z58OWA2") : (itemAtts.GetDecimalAttributeValue("Z58OOA1") + itemAtts.GetDecimalAttributeValue("Z58OOA2"));
                     }
-                    line.Construction = _flexItemMgr.GetUnitConstruction(itemAtts);
+                   // line.Construction = _flexItemMgr.GetUnitConstruction(itemAtts);
                     line.Dimension = _flexItemMgr.GetDimension(itemAtts);
                     line.Lite1GlassType = _flexItemMgr.GetLite1GlassType(itemAtts);
                     line.Lite2GlassType = _flexItemMgr.GetLite2GlassType(itemAtts);
@@ -1177,7 +1394,7 @@ namespace BIServices.Common.Managers.E1
                     line.PreserveProcessing = _flexItemMgr.GetPreserveProcessing(itemAtts, true);
                     line.EdgeProcessing = _flexItemMgr.GetEdgeProcessing(itemAtts, true);
                     line.HoleProcessing = _flexItemMgr.GetHoleProcessing(itemAtts, true);
-                    line.ConfigHash = _flexItemMgr.GetHashValue(itemAtts);
+                    //line.ConfigHash = _flexItemMgr.GetHashValue(itemAtts);
 
                     // New Metrics
                     int lite1Routing;
@@ -1316,37 +1533,37 @@ namespace BIServices.Common.Managers.E1
 
                 _logger.Info("End Attributes");
 
-                GetRelatedOrders(session, lines);
+                //GetRelatedOrders(session, lines);
                 if (!string.IsNullOrEmpty(racks) && racks.ToUpper() == "Y")
                 {
                     GetCustomRacks(session, lines);
                 }
                 _logger.Info("End Racks");
 
-                foreach (var line in lines)
-                {
-                    var configLines = lines.Where(x => x.ConfigHash == line.ConfigHash);
-                    var configLinesList = configLines as IList<SalesOrderLine> ?? configLines.ToList();
-                    var cfgAgg = new ConfigAggregate();
-                    cfgAgg.ConfigHashCount = configLinesList.Count();
-                    cfgAgg.Lite1TotalWeightAggregate = configLinesList.Sum(x => x.Lite1TotalWeight);
-                    cfgAgg.Lite2TotalWeightAggregate = configLinesList.Sum(x => x.Lite2TotalWeight);
-                    cfgAgg.Lite3TotalWeightAggregate = configLinesList.Sum(x => x.Lite3TotalWeight);
-                    cfgAgg.TotalGlassWeightAggregate = configLinesList.Sum(x => x.TotalGlassWeight);
-                    cfgAgg.AllLitesPurchased = configLinesList.Min(x => x.LitesPurchased);
-                    decimal[] liteWeights =
-                    {
-                        cfgAgg.Lite1TotalWeightAggregate, cfgAgg.Lite2TotalWeightAggregate,
-                        cfgAgg.Lite3TotalWeightAggregate
-                    };
-                    cfgAgg.MaximumLiteWeightAggregate = liteWeights.Max();
-                    line.ConfigAggregate = cfgAgg;
-                    if (line.TotalGlassPounds <= 0)
-                    {
-                        line.TotalGlassPounds = cfgAgg.TotalGlassWeightAggregate;
-                        line.TotalGlassTons = cfgAgg.TotalGlassWeightAggregate / 2000;
-                    }
-                }
+                //foreach (var line in lines)
+                //{
+                //    var configLines = lines.Where(x => x.ConfigHash == line.ConfigHash);
+                //    var configLinesList = configLines as IList<SalesOrderLine> ?? configLines.ToList();
+                //    var cfgAgg = new ConfigAggregate();
+                //    cfgAgg.ConfigHashCount = configLinesList.Count();
+                //    cfgAgg.Lite1TotalWeightAggregate = configLinesList.Sum(x => x.Lite1TotalWeight);
+                //    cfgAgg.Lite2TotalWeightAggregate = configLinesList.Sum(x => x.Lite2TotalWeight);
+                //    cfgAgg.Lite3TotalWeightAggregate = configLinesList.Sum(x => x.Lite3TotalWeight);
+                //    cfgAgg.TotalGlassWeightAggregate = configLinesList.Sum(x => x.TotalGlassWeight);
+                //    cfgAgg.AllLitesPurchased = configLinesList.Min(x => x.LitesPurchased);
+                //    decimal[] liteWeights =
+                //    {
+                //        cfgAgg.Lite1TotalWeightAggregate, cfgAgg.Lite2TotalWeightAggregate,
+                //        cfgAgg.Lite3TotalWeightAggregate
+                //    };
+                //    cfgAgg.MaximumLiteWeightAggregate = liteWeights.Max();
+                //    line.ConfigAggregate = cfgAgg;
+                //    if (line.TotalGlassPounds <= 0)
+                //    {
+                //        line.TotalGlassPounds = cfgAgg.TotalGlassWeightAggregate;
+                //        line.TotalGlassTons = cfgAgg.TotalGlassWeightAggregate / 2000;
+                //    }
+                //}
             }
             catch (Exception e)
             {

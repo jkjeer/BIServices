@@ -6,6 +6,8 @@ using BIServices.Common.Types.E1;
 using BIServices.Common.Utilities;
 using System.Linq;
 using NLog;
+using System.Collections;
+using BIServices.Common.Types.Enterprise;
 // ReSharper disable InconsistentNaming
 
 namespace BIServices.Common.Managers.E1
@@ -22,8 +24,10 @@ namespace BIServices.Common.Managers.E1
         {
             var hash = new Dictionary<string, iDB2Command>
             {
-                {"F4102Manager.GetCustomerNum", GetPlannerNum()},
-                {"F4102Manager.GetCustomerPartNum", GetCustomerPartNum()}
+                {"F4102Manager.GetPlannerNum", GetPlannerNum()},
+                {"F4102Manager.GetCustomerPartNum", GetCustomerPartNum()},
+                {"F4102Manager.GetCost", GetCost()},
+                {"F4102Manager.GetConsumption", GetConsumption()}
             };
             foreach (var keyName in hash.Keys.Where(keyName => !e1Session.DbCommands.ContainsKey(keyName)))
             {
@@ -42,9 +46,12 @@ namespace BIServices.Common.Managers.E1
                 CommandText = @"
                     SELECT
                         IBANPL,
-                        IBPRP4
+                        IBPRP4,
+                        ABALPH AS IBANPLALPH
                     FROM
                         F4102
+                        LEFT OUTER JOIN F0101
+                        ON ABAN8 = IBANPL
                     WHERE
                         IBMCU = ? AND
                         IBITM = ?"
@@ -56,12 +63,13 @@ namespace BIServices.Common.Managers.E1
             return cmd;
         }
 
-        public decimal GetPlannerNum(BusinessSystemSession e1Session, string plantNum, decimal itemNum)
+        public Hashtable GetPlannerNum(BusinessSystemSession e1Session, string plantNum, decimal itemNum)
         {
             decimal customerNum = 0;
+            var table = new Hashtable();
             try
             {
-                var cmd = e1Session.DbCommands["F4102Manager.GetCustomerNum"];
+                var cmd = e1Session.DbCommands["F4102Manager.GetPlannerNum"];
                 cmd.Parameters["MCU"].Value = plantNum.PadLeft(12);
                 cmd.Parameters["ITM"].Value = itemNum;
                 cmd.Connection = e1Session.DbConnection;
@@ -70,14 +78,17 @@ namespace BIServices.Common.Managers.E1
                 {
                     while (reader.Read())
                     {
+                        table.Add("IBPRP4", CastDbNull.To(reader["IBPRP4"], string.Empty).Trim());
+                        table.Add("IBANPL", CastDbNull.To<decimal>(reader["IBANPL"], 0));
                         var family = CastDbNull.To(reader["IBPRP4"], string.Empty).Trim();
                         var planner = CastDbNull.To<decimal>(reader["IBANPL"], 0);
                         if (family == "PLN")
                         {
                             customerNum = planner;
                         }
+                        table.Add("PlannerNum", customerNum);
+                        table.Add("PlannerName", CastDbNull.To(reader["IBANPLALPH"], string.Empty).Trim());
                     }
-
                     reader.Close();
                 }
             }
@@ -86,7 +97,7 @@ namespace BIServices.Common.Managers.E1
                 Logger.Error("ERROR: " + e1Session.DbConnection.ConnectionString + " JobName: " + e1Session.DbConnection.JobName + "  " + e.Message + ": " + e.StackTrace);
                 throw new Exception(e1Session.DbConnection.ConnectionString + "  " + e.Message + ": " + e.StackTrace);
             }
-            return customerNum;
+            return table;
         }
 
         public iDB2Command GetCustomerPartNum()
@@ -156,6 +167,113 @@ namespace BIServices.Common.Managers.E1
                 throw new Exception(err.ToString());
             }
             return customerPartNum;
+        }
+
+        public iDB2Command GetCost()
+        {
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+	            SUM(IECSL) AS IECSL
+            FROM
+	            F30026
+            WHERE
+                IEITM = ? AND
+                IEMMCU = ? AND
+                IELEDG = '07'
+            FOR READ ONLY";
+            cmd.Parameters.Add(new iDB2Parameter("ITM", iDB2DbType.iDB2Decimal));
+            cmd.Parameters["ITM"].Precision = 8;
+            cmd.Parameters["ITM"].Scale = 0;
+            cmd.Parameters.Add(new iDB2Parameter("MCU", iDB2DbType.iDB2Graphic, 12));
+            return cmd;
+        }
+
+        public decimal GetCost(BusinessSystemSession session, Plant plant, Decimal itemNum)
+        {
+            try
+            {
+                decimal unitCost = 0;
+                try
+                {
+                    var cmd = session.DbCommands["F4102Manager.GetCost"];
+                    cmd.Parameters[0].Value = itemNum;
+                    cmd.Parameters[1].Value = plant.PlantNum.PadLeft(12);
+                    cmd.Connection = session.DbConnection;
+                    IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleRow);
+                    while (reader.Read())
+                    {
+                        unitCost = CastDbNull.To<Decimal>(reader["IECSL"], 0) / 10000;
+                    }
+                    reader.Close();
+                }
+                catch (Exception err)
+                {
+                    throw new Exception(err.ToString());
+                }
+                return unitCost;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public iDB2Command GetConsumption()
+        {
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+	            SUM(ILTRQT) AS ILTRQT
+            FROM
+	            F4111
+            WHERE
+                ILITM = ? AND
+                ILMCU = ? AND
+                ILTRDJ >= ? AND
+                ILDCT IN ('2I','IM','1A')
+            FOR READ ONLY";
+            cmd.Parameters.Add(new iDB2Parameter("ITM", iDB2DbType.iDB2Decimal));
+            cmd.Parameters["ITM"].Precision = 8;
+            cmd.Parameters["ITM"].Scale = 0;
+            cmd.Parameters.Add(new iDB2Parameter("MCU", iDB2DbType.iDB2Graphic, 12));
+            cmd.Parameters.Add(new iDB2Parameter("TRDJ", iDB2DbType.iDB2Decimal));
+            cmd.Parameters["TRDJ"].Precision = 6;
+            cmd.Parameters["TRDJ"].Scale = 0;
+            return cmd;
+        }
+
+        public decimal GetConsumption(BusinessSystemSession session, Plant plant, Decimal itemNum, int interval)
+        {
+            try
+            {
+                decimal val = 0;
+                try
+                {
+                    var cmd = session.DbCommands["F4102Manager.GetConsumption"];
+                        cmd.Parameters[0].Value = itemNum;
+                        cmd.Parameters[1].Value = plant.PlantNum.PadLeft(12);
+                        cmd.Parameters[2].Value = E1TimeManager.CastToE1Date(DateTime.Now.Date.AddDays(interval * -1));
+                    cmd.Connection = session.DbConnection;
+                    IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleRow);
+                    while (reader.Read())
+                    {
+                        val = CastDbNull.To<Decimal>(reader["ILTRQT"], 0) / -1000;
+                    }
+                    reader.Close();
+                }
+                catch (Exception err)
+                {
+                    throw new Exception(err.ToString());
+                }
+                return val;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
     }

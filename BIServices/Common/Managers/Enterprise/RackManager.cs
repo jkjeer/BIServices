@@ -54,6 +54,7 @@ namespace BIServices.Common.Managers.Enterprise
                 RHZ58RCD,
                 RHZ58SCN,
                 RHZ58BOX,
+                RHZ58SLDN,
                 RHPSN,
                 RHAN8,
                 RHUPMJ,
@@ -151,6 +152,7 @@ namespace BIServices.Common.Managers.Enterprise
                         rack.TareWeight = Math.Round(Data.CastDbNull.To<Decimal>(reader["RHZ58RTWT"], 0), 4);
                         rack.GrossWeight = CastDbNull.To<Decimal>(reader["RHGWEI"], 0);
                         rack.ReasonCode = CastDbNull.To<String>(reader["RHZ58RCD"], String.Empty).Trim();
+                        rack.SuggestedLoadNum = CastDbNull.To<Decimal>(reader["RHZ58SLDN"], 0);
                         rack.LoadNum = CastDbNull.To<Decimal>(reader["RHPSN"], 0);
                         rack.ScheduleNum = CastDbNull.To<Decimal>(reader["RHZ58SCN"], 0);
                         rack.BoxNum = CastDbNull.To<Decimal>(reader["RHZ58BOX"], 0);
@@ -230,7 +232,9 @@ namespace BIServices.Common.Managers.Enterprise
                         rackItem.PurchaseOrderNum = CastDbNull.To<Decimal>(reader["RDDOC2"], 0);
                         rackItem.PurchaseOrderType = CastDbNull.To<String>(reader["RDXCTO"], String.Empty).Trim();
                         rackItem.PurchaseOrderLineNum = CastDbNull.To<Decimal>(reader["RDLNIC"], 0) / 1000;
-                        rackItem.PlannerNum = f4102Mgr.GetPlannerNum(session, rackItem.PlantNum, rackItem.ItemNum);
+                        var itemBranchAttributes = f4102Mgr.GetPlannerNum(session, rackItem.PlantNum, rackItem.ItemNum);
+                        rackItem.PlannerNum = (decimal)itemBranchAttributes["PlannerNum"];
+                        rackItem.PlanningFamily = (string)itemBranchAttributes["IBPRP4"];
                         rackItems.Add(rackItem);
                     }
 

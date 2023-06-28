@@ -431,6 +431,8 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerName = CastDbNull.To<String>(reader["SoldToCustName"], String.Empty).Trim();
                         unit.CustomerShipNum = CastDbNull.To<Decimal>(reader["ShipToCustNum"], 0);
                         unit.CustomerShipName = CastDbNull.To<String>(reader["ShipToCustName"], String.Empty).Trim();
+                        unit.OrigCustomerNum = CastDbNull.To<Decimal>(reader["OrigSoldToCustNum"], 0);
+                        unit.OrigCustomerName = CastDbNull.To<String>(reader["OrigSoldToCustName"], String.Empty).Trim();
                         unit.OrigWOrderNum = CastDbNull.To<Decimal>(reader["OrigWOrderNum"], 0);
                         unit.OrderDate = CastDbNull.To<DateTime>(reader["OrderDate"], DateTime.MinValue);
                         unit.RequestedDate = CastDbNull.To<DateTime>(reader["RequestedDate"], DateTime.MinValue);
@@ -558,7 +560,9 @@ namespace BIServices.Common.Managers.ShopFloor
                 SoldToCustName,
                 SoldToCustType,
                 ShipToCustNum,
-                ShipToCustName,
+                ShipToCustName,                
+                OrigSoldToCustNum,
+                OrigSoldToCustName,
                 OrderDate,
                 OrigRequestedDate,
                 RequestedDate,
@@ -659,6 +663,8 @@ namespace BIServices.Common.Managers.ShopFloor
                 SoldToCustType,
                 ShipToCustNum,
                 ShipToCustName,
+                OrigSoldToCustNum,
+                OrigSoldToCustName,
                 OrderDate,
                 OrigRequestedDate,
                 RequestedDate,

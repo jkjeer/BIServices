@@ -68,7 +68,8 @@ namespace BIServices.Common.Managers.ShopFloor
 	            SUM(CASE WHEN A.IGLine = '9' THEN A.Quantity ELSE 0 END) AS IG9, 
 	            SUM(CASE WHEN A.IGLine NOT IN ('0','1','2','3','4','5','6','7','8','9') THEN A.Quantity ELSE 0 END) AS IGX, 
 	            --
-                SUM(CASE WHEN A.ShapeNum > 0 THEN 1 ELSE 0 END) AS SHAPES,
+                SUM(CASE WHEN A.ShapeNum > 0 THEN 1 ELSE 0 END) AS SHAPES,                
+                SUM(CASE WHEN A.BreatherTube_Air1 > 0 THEN 1 ELSE 0 END) AS TUBES,
                 SUM(CASE
                            WHEN A.UnitType = '2' AND
                                 A.Lite1_Routing LIKE '%U%' AND
@@ -80,6 +81,11 @@ namespace BIServices.Common.Managers.ShopFloor
                            ELSE 0
                        END
                    ) AS FIN_PICKS,
+                SUM(CASE
+                           WHEN A.MCode1_Air1 > 0 THEN A.Quantity
+                           ELSE 0
+                       END
+                   ) AS BARS,
 	            --
                 SUM(CASE
                            WHEN A.UnitType = '2' THEN A.Quantity * 2
@@ -156,10 +162,12 @@ namespace BIServices.Common.Managers.ShopFloor
 					ord.Lite1Weight,
 					ord.Lite2Weight,
 					ord.Lite3Weight,
-					ord.UnitWeight
+					ord.UnitWeight,
+                    ord.MCode1_Air1,
+                    ord.BreatherTube_Air1
                 FROM
 		            ShopFloor.dbo.IncomingOrders ord WITH (NOLOCK)
-		            INNER JOIN ShopFloor.dbo.UnitBox ub 
+		            LEFT OUTER JOIN ShopFloor.dbo.UnitBox ub 
 		            ON ub.OrderItem = ord.WOrderNum AND
                     ub.SchedNum = ord.ScheduleNum
                 WHERE
@@ -260,7 +268,9 @@ namespace BIServices.Common.Managers.ShopFloor
                         schedule.DoubleQty = CastDbNull.To<int>(reader["DOUBLE"], 0);
                         schedule.TripleQty = CastDbNull.To<int>(reader["TRIPLE"], 0);
                         schedule.ShapesQty = CastDbNull.To<int>(reader["SHAPES"], 0);
+                        schedule.TubesQty = CastDbNull.To<int>(reader["TUBES"], 0);
                         schedule.Pick = CastDbNull.To<int>(reader["FIN_PICKS"], 0);
+                        schedule.BarsQty = CastDbNull.To<int>(reader["BARS"], 0);
 
                         schedule.Line0Qty = CastDbNull.To<int>(reader["IG0"], 0);
                         schedule.Line1Qty = CastDbNull.To<int>(reader["IG1"], 0);
@@ -289,13 +299,6 @@ namespace BIServices.Common.Managers.ShopFloor
                         schedule.TemperTons = CastDbNull.To<decimal>(reader["TEMP_TONS"], 0);
                         schedule.TemperPurchasedTons = CastDbNull.To<decimal>(reader["TEMP_PUR_TONS"], 0);
 
-                        //schedule.Scheduled = CastDbNull.To<Decimal>(reader["S1Z58TQSC"], 0);
-                        //schedule.Produce = CastDbNull.To<Decimal>(reader["S1Z58TQMAK"], 0);
-                        //schedule.Pick = CastDbNull.To<Decimal>(reader["S1Z58TQPIK"], 0);
-                        //schedule.Purchase = CastDbNull.To<Decimal>(reader["S1HQ05"], 0) / 1000;
-                        //schedule.BarsQty = CastDbNull.To<Decimal>(reader["S1UB01"], 0) / 1000;
-                        //schedule.TotalSqft1 = CastDbNull.To<Decimal>(reader["S1HQ02"], 0) / 1000;
-                        //schedule.TemperSqft1 = (CastDbNull.To<Decimal>(reader["S1HQ01"], 0) / 1000) + (CastDbNull.To<Decimal>(reader["S1HQ03"], 0) / 1000);
                         schedules.Add(schedule);
                     }
 

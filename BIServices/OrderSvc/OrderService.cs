@@ -77,6 +77,20 @@ namespace BIServices.OrderSvc
                 throw new Exception(e.Message);
             }
         }
+
+        public SalesOrderLines GetAgcOpenOrders(string plants, string customerSoldNums)
+        {
+            var processor = new OrderProcessor();
+            try
+            {
+                return processor.GetAgcOpenOrders(plants, customerSoldNums);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
     }
 
     [ParameterInspectorLogger, CGIErrorHandler]
@@ -158,6 +172,19 @@ namespace BIServices.OrderSvc
             try
             {
                 return processor.GetOpenOrders(plants, customerSoldNums, customerShipNums, dateCode, startDate, endDate, dateProperty, stockTypes, lastStatusCodes, nextStatusCodes, documentTypes, options, racks);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public SalesOrderLines GetAgcOpenOrders(string plants, string customerSoldNums)
+        {
+            var processor = new OrderProcessor();
+            try
+            {
+                return processor.GetAgcOpenOrders(plants, customerSoldNums);
             }
             catch (Exception e)
             {
