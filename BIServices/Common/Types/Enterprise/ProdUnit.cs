@@ -52,6 +52,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 110, EmitDefaultValue = false)]
         public string MfgSource { get; set; }
 
+        [DataMember(Order = 112, EmitDefaultValue = false)]
+        public string UnitOriginCode { get; set; }
+
         // Related Dates
         [DataMember(Order = 150, EmitDefaultValue = false)]
         public DateTime OrderDate { get; set; }

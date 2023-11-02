@@ -352,6 +352,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.VolumeCode = CastDbNull.To<String>(reader["VolumeCode"], String.Empty).Trim();
                         unit.ItemStockType = CastDbNull.To<String>(reader["StockingType"], String.Empty).Trim();
                         unit.ItemNum = CastDbNull.To<Decimal>(reader["ItemNum"], 0);
+                        unit.UnitOriginCode = CastDbNull.To<String>(reader["UnitOriginCode"], String.Empty).Trim();
                         switch (CastDbNull.To<String>(reader["UnitTypeCode"], String.Empty).Trim())
                         {
                             case "MONO GLASS":

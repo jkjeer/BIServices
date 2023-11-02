@@ -58,6 +58,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 VolumeCode,
                 StockTypeCode,
                 UnitTypeCode,
+                UnitOriginCode,
                 LitesNum,
                 SOrderLastStatusCode,
                 SOrderNextStatusCode,
@@ -596,6 +597,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.VolumeCode = CastDbNull.AsString(reader["VolumeCode"]);
                         unit.StockTypeCode = CastDbNull.AsString(reader["StockTypeCode"]);
                         unit.UnitTypeCode = CastDbNull.AsString(reader["UnitTypeCode"]);
+                        unit.UnitOriginCode = CastDbNull.AsString(reader["UnitOriginCode"]);
                         unit.LitesNum = CastDbNull.To<int>(reader["LitesNum"], 0);
 
                         unit.Attempts = CastDbNull.To<int>(reader["Attempts"], 0);                      
@@ -1079,6 +1081,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.WorkOrderStatus = reader.Get<String>("WOrderStatusCode");
                         unit.ItemNum = reader.Get<Decimal>("ItemNum");
                         unit.ItemStockType = reader.Get<String>("StockTypeCode");
+                        unit.UnitOriginCode = reader.Get<String>("UnitOriginCode");
                         unit.ScheduleType = reader.Get<String>("OrigScheduleType");
                         unit.ProductType = reader.Get<String>("ProductType");
                         unit.OrderDate = reader.Get<DateTime>("OrderDate");

@@ -58,6 +58,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 50)]
         public string IGLine { get; set; }
 
+        [DataMember(Order = 52)]
+        public string PurchaseLiteDesc { get; set; }
+
 
         // Planned Metrics
         [DataMember(Order = 100)]

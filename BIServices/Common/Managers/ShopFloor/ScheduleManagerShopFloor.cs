@@ -45,6 +45,357 @@ namespace BIServices.Common.Managers.ShopFloor
             SELECT
                 A.ScheduleNum,
                 A.ScheduleDate,
+                A.ScheduleType,
+                A.DueDate,
+                A.CustNum,
+                A.CustName,
+	            A.SupplierCodes,
+                --
+                SUM(A.Quantity)      AS QTY,
+                --
+                SUM(CASE
+                        WHEN A.UnitType = '1' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS [MONO],
+                SUM(CASE
+                        WHEN A.UnitType = '2' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS [DOUBLE],
+                SUM(CASE
+                        WHEN A.UnitType = '3' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS [TRIPLE],
+                --
+                SUM(CASE
+                        WHEN A.IGLine = '0' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG0,
+                SUM(CASE
+                        WHEN A.IGLine = '1' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG1,
+                SUM(CASE
+                        WHEN A.IGLine = '2' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG2,
+                SUM(CASE
+                        WHEN A.IGLine = '3' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG3,
+                SUM(CASE
+                        WHEN A.IGLine = '4' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG4,
+                SUM(CASE
+                        WHEN A.IGLine = '5' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG5,
+                SUM(CASE
+                        WHEN A.IGLine = '6' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG6,
+                SUM(CASE
+                        WHEN A.IGLine = '7' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG7,
+                SUM(CASE
+                        WHEN A.IGLine = '8' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG8,
+                SUM(CASE
+                        WHEN A.IGLine = '9' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IG9,
+                SUM(CASE
+                        WHEN A.IGLine NOT IN ( '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' ) THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS IGX,
+                --
+                SUM(CASE
+                        WHEN A.ShapeNum > 0 THEN
+                             1
+                        ELSE 0
+                    END)             AS SHAPES,
+                SUM(CASE
+                        WHEN A.BreatherTube_Air1 > 0 THEN
+                             1
+                        ELSE 0
+                    END)             AS TUBES,
+                SUM(CASE
+                        WHEN A.UnitType = '2'
+                             AND A.Lite1_Routing LIKE '%U%'
+                             AND A.Lite2_Routing LIKE '%U%' THEN
+                             A.Quantity
+                        WHEN A.UnitType = '3'
+                             AND A.Lite1_Routing LIKE '%U%'
+                             AND A.Lite2_Routing LIKE '%U%'
+                             AND A.Lite3_Routing LIKE '%U%' THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS FIN_PICKS,
+                SUM(CASE
+                        WHEN A.MCode1_Air1 > 0 THEN
+                             A.Quantity
+                        ELSE 0
+                    END)             AS BARS,
+                --
+                SUM(CASE
+                        WHEN A.UnitType = '2' THEN
+                             A.Quantity * 2
+                        WHEN A.UnitType = '3' THEN
+                             A.Quantity * 3
+                        ELSE A.Quantity
+                    END)             AS LITES,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%C%' THEN
+                             A.Quantity
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%C%' THEN
+                                   A.Quantity
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%C%' THEN
+                                         A.Quantity
+                                    ELSE 0
+                                END) AS CUT_LITE,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%T%' THEN
+                             A.Quantity
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%T%' THEN
+                                   A.Quantity
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%T%' THEN
+                                         A.Quantity
+                                    ELSE 0
+                                END) AS TEMP_LITE,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%K%' THEN
+                             A.Quantity
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%K%' THEN
+                                   A.Quantity
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%K%' THEN
+                                         A.Quantity
+                                    ELSE 0
+                                END) AS PICK_LITE,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%P%' THEN
+                             A.Quantity
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%P%' THEN
+                                   A.Quantity
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%P%' THEN
+                                         A.Quantity
+                                    ELSE 0
+                                END) AS PRCH_LITE,
+                --
+                SUM(A.ActualSqft)    AS UNIT_ACTUAL_SQFT,
+                SUM(CASE
+                        WHEN A.UnitType = '2' THEN
+                             A.ActualSqft * 2
+                        WHEN A.UnitType = '3' THEN
+                             A.ActualSqft * 3
+                        ELSE A.ActualSqft
+                    END)             AS LITE_ACTUAL_SQFT,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%C%' THEN
+                             A.ActualSqft
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%C%' THEN
+                                   A.ActualSqft
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%C%' THEN
+                                         A.ActualSqft
+                                    ELSE 0
+                                END) AS CUT_SQFT,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%T%' THEN
+                             A.ActualSqft
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%T%' THEN
+                                   A.ActualSqft
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%T%' THEN
+                                         A.ActualSqft
+                                    ELSE 0
+                                END) AS TEMP_SQFT,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%K%' THEN
+                             A.ActualSqft
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%K%' THEN
+                                   A.ActualSqft
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%K%' THEN
+                                         A.ActualSqft
+                                    ELSE 0
+                                END) AS PICK_SQFT,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%P%' THEN
+                             A.ActualSqft
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%P%' THEN
+                                   A.ActualSqft
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%P%' THEN
+                                         A.ActualSqft
+                                    ELSE 0
+                                END) AS PRCH_SQFT,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%T%' THEN
+                             A.Lite1Weight
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%T%' THEN
+                                   A.Lite2Weight
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%T%' THEN
+                                         A.Lite3Weight
+                                    ELSE 0
+                                END) AS TEMP_LBS,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%T%' THEN
+                             A.Lite1Weight / 2000.000
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%T%' THEN
+                                   A.Lite2Weight / 2000.000
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%T%' THEN
+                                         A.Lite3Weight / 2000.000
+                                    ELSE 0
+                                END) AS TEMP_TONS,
+                SUM(CASE
+                        WHEN A.Lite1_Routing LIKE '%P%'
+                             AND A.Lite1_Heat = 'T' THEN
+                             A.Lite1Weight / 2000.000
+                        ELSE 0
+                    END + CASE
+                              WHEN A.Lite2_Routing LIKE '%P%'
+                                   AND A.Lite1_Heat = 'T' THEN
+                                   A.Lite2Weight / 2000.000
+                              ELSE 0
+                          END + CASE
+                                    WHEN A.Lite3_Routing LIKE '%P%'
+                                         AND A.Lite1_Heat = 'T' THEN
+                                         A.Lite3Weight / 2000.000
+                                    ELSE 0
+                                END) AS TEMP_PUR_TONS
+            FROM
+            (   SELECT
+                    ord.ScheduleNum,
+                    ord.ScheduleDate,
+                    ord.ScheduleType,
+                    ord.DueDate,
+                    ord.CustNum,
+                    ord.CustName,
+                    ord.SqftActual AS ActualSqft,
+                    ord.ShapeNum,
+                    1              AS Quantity,
+                    CASE
+                        WHEN ord.Lite3_Thick > 0 THEN
+                             '3'
+                        WHEN ord.Lite2_Thick > 0 THEN
+                             '2'
+                        ELSE '1'
+                    END            AS UnitType,
+                    ord.Lite1_Routing,
+                    ord.Lite2_Routing,
+                    ord.Lite3_Routing,
+                    ord.Lite1_Heat,
+                    ord.Lite2_Heat,
+                    ord.Lite3_Heat,
+                    ord.LineID,
+                    ub.IGLine,
+                    ub.IGLineRun,
+                    ord.Lite1Weight,
+                    ord.Lite2Weight,
+                    ord.Lite3Weight,
+                    ord.UnitWeight,
+                    ord.MCode1_Air1,
+                    ord.BreatherTube_Air1,
+		            rg1.SupplierCodes
+                FROM
+                    ShopFloor.dbo.IncomingOrders          ord WITH (NOLOCK)
+                    LEFT OUTER JOIN ShopFloor.dbo.UnitBox ub
+                    ON  ub.OrderItem = ord.WOrderNum
+                        AND ub.SchedNum = ord.ScheduleNum
+                    OUTER APPLY
+                (   SELECT
+                        rg1.SupplierCode + ' [' + CAST(SUM(CASE WHEN rg1.RecdRackId > 0 THEN 1 ELSE 0 END) AS VARCHAR) + '/' + CAST(COUNT(*) AS VARCHAR) + '] '
+                    FROM
+                        EBS.RelatedOrderGlass                 rg1
+                    WHERE
+			            rg1.ScheduleNum = ord.ScheduleNum
+                    GROUP BY
+                         rg1.SupplierCode 
+                    ORDER BY
+                        COUNT(*) DESC
+                    FOR XML PATH(''))                     AS rg1(SupplierCodes)
+                WHERE
+                    ord.ScheduleDate >= @StartDate AND
+                    ord.ScheduleDate <= @EndDate) A
+            GROUP BY
+                ScheduleNum,
+                ScheduleDate,
+                ScheduleType,
+                DueDate,
+                CustNum,
+                CustName,
+	            A.SupplierCodes
+            ORDER BY
+                1,
+                2,
+                3,
+                4,
+                5,
+                6;";
+            return cmd;
+        }
+
+
+        public SqlCommand GetMtoSchedules1()
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+                A.ScheduleNum,
+                A.ScheduleDate,
 	            A.ScheduleType,
                 A.DueDate,
                 A.CustNum,
@@ -182,8 +533,6 @@ namespace BIServices.Common.Managers.ShopFloor
                 CustNum,
                 CustName
             ORDER BY 1,2,3,4,5,6";
-            //cmd.Parameters.Add(new SqlParameter("@StartDate", SqlDbType.DateTime));
-            //cmd.Parameters.Add(new SqlParameter("@EndDate", SqlDbType.DateTime));
             return cmd;
         }
 
@@ -261,6 +610,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         schedule.DueDate = CastDbNull.To<DateTime>(reader["DueDate"], new DateTime(1900, 1, 1));
                         schedule.ScheduleType = CastDbNull.To<String>(reader["ScheduleType"], String.Empty).Trim();
                         schedule.CustomerName = CastDbNull.To<String>(reader["CustName"], String.Empty).Trim();
+                        schedule.PurchaseLiteDesc = CastDbNull.To<String>(reader["SupplierCodes"], String.Empty).Trim();
 
                         schedule.LineQty = CastDbNull.To<int>(reader["QTY"], 0);
 

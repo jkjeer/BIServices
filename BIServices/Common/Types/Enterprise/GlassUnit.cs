@@ -343,6 +343,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 354, EmitDefaultValue = true)]
         public decimal UnitListPriceAmt { get; set; }
 
+        [DataMember(Order = 356, EmitDefaultValue = true)]
+        public string UnitOriginCode { get; set; }
+
         // Scheduling
         [DataMember(Order = 400, EmitDefaultValue = true)]
         public decimal ScheduleNum { get; set; }

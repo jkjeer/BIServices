@@ -11,7 +11,6 @@ using BIServices.Common.Types.E1;
 using BIServices.Common.Types.Enterprise;
 using BIServices.Common.Types.ShopFloor;
 using BIServices.Common.Utilities;
-using BIServices.HvMtoSvc;
 using IBM.Data.DB2.iSeries;
 using NLog;
 
@@ -21,7 +20,7 @@ namespace BIServices.Common.Managers.ShopFloor
     {
         private static Logger _logger = LogManager.GetCurrentClassLogger();
         private FlexItemManager _flexItemMgr;
-        private ItemAttributeManager _itemAttMgr;
+        private E1.ItemAttributeManager _itemAttMgr;
 
         public HvMtoManager(BusinessSystemSession session)
         {

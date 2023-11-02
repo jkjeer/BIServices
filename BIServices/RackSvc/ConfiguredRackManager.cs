@@ -268,7 +268,7 @@ namespace BIServices.RackSvc
                     itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, rack.ConfigId);
                     if (itemAtts.Count == 0)
                     {
-                        itemAtts = _itemAttMgr.GetConfiguredItemArchiveAttributes(session, rack.ConfigId);
+                        itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, rack.ConfigId);
                     }
                     var flexDescs = _flexItemMgr.GetDescription(session, itemAtts);
 
@@ -535,7 +535,7 @@ namespace BIServices.RackSvc
                         itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, configId);
                         if (itemAtts.Count == 0)
                         {
-                            itemAtts = _itemAttMgr.GetConfiguredItemArchiveAttributes(session, configId);
+                            itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, configId);
                         }
 
                         rack.ItemAttributes = itemAtts;
@@ -743,7 +743,7 @@ namespace BIServices.RackSvc
                     itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, configId);
                     if (itemAtts.Count == 0)
                     {
-                        itemAtts = _itemAttMgr.GetConfiguredItemArchiveAttributes(session, configId);
+                        itemAtts = _itemAttMgr.GetConfiguredItemAttributes(session, configId);
                     }
                     var flexDescs = _flexItemMgr.GetDescription(session, itemAtts);
 

@@ -4,15 +4,12 @@ using System.Configuration;
 using System.Globalization;
 using BIServices.Common.Types.Enterprise;
 using BIServices.Common.Types.Response;
-using Microsoft.PowerBI.Api.Models;
 using NLog;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Linq;
 using BIServices.Common.Utilities;
 using System.Text;
-using System.Security.Policy;
-using System.Web;
 
 namespace BIServices.ReportSvc
 {

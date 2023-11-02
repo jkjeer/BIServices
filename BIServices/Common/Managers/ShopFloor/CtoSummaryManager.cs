@@ -296,7 +296,7 @@ namespace BIServices.Common.Managers.ShopFloor
                     WHERE
                       ReportDate BETWEEN @StartDate AND @EndDate AND
                       ISNULL(RejectReasonDescription, '') = '' AND
-                        (pl.ProductionLineCode LIKE 'CUTLV%' OR pl.ProductionLineCode LIKE 'TEMPER%')
+                        (pl.ProductionLineCode LIKE 'CUTLV%' OR pl.ProductionLineCode LIKE 'TEMPER%'  OR pl.ProductionLineCode LIKE 'SEAM%')
                 ) A
               GROUP BY
                 A.ReportDate ,
