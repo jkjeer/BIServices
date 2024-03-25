@@ -210,9 +210,9 @@ namespace BIServices.Common.Managers.E1
 	                    ATZ58RT,
                         ATZ5840460,
                         ATZ58WODC,
-	                    IBSTKT,
-	                    IBGLPT,
-                        IBSRP4,
+	                    COALESCE(IBSTKT, IMSTKT) AS IBSTKT,
+	                    COALESCE(IBGLPT, IMGLPT) AS IBGLPT,
+	                    COALESCE(IBSRP4, IMSRP4) AS IBSRP4,
 	                    IMDSC1,
 	                    IMDSC2,
                         DRDL01,
@@ -302,7 +302,7 @@ namespace BIServices.Common.Managers.E1
                         ON  SHKCOO = SDKCOO AND
                             SHDOCO = SDDOCO AND
                             SHDCTO = SDDCTO
-	                    INNER JOIN F4102 
+	                    LEFT OUTER JOIN F4102 
 	                    INNER JOIN F4101
 	                    ON  IMITM = IBITM
 	                    ON	IBMCU = SDMCU AND
@@ -333,9 +333,9 @@ namespace BIServices.Common.Managers.E1
                             CP2.CPMCU = SDMCU
                     WHERE
                         {filterString}
-                        SDLNTY = 'W' AND
+                        SDLNTY IN ('W') AND
                         SDDCTO NOT IN ('SQ') AND
-                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ','LUWT','MSAL','MSCR')
                         
             ORDER BY
 	            1,2
@@ -1333,6 +1333,7 @@ namespace BIServices.Common.Managers.E1
                 int j = 0;
                 foreach (var line in lines)
                 {
+                    _logger.Info($"Line Lot Num {line.LotNum}");
                     j++;
                     if (j % 1000 == 0)
                     {
@@ -1364,7 +1365,6 @@ namespace BIServices.Common.Managers.E1
                     line.Lite3TotalWeight = line.OrderQty * itemAtts.GetDecimalAttributeValue("Z5887006");
                     line.EndItemPickNum = itemAtts.GetDecimalAttributeValue("Z5880230");
                     line.Lite1ItemNum = itemAtts.GetDecimalAttributeValue("Z5851551");
-                    //line.BarsQty = itemAtts.GetDecimalAttributeValue("Z58GHA1") + itemAtts.GetDecimalAttributeValue("Z58GVA1") + itemAtts.GetDecimalAttributeValue("Z58GHA2") + itemAtts.GetDecimalAttributeValue("Z58GVA2");
                     line.BarsQty =
                         (itemAtts.GetDecimalAttributeValue("Z58GHA1") + itemAtts.GetDecimalAttributeValue("Z58GVA1") +
                          itemAtts.GetDecimalAttributeValue("Z58GHA2") + itemAtts.GetDecimalAttributeValue("Z58GVA2") >
@@ -1378,7 +1378,6 @@ namespace BIServices.Common.Managers.E1
                             ? itemAtts.GetDecimalAttributeValue("Z58OHA1") * itemAtts.GetDecimalAttributeValue("Z58OWA1") +
                               itemAtts.GetDecimalAttributeValue("Z58OHA2") * itemAtts.GetDecimalAttributeValue("Z58OWA2") : (itemAtts.GetDecimalAttributeValue("Z58OOA1") + itemAtts.GetDecimalAttributeValue("Z58OOA2"));
                     }
-                   // line.Construction = _flexItemMgr.GetUnitConstruction(itemAtts);
                     line.Dimension = _flexItemMgr.GetDimension(itemAtts);
                     line.Lite1GlassType = _flexItemMgr.GetLite1GlassType(itemAtts);
                     line.Lite2GlassType = _flexItemMgr.GetLite2GlassType(itemAtts);

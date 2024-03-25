@@ -11,6 +11,7 @@ using BIServices.Common.Types.Enterprise;
 using BIServices.Common.Utilities;
 using IBM.Data.DB2.iSeries;
 using NLog;
+using static BIServices.Common.Utilities.Sql;
 
 namespace BIServices.Common.Managers.ShopFloor
 {
@@ -25,7 +26,211 @@ namespace BIServices.Common.Managers.ShopFloor
         /*********************************************************************************
          * Get Open Units Dynamic
          *******************************************************************************/
-        public SqlCommand GetInterlayerSalesLG(List<string> filters)
+        public SqlCommand GetSubstrateSales(SqlFilters filters)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+            SELECT
+                *
+            FROM
+            (   SELECT
+                    sl.CustomerSoldNum                     AS SoldToCustNum,
+                    ab1.Name                               AS SoldToCustName,
+                    sl.CustomerShipNum                     AS ShipToCustNum,
+                    ab2.Name                               AS ShipToCustName,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    NULLIF(sl.InvoiceDate, '01/01/1900')   AS InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC                                   AS SubstrateCode,
+                    s.TK                                   AS SubstrateThickness,
+                    s.MTRL                                 AS SubstrateMaterial,
+                    CAST(SUM(sl.Quantity) AS INT)          AS Units,
+                    SUM(sl.UnitBillableSqft * sl.Quantity) AS BillableSqft,
+                    SUM(sl.UnitPriceAmt * sl.Quantity)     AS SalesAmt
+                FROM
+                    EBS.SalesLine                           sl
+                    INNER JOIN EBS.Item                     i
+                    ON  i.ItemNum = sl.ItemNum
+                    INNER JOIN EBS.AddressBook              ab1
+                    ON  ab1.AddressNum = sl.CustomerSoldNum
+                    INNER JOIN EBS.AddressBook              ab2
+                    ON  ab2.AddressNum = sl.CustomerShipNum
+                    INNER JOIN EBS.vw_SpecItemSubstrateType s
+                    ON  s.ItemNum = sl.ItemNum
+                WHERE
+                    sl.LineType = 'S'
+                GROUP BY
+                    sl.CustomerSoldNum,
+                    sl.CustomerShipNum,
+                    ab1.Name,
+                    ab2.Name,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    sl.InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC,
+                    s.TK,
+                    s.MTRL
+                UNION ALL
+                SELECT
+                    sl.CustomerSoldNum                     AS SoldToCustNum,
+                    ab1.Name                               AS SoldToCustName,
+                    sl.CustomerShipNum                     AS ShipToCustNum,
+                    ab2.Name                               AS ShipToCustName,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    NULLIF(sl.InvoiceDate, '01/01/1900')   AS InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC                                   AS SubstrateCode,
+                    s.TK                                   AS SubstrateThickness,
+                    s.MTRL                                 AS SubstrateMaterial,
+                    CAST(SUM(sl.Quantity) AS INT)          AS Units,
+                    SUM(sl.UnitBillableSqft * sl.Quantity) AS BillableSqft,
+                    SUM(sl.UnitPriceAmt * sl.Quantity)     AS SalesAmt
+                FROM
+                    EBS.SalesLine                           sl
+                    INNER JOIN EBS.Item                     i
+                    ON  i.ItemNum = sl.ItemNum
+                    INNER JOIN EBS.AddressBook              ab1
+                    ON  ab1.AddressNum = sl.CustomerSoldNum
+                    INNER JOIN EBS.AddressBook              ab2
+                    ON  ab2.AddressNum = sl.CustomerShipNum
+                    INNER JOIN EBS.vw_SpecUnitSubstrateType s
+                    ON  s.ConfigurationId = sl.ConfigurationId
+                WHERE
+                    sl.LineType = 'W'
+                GROUP BY
+                    sl.CustomerSoldNum,
+                    sl.CustomerShipNum,
+                    ab1.Name,
+                    ab2.Name,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    sl.InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC,
+                    s.TK,
+                    s.MTRL) A
+            WHERE
+                {filters} AND
+                LastStatus <> '980'";
+        return cmd;
+                }
+
+        public SqlCommand GetInterlayerSales(SqlFilters filters)
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+            SELECT
+                *
+            FROM
+            (   SELECT
+                    sl.CustomerSoldNum                     AS SoldToCustNum,
+                    ab1.Name                               AS SoldToCustName,
+                    sl.CustomerShipNum                     AS ShipToCustNum,
+                    ab2.Name                               AS ShipToCustName,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    NULLIF(sl.InvoiceDate, '01/01/1900')   AS InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC                                   AS InterlayerCode,
+                    s.TK                                   AS InterlayerThickness,
+                    s.MTRL                                 AS InterlayerMaterial,
+                    CAST(SUM(sl.Quantity) AS INT)          AS Units,
+                    SUM(sl.UnitBillableSqft * sl.Quantity) AS BillableSqft,
+                    SUM(sl.UnitPriceAmt * sl.Quantity)     AS SalesAmt
+                FROM
+                    EBS.SalesLine                            sl
+                    INNER JOIN EBS.Item                      i
+                    ON  i.ItemNum = sl.ItemNum
+                    INNER JOIN EBS.AddressBook               ab1
+                    ON  ab1.AddressNum = sl.CustomerSoldNum
+                    INNER JOIN EBS.AddressBook               ab2
+                    ON  ab2.AddressNum = sl.CustomerShipNum
+                    INNER JOIN EBS.vw_SpecItemInterlayerType s
+                    ON  s.ItemNum = sl.ItemNum
+                WHERE
+                    sl.LineType = 'S'
+                GROUP BY
+                    sl.CustomerSoldNum,
+                    sl.CustomerShipNum,
+                    ab1.Name,
+                    ab2.Name,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    sl.InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC,
+                    s.TK,
+                    s.MTRL
+                UNION ALL
+                SELECT
+                    sl.CustomerSoldNum                     AS SoldToCustNum,
+                    ab1.Name                               AS SoldToCustName,
+                    sl.CustomerShipNum                     AS ShipToCustNum,
+                    ab2.Name                               AS ShipToCustName,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    NULLIF(sl.InvoiceDate, '01/01/1900')   AS InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC                                   AS InterlayerCode,
+                    s.TK                                   AS InterlayerThickness,
+                    s.MTRL                                 AS InterlayerMaterial,
+                    CAST(SUM(sl.Quantity) AS INT)          AS Units,
+                    SUM(sl.UnitBillableSqft * sl.Quantity) AS BillableSqft,
+                    SUM(sl.UnitPriceAmt * sl.Quantity)     AS SalesAmt
+                FROM
+                    EBS.SalesLine                            sl
+                    INNER JOIN EBS.Item                      i
+                    ON  i.ItemNum = sl.ItemNum
+                    INNER JOIN EBS.AddressBook               ab1
+                    ON  ab1.AddressNum = sl.CustomerSoldNum
+                    INNER JOIN EBS.AddressBook               ab2
+                    ON  ab2.AddressNum = sl.CustomerShipNum
+                    INNER JOIN EBS.vw_SpecUnitInterlayerType s
+                    ON  s.ConfigurationId = sl.ConfigurationId
+                WHERE
+                    sl.LineType = 'W'
+                GROUP BY
+                    sl.CustomerSoldNum,
+                    sl.CustomerShipNum,
+                    ab1.Name,
+                    ab2.Name,
+                    i.StockType,
+                    sl.VolumeType,
+                    sl.RequestedDate,
+                    sl.InvoiceDate,
+                    sl.LastStatus,
+                    sl.NextStatus,
+                    s.PC,
+                    s.TK,
+                    s.MTRL) A
+            WHERE
+                {filters} AND
+                LastStatus <> '980'";
+            return cmd;
+        }
+
+
+
+        public SqlCommand GetInterlayerSalesLG0(List<string> filters)
         {
             var filterString = new StringBuilder();
             foreach (string filter in filters)
@@ -463,7 +668,8 @@ namespace BIServices.Common.Managers.ShopFloor
             return cmd;
         }
 
-        public SalesOrderLines GetInterlayerSales(SqlConnection cnShopFloor, Plant plant, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, List<string> lastStatusCodes, List<string> nextStatusCodes)
+
+        public SalesOrderLines GetInterlayerSales0(SqlConnection cnShopFloor, Plant plant, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, List<string> lastStatusCodes, List<string> nextStatusCodes)
         {
             var lines = new SalesOrderLines();
             var cmd = new SqlCommand();
@@ -520,8 +726,9 @@ namespace BIServices.Common.Managers.ShopFloor
                         else if (nextStatusCodes.Contains("999") && nextStatusCodes.Count > 1)
                         {
                             filters.Add("((NextStatus = '999' AND InvoiceDate BETWEEN @StartDate AND @EndDate) OR (NextStatus <> '999' AND RequestedDate BETWEEN @StartDate AND @EndDate)) AND\r\n");
-                            
-                        } else
+
+                        }
+                        else
                         {
                             filters.Add("RequestedDate BETWEEN @StartDate AND @EndDate AND\r\n");
                         }
@@ -642,17 +849,222 @@ namespace BIServices.Common.Managers.ShopFloor
                         "NextStatus IN (" + sb + ") AND\r\n");
                 }
 
-                switch (plant.PlantCode)
+                foreach (SqlParameter parameter in parameters)
                 {
-                    case "AMLG":
-                        cmd = GetInterlayerSalesLG(filters);
-                        break;
-                    case "NELG":
-                        cmd = GetInterlayerSalesLG(filters);
-                        break;
-                    case "OCLG":
-                        cmd = GetInterlayerSalesOCLG(filters);
-                        break;
+                    cmd.Parameters.Add(parameter);
+                }
+                cmd.Connection = cnShopFloor;
+                cmd.CommandTimeout = 0;
+                _logger.Info(Logging.DbCmdString(cmd));
+
+                using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
+                {
+                    while (reader.Read())
+                    {
+                        var line = new SalesOrderLine();
+                        line.PlantNum = plant.PlantNum;
+                        line.PlantCode = plant.PlantCode;
+                        line.CustomerNum = CastDbNull.To<decimal>(reader["SoldToCustNum"], 0);
+                        line.CustomerName = CastDbNull.To(reader["SoldToCustName"], string.Empty).Trim();
+                        line.CustomerShipNum = CastDbNull.To<decimal>(reader["ShipToCustNum"], 0);
+                        line.CustomerShipName = CastDbNull.To(reader["ShipToCustName"], string.Empty).Trim();
+                        line.StockType = CastDbNull.To(reader["StockType"], string.Empty).Trim();
+                        line.VolumeIndicator = CastDbNull.To(reader["VolumeType"], string.Empty).Trim();
+                        line.LastStatus = CastDbNull.To(reader["LastStatus"], string.Empty).Trim();
+                        line.NextStatus = CastDbNull.To(reader["NextStatus"], string.Empty).Trim();
+                        line.RequestedDate = CastDbNull.To<DateTime>(reader["RequestedDate"], new DateTime(1900, 1, 1));
+                        if (reader["InvoiceDate"] != DBNull.Value)
+                            line.InvoiceDate = CastDbNull.To<DateTime>(reader["InvoiceDate"], new DateTime(1900, 1, 1));
+                        line.InterlayerCode = CastDbNull.To(reader["InterlayerCode"], string.Empty).Trim();
+                        line.Units = CastDbNull.To<int>(reader["Units"], 0);
+                        line.TotalBillableSqft = CastDbNull.To<decimal>(reader["BillableSqft"], 0);
+                        line.TotalPrice = CastDbNull.To<decimal>(reader["SalesAmt"], 0);
+                        lines.Add(line);
+                    }
+
+                    reader.Close();
+                }
+                _logger.Info("Lines Returned: " + lines.Count);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            _logger.Info("Return Lines");
+            return lines;
+        }
+
+        public SalesOrderLines GetInterlayerSales(SqlConnection cnShopFloor, Plant plant, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, List<string> lastStatusCodes, List<string> nextStatusCodes)
+        {
+            var lines = new SalesOrderLines();
+            SqlFilters filters = new SqlFilters();
+            List<SqlParameter> parameters = new List<SqlParameter>();
+            var cmd = GetInterlayerSales(filters);
+            try
+            {
+                // Dates
+                if (!string.IsNullOrEmpty(startDate) || !string.IsNullOrEmpty(endDate) ||
+                     !string.IsNullOrEmpty(dateCode))
+                {
+                    DateTime startDateValue;
+                    DateTime endDateValue;
+
+                    if (!string.IsNullOrEmpty(dateCode))
+                    {
+                        var dateValues = DateCodeManager.GetDateCodeRange(dateCode);
+                        startDateValue = dateValues[0];
+                        endDateValue = dateValues[1];
+                    }
+                    else
+                    {
+
+                        if (!string.IsNullOrEmpty(startDate))
+                        {
+                            startDateValue = DateCodeManager.IsDate(startDate)
+                                ? Convert.ToDateTime(startDate)
+                                : DateCodeManager.GetDateCodeValue(startDate);
+                        }
+                        else
+                        {
+                            startDateValue = new DateTime(1900, 1, 1);
+                        }
+
+
+                        if (!string.IsNullOrEmpty(endDate))
+                        {
+                            endDateValue = DateCodeManager.IsDate(endDate)
+                                ? Convert.ToDateTime(endDate)
+                                : DateCodeManager.GetDateCodeValue(endDate);
+                        }
+                        else
+                        {
+                            endDateValue = new DateTime(2050, 12, 31);
+                        }
+                    }
+
+                    if (nextStatusCodes.Any())
+                    {
+                        if (nextStatusCodes.Contains("999") && nextStatusCodes.Count == 1)
+                        {
+                            filters.Add(new SqlFilter("InvoiceDate BETWEEN @StartDate AND @EndDate", "AND"));
+                        }
+                        else if (nextStatusCodes.Contains("999") && nextStatusCodes.Count > 1)
+                        {
+                            filters.Add(new SqlFilter("((NextStatus = '999' AND InvoiceDate BETWEEN @StartDate AND @EndDate) OR (NextStatus <> '999' AND RequestedDate BETWEEN @StartDate AND @EndDate))", "AND"));
+                            
+                        } else
+                        {
+                            filters.Add(new SqlFilter("RequestedDate BETWEEN @StartDate AND @EndDate", "AND"));
+                        }
+                        parameters.Add(new SqlParameter("@StartDate", SqlDbType.Date));
+                        parameters.Last().Value = startDateValue;
+                        parameters.Add(new SqlParameter("@EndDate", SqlDbType.Date));
+                        parameters.Last().Value = endDateValue;
+                    }
+                }
+
+                // Customer Ship Num
+                if (!String.IsNullOrEmpty(customerShipNums))
+                {
+                    var exclude = false;
+                    List<decimal> customerShipNumList;
+                    if (customerShipNums.Substring(0, 1) == "!")
+                    {
+                        exclude = true;
+                        customerShipNumList = Array
+                            .ConvertAll<string, decimal>(
+                                customerShipNums.Substring(1, customerShipNums.Length - 1).Split(','),
+                                Convert.ToDecimal)
+                            .ToList();
+                    }
+                    else
+                    {
+                        customerShipNumList =
+                            Array.ConvertAll<string, decimal>(customerShipNums.Split(','), Convert.ToDecimal)
+                                .ToList();
+                    }
+
+                    string strInClause = "";
+                    foreach (decimal customerShip in customerShipNumList)
+                    {
+                        strInClause = strInClause + $"{customerShip.ToString()},";
+                    }
+                    filters.Add(new SqlFilter($"ShipToCustNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} )", "AND"));
+                }
+
+                // Customer Sold Num
+                if (!String.IsNullOrEmpty(customerSoldNums))
+                {
+                    var exclude = false;
+                    List<decimal> customerSoldNumList;
+                    if (customerSoldNums.Substring(0, 1) == "!")
+                    {
+                        exclude = true;
+                        customerSoldNumList = Array
+                            .ConvertAll<string, decimal>(
+                                customerSoldNums.Substring(1, customerSoldNums.Length - 1).Split(','),
+                                Convert.ToDecimal)
+                            .ToList();
+                    }
+                    else
+                    {
+                        customerSoldNumList =
+                            Array.ConvertAll<string, decimal>(customerSoldNums.Split(','), Convert.ToDecimal)
+                                .ToList();
+                    }
+
+                    string strInClause = "";
+                    foreach (decimal customerSold in customerSoldNumList)
+                    {
+                        strInClause = strInClause + $"{customerSold.ToString()},";
+                    }
+                    filters.Add(new SqlFilter($"SoldToCustNum {(exclude ? "NOT" : "")} IN ( {strInClause.Substring(0, strInClause.Length - 1)} )", "AND"));
+                }
+
+                // Last Status
+                if (lastStatusCodes.Any())
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (string statusCode in lastStatusCodes)
+                    {
+                        if (statusCode == lastStatusCodes.First())
+                        {
+                            sb.Append("'");
+                            sb.Append(statusCode);
+                            sb.Append("'");
+                        }
+                        else
+                        {
+                            sb.Append(",");
+                            sb.Append("'");
+                            sb.Append(statusCode);
+                            sb.Append("'");
+                        }
+                    }
+                    filters.Add(new SqlFilter("LastStatus IN (" + sb + ")", "AND"));
+                }
+
+                // Next Status
+                if (nextStatusCodes.Any())
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (string statusCode in nextStatusCodes)
+                    {
+                        if (statusCode == nextStatusCodes.First())
+                        {
+                            sb.Append("'");
+                            sb.Append(statusCode);
+                            sb.Append("'");
+                        }
+                        else
+                        {
+                            sb.Append(",");
+                            sb.Append("'");
+                            sb.Append(statusCode);
+                            sb.Append("'");
+                        }
+                    }
+                    filters.Add(new SqlFilter("NextStatus IN (" + sb + ")", "AND"));
                 }
 
                 foreach (SqlParameter parameter in parameters)

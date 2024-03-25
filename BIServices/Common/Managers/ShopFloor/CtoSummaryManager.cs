@@ -973,9 +973,9 @@ namespace BIServices.Common.Managers.ShopFloor
                     case "TWCG":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV4");
                         break;
-                    case "GTCG":
-                        lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
-                        break;
+                    //case "GTCG":
+                    //    lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
+                    //    break;
                     case "CGCG":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV3");
                         break;
