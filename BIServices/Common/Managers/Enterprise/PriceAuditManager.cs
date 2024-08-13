@@ -139,7 +139,7 @@ WHERE
         PADOCO = SDDOCO AND
         PADCTO = SDDCTO AND
         PALNID = SDLNID AND
-        PAZ58PRLV IN (375,380,396,398)
+        PAZ58PRLV IN (375,380,381,396,398)
 ) AND 
     EXISTS 
 (
@@ -156,7 +156,7 @@ WHERE
 ) A
 WHERE 
 	A.RN = 1 and
-    PAUPRC <= 0.50 and
+    PAUPRC / 10000 <= 0.50 and
 	MOD(SDLNID/1000, 1) = 0
 FOR READ ONLY";
             return cmd;
@@ -259,7 +259,7 @@ WHERE
         PADOCO = SDDOCO AND
         PADCTO = SDDCTO AND
         PALNID = SDLNID AND
-        PAZ58PRLV IN (375,380,396,398)
+        PAZ58PRLV IN (375,380,381,396,398)
 ) AND 
     EXISTS 
 (
@@ -276,7 +276,7 @@ WHERE
 ) A
 WHERE 
 	A.RN = 1 and
-    PAUPRC <= 0.50 and
+    PAUPRC / 10000 <= 0.50 and
 	MOD(SDLNID/1000, 1) = 0
 FOR READ ONLY";
             return cmd;
@@ -354,13 +354,13 @@ FROM
         CMDOCO = SDDOCO AND
         CMDCTO = SDDCTO AND
         CMLNID = SDLNID
-    LEFT OUTER JOIN F580124
+    INNER JOIN F580124
     ON  PAKCOO = SDKCOO AND
         PADOCO = SDDOCO AND
         PADCTO = SDDCTO AND
         PALNID = SDLNID AND
-        PAZ58PRLV IN (4220, 4221, 4226, 4240, 4241, 4246, 4290)
-	LEFT OUTER JOIN F3211 KZ1
+        PAZ58PRLV IN (4200, 4205, 4210, 4211, 4215, 4216, 4230, 4231, 4236, 4250, 4280,4220, 4221, 4226, 4240, 4241, 4246, 4290)
+	INNER JOIN F3211 KZ1
 	ON	KZ1.KZCFGID = CMCFGID AND
 		KZ1.KZPEL = 5760 AND
 		KZ1.KZSGVL NOT IN ('','0','00000')
@@ -384,7 +384,7 @@ WHERE
         PADOCO = SDDOCO AND
         PADCTO = SDDCTO AND
         PALNID = SDLNID AND
-        PAZ58PRLV IN (375,380,396,398)
+        PAZ58PRLV IN (375,380,381,396,398)
 ) AND 
     EXISTS 
 (
@@ -401,7 +401,7 @@ WHERE
 ) A
 WHERE 
 	A.RN = 1 and
-    PAUPRC <= 0.50 and
+    PAUPRC / 10000 <= 0.50 and
 	MOD(SDLNID/1000, 1) = 0
 FOR READ ONLY";
             return cmd;
@@ -488,8 +488,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing Bar Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 
@@ -594,8 +594,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing Bar Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 
@@ -700,8 +700,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing Bar Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 
@@ -876,8 +876,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing Unit Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 
@@ -1012,7 +1012,7 @@ WHERE
                  )
              ) OR
              (
-                PAZ58PRLV IN (375,380,396,398)
+                PAZ58PRLV IN (375,380,381,396,398)
             )
          )
 ) AND 
@@ -1114,11 +1114,10 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing I89 Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
-
                 _logger.Info($"{i} Rows");
 
                 foreach (var line in lines)
@@ -1250,7 +1249,7 @@ WHERE
                 (PAZ58PRLV IN (300,374,390,391,392,393,394,395,398,399,401,402) AND PADSCA LIKE '%366%') OR 
 				(PAZ58PRLV IN (399,402) AND (PADSCA LIKE '%XL%' OR PADSCA LIKE '%XM%' OR PADSCA LIKE '%E66%' OR PADSCA LIKE '%Q66%')) OR
 				(PAZ58PRLV IN (300) AND (PADSCA LIKE '%XL%' OR PADSCA LIKE '%XM%' OR PADSCA LIKE '%E66%' OR PADSCA LIKE '%Q66%')) OR
-				(PAZ58PRLV IN (375,377,380,396,397))
+				(PAZ58PRLV IN (375,377,380,381,396,397))
 			)
 ) AND 
     EXISTS 
@@ -1352,8 +1351,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing 366 Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 
@@ -1485,7 +1484,7 @@ WHERE
         PALNID = SDLNID AND
             (
                 (PAZ58PRLV IN (300,374,390,391,392,393,394,395,398,399,401) AND PADSCA LIKE '%180%') OR 
-				(PAZ58PRLV IN (375,377,380,396,397))
+				(PAZ58PRLV IN (375,377,380,381,396,397))
 			)
 ) AND 
     EXISTS 
@@ -1587,8 +1586,8 @@ FOR READ ONLY";
                         line.ConfiguratorId = CastDbNull.To<decimal>(reader["CMCFGID"], 0);
                         line.PriceAuditDesc = "Missing 180 Pricing";
                         lines.Add(line);
+                        i++;
                     }
-
                     reader.Close();
                 }
 

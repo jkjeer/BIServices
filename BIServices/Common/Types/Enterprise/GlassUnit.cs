@@ -389,6 +389,13 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 420, EmitDefaultValue = true)]
         public int Passes { get; set; }
 
+        // Load
+        [DataMember(Order = 430, EmitDefaultValue = true)]
+        public decimal LoadNum { get; set; }
+
+        [DataMember(Order = 432, EmitDefaultValue = true)]
+        public string LoadStatusCode { get; set; }
+
         // Item
         [DataMember(Order = 500, EmitDefaultValue = true)]
         public decimal ItemNum { get; set; }

@@ -164,13 +164,11 @@ namespace BIServices.OrderSvc
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var mgr = new PriceAuditManager(session);
-                //lines.AddRange(mgr.GetMissingBarOrders(session, plantCode));
                 lines.AddRange(mgr.GetMissingBarOrdersAir1(session, plantCode));
                 lines.AddRange(mgr.GetMissingBarOrdersAir2(session, plantCode));
                 lines.AddRange(mgr.GetMissingUnitPricing(session, plantCode));
                 lines.AddRange(mgr.GetMissingI89Pricing(session, plantCode));
                 lines.AddRange(mgr.GetMissing366Pricing(session, plantCode));
-                //lines.AddRange(mgr.GetMissing180Pricing(session, plantCode));
             }
             catch (Exception e)
             {

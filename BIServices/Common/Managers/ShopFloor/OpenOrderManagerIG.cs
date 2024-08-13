@@ -97,7 +97,9 @@ namespace BIServices.Common.Managers.ShopFloor
 				MinUnitId = (SELECT MIN(SerialNum) FROM EBS.RackDetail WHERE WOrderNum = sl.WOrderNum and Sl.WOrderNum > 0),
 				MaxUnitId = (SELECT MAX(SerialNum) FROM EBS.RackDetail WHERE WOrderNum = sl.WOrderNum and Sl.WOrderNum > 0),
 				MinUnitStatus = (SELECT MIN(StatusCode) FROM EBS.RackDetail WHERE WOrderNum = sl.WOrderNum and sl.WOrderNum > 0 ),
-                MaxUnitStatus = (SELECT MAX(StatusCode) FROM EBS.RackDetail WHERE WOrderNum = sl.WOrderNum and sl.WOrderNum > 0 )
+                MaxUnitStatus = (SELECT MAX(StatusCode) FROM EBS.RackDetail WHERE WOrderNum = sl.WOrderNum and sl.WOrderNum > 0 ),
+                LaminatedActualSqft = CASE WHEN ord.Lite1_Lami + ord.Lite2_Lami + ord.Lite3_Lami <> '' THEN sl.UnitActualSqft * sl.Quantity ELSE 0 END,
+                LaminatedBillableSqft = CASE WHEN ord.Lite1_Lami + ord.Lite2_Lami + ord.Lite3_Lami <> '' THEN sl.UnitActualSqft * sl.Quantity ELSE 0 END
             FROM
                 EBS.SalesLine                        sl
                 LEFT OUTER JOIN EBS.AddressBook         cs1
@@ -356,6 +358,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         line.ScheduledUnits = CastDbNull.To<int>(reader["ScheduledUnits"], 0);
                         line.CompletedUnits = CastDbNull.To<int>(reader["CompletedUnits"], 0);
                         line.ClosedUnits = CastDbNull.To<int>(reader["ClosedUnits"], 0);
+                        line.LaminatedSqft = CastDbNull.To<decimal>(reader["LaminatedActualSqft"], 0);
                         lines.Add(line);
                     }
 

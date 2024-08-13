@@ -154,6 +154,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 332, EmitDefaultValue = false)]
         public string ReasonCode { get; set; }
 
+        [DataMember(Order = 343, EmitDefaultValue = false)]
+        public string QCInspectFlag { get; set; }
+
         [DataMember(Order = 334, EmitDefaultValue = false)]
         public string PickNotes { get; set; }
 

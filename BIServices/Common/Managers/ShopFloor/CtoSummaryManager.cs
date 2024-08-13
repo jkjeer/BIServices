@@ -967,7 +967,8 @@ namespace BIServices.Common.Managers.ShopFloor
                 var rejectedLitesAll = GetRejectedLites(cn, plant, dateCode, startDate, endDate);
                 _logger.Info($"Done {DateTime.Now}");
 
-                var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVCutMono")).ToList();
+                //var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVCutMono")).ToList();
+                var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVCut")).ToList();
                 switch (plant.PlantCode)
                 {
                     case "TWCG":

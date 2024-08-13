@@ -352,16 +352,16 @@
       <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="NLog">
-      <Version>5.2.7</Version>
+      <Version>5.2.8</Version>
     </PackageReference>
     <PackageReference Include="NLog.Database">
-      <Version>5.2.7</Version>
+      <Version>5.2.8</Version>
     </PackageReference>
     <PackageReference Include="NLog.Schema">
-      <Version>5.2.7</Version>
+      <Version>5.2.8</Version>
     </PackageReference>
     <PackageReference Include="NLog.WindowsIdentity">
-      <Version>5.2.0</Version>
+      <Version>5.3.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

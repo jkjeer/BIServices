@@ -89,6 +89,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 SchedulerMsg1,
                 PickingNotes,
                 PackingNotes,
+                QCInspectFlag,
                 LoadNum,
                 UnitCostAmt,
                 UnitActualPriceAmt,
@@ -587,6 +588,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CardinalProductType = CastDbNull.AsString(reader["CardinalProductType"]);
                         unit.PickNotes = CastDbNull.AsString(reader["PickingNotes"]);
                         unit.PackNotes = CastDbNull.AsString(reader["PackingNotes"]);
+                        unit.QCInspectFlag = CastDbNull.AsString(reader["QCInspectFlag"]);
                         unit.IsPick = CastDbNull.To<bool>(reader["IsPick"], false);
                         unit.SchedulingMessage1 = CastDbNull.AsString(reader["SchedulerMsg1"]);
                         unit.UnitCostAmt = CastDbNull.To<Decimal>(reader["UnitCostAmt"], 0);

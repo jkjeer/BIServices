@@ -406,6 +406,8 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.AssetId = CastDbNull.To<String>(reader["RackAssetId"], String.Empty).Trim();
                         unit.RackLocation = CastDbNull.To<String>(reader["RackLocation"], String.Empty).Trim();
                         unit.RackTransactionDate = CastDbNull.To<DateTime>(reader["RackTransactionDate"], DateTime.MinValue);
+                        unit.LoadNum = CastDbNull.To<Decimal>(reader["RackLoadNum"], 0);
+                        unit.LoadStatusCode = CastDbNull.To<String>(reader["LoadStatusCode"], String.Empty).Trim();
 
                         unit.Status = CastDbNull.To<String>(reader["RackDetailStatusCode"], String.Empty).Trim();
                         unit.RackItemStatusCode = CastDbNull.To<String>(reader["RackDetailStatusCode"], String.Empty).Trim();
@@ -547,10 +549,12 @@ namespace BIServices.Common.Managers.ShopFloor
                 RackDetailPosition,
                 RackTransactionDate,
                 RackDetailTransactionDate,
+                RackLoadNum,
                 VirtualRackName,
                 VirtualSlotNumber,
                 VirtualSideNumber,
                 VirtualStackNumber,
+                LoadStatusCode,
                 ProductionStatus,
                 LastProductionDate,
                 LastProductionLineCode,
