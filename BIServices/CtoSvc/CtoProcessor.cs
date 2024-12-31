@@ -194,6 +194,52 @@ namespace BIServices.CtoSvc
             return aggs;
         }
 
+        public CutAggregates GetCutSummaryByDate(string plants, string dateCode, DateTime startDate, DateTime endDate)
+        {
+            var aggs = new CutAggregates();
+            var aggsBag = new ConcurrentBag<CutAggregate>();
+
+            //var plantList = plants.Replace("'", "").Split(',').ToList();
+            var plantObjects = PlantManager.GetPlants(plants);
+
+            var exceptions = new ConcurrentQueue<Exception>();
+            try
+            {
+                Parallel.ForEach(plantObjects, (plantItem) =>
+                {
+                    var mgr = new CtoSummaryManager();
+                    var cn = new SqlConnection();
+                    try
+                    {
+                        var plant = PlantManager.GetPlant(plantItem.PlantCode);
+                        cn = ConnectionManager.GetSqlConnectionFromKey(plant.PlantCode + ".ClearPath");
+                        cn.Open();
+                        var results = mgr.GetCutSummaryByDate(plant, cn, dateCode, startDate, endDate);
+                        results.AsParallel().ForAll(t => aggsBag.Add(t));
+                    }
+                    catch (Exception e)
+                    {
+                        var ex = new Exception($"Plant: {plantItem} Message: {e.Message}");
+                        exceptions.Enqueue(ex);
+                    }
+                    finally
+                    {
+                        cn.Close();
+                    }
+                });
+                if (exceptions.Count > 0) throw new AggregateException(exceptions);
+            }
+            catch (AggregateException es)
+            {
+                foreach (var e in es.InnerExceptions)
+                {
+                    var ez = new Error(e);
+                }
+            }
+            aggs.AddRange(aggsBag.ToList());
+            return aggs;
+        }
+
         public TemperAggregates GetTemperSummary(string plants, string dateCode, DateTime startDate, DateTime endDate)
         {
             var aggs = new TemperAggregates();
@@ -212,6 +258,50 @@ namespace BIServices.CtoSvc
                         cn = ConnectionManager.GetSqlConnectionFromKey(plant.PlantCode + ".ClearPath");
                         cn.Open();
                         var results = mgr.GetTemperSummary(plant, cn, dateCode, startDate, endDate);
+                        results.AsParallel().ForAll(t => aggsBag.Add(t));
+                        //aggs.AddRange(mgr.GetTemperSummary(plant, cn, dateCode, startDate, endDate));
+                    }
+                    catch (Exception e)
+                    {
+                        var ex = new Exception($"Plant: {plantItem} Message: {e.Message}");
+                        exceptions.Enqueue(ex);
+                    }
+                    finally
+                    {
+                        cn.Close();
+                    }
+                });
+                if (exceptions.Count > 0) throw new AggregateException(exceptions);
+            }
+            catch (AggregateException es)
+            {
+                foreach (var e in es.InnerExceptions)
+                {
+                    var ez = new Error(e);
+                }
+            }
+            aggs.AddRange(aggsBag.ToList());
+            return aggs;
+        }
+
+        public TemperAggregates GetTemperSummaryByDate(string plants, string dateCode, DateTime startDate, DateTime endDate)
+        {
+            var aggs = new TemperAggregates();
+            var aggsBag = new ConcurrentBag<TemperAggregate>();
+            var plantList = plants.Replace("'", "").Split(',').ToList();
+            var exceptions = new ConcurrentQueue<Exception>();
+            try
+            {
+                Parallel.ForEach(plantList, (plantItem) =>
+                {
+                    var mgr = new CtoSummaryManager();
+                    var cn = new SqlConnection();
+                    try
+                    {
+                        var plant = PlantManager.GetPlant(plantItem);
+                        cn = ConnectionManager.GetSqlConnectionFromKey(plant.PlantCode + ".ClearPath");
+                        cn.Open();
+                        var results = mgr.GetTemperSummaryByDate(plant, cn, dateCode, startDate, endDate);
                         results.AsParallel().ForAll(t => aggsBag.Add(t));
                         //aggs.AddRange(mgr.GetTemperSummary(plant, cn, dateCode, startDate, endDate));
                     }

@@ -56,8 +56,16 @@ namespace BIServices.CtoSvc
         CutAggregates GetCutSummary(string plants, string dateCode, string startDate, string endDate);
 
         [OperationContract, OperationInvokerLogger]
+        [WebGet(UriTemplate = "/GetCutSummaryByDate?Plant={plants}&DateCode={dateCode}&StartDate={startDate}&EndDate={endDate}")]
+        CutAggregates GetCutSummaryByDate(string plants, string dateCode, string startDate, string endDate);
+
+        [OperationContract, OperationInvokerLogger]
         [WebGet(UriTemplate = "/GetTemperSummary?Plant={plants}&DateCode={dateCode}&StartDate={startDate}&EndDate={endDate}")]
         TemperAggregates GetTemperSummary(string plants, string dateCode, string startDate, string endDate);
+
+        [OperationContract, OperationInvokerLogger]
+        [WebGet(UriTemplate = "/GetTemperSummaryByDate?Plant={plants}&DateCode={dateCode}&StartDate={startDate}&EndDate={endDate}")]
+        TemperAggregates GetTemperSummaryByDate(string plants, string dateCode, string startDate, string endDate);
 
         [OperationContract, OperationInvokerLogger]
         [WebGet(UriTemplate = "/GetRawSupply?Plant={plant}&ItemNum={itemNum}")]

@@ -235,7 +235,8 @@ namespace BIServices.Common.Managers.ShopFloor
                 ChannelCompletedAirspaces,
                 ChannelCompletedInches,
                 CategoryCode,
-                WrittenDate
+                WrittenDate,
+                BarGap
             FROM
                 PlantReporting.rpclient.OpenUnits
             WHERE
@@ -629,6 +630,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.Spacer2 = CastDbNull.AsString(reader["Spacer2"]);
                         unit.Air1MCode1 = CastDbNull.AsString(reader["Air1MCode1"]);
                         unit.BarDescription = CastDbNull.AsString(reader["BarDescription"]);
+                        unit.BarGap = reader.Get<decimal>("BarGap");
                         unit.GridStyleCode = CastDbNull.AsString(reader["GridStyleCode"]);
                         unit.GridStyleGroupName = CastDbNull.AsString(reader["GridStyleGroupName"]);
                         unit.Lite1Routing = CastDbNull.AsString(reader["Lite1Routing"]);
@@ -1063,6 +1065,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.ScheduledRackStatusCode = reader.Get<String>("OrigScheduleRackStatusCode");
                         unit.ScheduledLineId = reader.Get<byte>("OrigScheduleProductionLine").ToString();
                         unit.ScheduledLineNum = reader.Get<byte>("OrigScheduleProductionLine");
+                        unit.QcInspect = reader.Get<string>("QCInspectFlag");
                         unit.IGLineScheduled = reader.Get<byte>("OrigScheduleProductionLine").ToString();
                         if (unit.RackId != unit.ScheduledRackId)
                         {
@@ -1143,6 +1146,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.Construction = reader.Get<String>("ProductCode");
                         unit.IsLami = reader.Get<String>("Lite1Lami").Length + reader.Get<String>("Lite2Lami").Length + reader.Get<String>("Lite3Lami").Length > 0 ? "Y" : "N";
                         unit.BarDescription = reader.Get<String>("BarDescription");
+                        unit.BarGap = reader.Get<decimal>("BarGap");
                         unit.BaseDim = (double)reader.Get<decimal>("BaseDim");
                         unit.LeftDim = (double)reader.Get<decimal>("LeftDim");
                         unit.ShapeNum = reader.Get<int>("ShapeNum");

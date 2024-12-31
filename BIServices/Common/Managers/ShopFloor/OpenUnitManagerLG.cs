@@ -466,6 +466,9 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.PriceCode1 = CastDbNull.To<String>(reader["PriceCode1"], String.Empty).Trim();
                         unit.PriceCode2 = CastDbNull.To<String>(reader["PriceCode2"], String.Empty).Trim();
                         unit.PriceCode3 = CastDbNull.To<String>(reader["PriceCode3"], String.Empty).Trim();
+                        unit.UnitCostAmt = CastDbNull.To<Decimal>(reader["UnitCostAmt"], 0);
+                        unit.UnitActualPriceAmt = CastDbNull.To<Decimal>(reader["UnitPriceAmt"], 0);
+                        unit.UnitListPriceAmt = CastDbNull.To<Decimal>(reader["UnitListPriceAmt"], 0);
                         unit.Originator = CastDbNull.To<String>(reader["Originator"], String.Empty).Trim();
                         unit.IsMissing = (unit.RackId != unit.ScheduledRackId && unit.ScheduledRackStatusCode == "8") ? "Y" : "N";
                         unit.IsInternalOrder = unit.CustomerSoldType == "F";
@@ -590,7 +593,10 @@ namespace BIServices.Common.Managers.ShopFloor
                 PriceCode1,
                 PriceCode2,
                 PriceCode3,
-                CustomerTier
+                CustomerTier,
+                UnitCostAmt,
+                UnitPriceAmt,
+                UnitListPriceAmt
             FROM
                 PlantReporting.rpclient.OpenUnits
             WHERE
@@ -735,6 +741,47 @@ namespace BIServices.Common.Managers.ShopFloor
                     while (reader.Read())
                     {
                         dt = CastDbNull.To<DateTime>(reader["CAL_DATE"], new DateTime(1900, 1, 1));
+                    }
+
+                    reader.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+
+            return dt;
+        }
+
+        public SqlCommand GetRequestedDateLocal()
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+              MAX(DateValue) AS MaxDateValue
+            FROM
+              EBS.EBS.vw_CalendarDateCodeValue
+            WHERE
+              DateCode = @DateCode;";
+            cmd.Parameters.Add(new SqlParameter("@DateCode", SqlDbType.VarChar, 30));
+            return cmd;
+        }
+
+        public DateTime GetRequestedDateLocal(string code, SqlConnection cn)
+        {
+            var dt = new DateTime(1900, 1, 1);
+            try
+            {
+                var cmd = GetRequestedDateLocal();
+                cmd.Connection = cn;
+                cmd.Parameters[0].Value = code;
+                using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                {
+                    while (reader.Read())
+                    {
+                        dt = CastDbNull.To<DateTime>(reader["MaxDateValue"], new DateTime(1900, 1, 1));
                     }
 
                     reader.Close();

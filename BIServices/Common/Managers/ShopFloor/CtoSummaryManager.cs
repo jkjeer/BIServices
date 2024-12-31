@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using BIServices.Common.Managers.Enterprise;
 using BIServices.Common.Types.Enterprise;
 using BIServices.Common.Types.ShopFloor;
@@ -566,6 +568,55 @@ namespace BIServices.Common.Managers.ShopFloor
             return lines;
         }
 
+
+        /*********************************************************************************
+         * Produced
+         *******************************************************************************/
+        public SqlCommand GetProductionDates()
+        {
+            var cmd = new SqlCommand();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = @"
+            SELECT
+                CalendarDate
+              FROM
+                ShopFloor.EBS.SpecCalendar
+             WHERE
+                CalendarDate BETWEEN @StartDate and @EndDate";
+            cmd.Parameters.Add(new SqlParameter("@StartDate", SqlDbType.DateTime));
+            cmd.Parameters.Add(new SqlParameter("@EndDate", SqlDbType.DateTime));
+            return cmd;
+        }
+
+        public List<DateTime> GetProductionDates(SqlConnection cn, Plant plant, DateTime startDate, DateTime endDate)
+        {
+            var dates = new List<DateTime>();
+            try
+            {
+                var cmd = GetProductionDates();
+                cmd.Connection = cn;
+                cmd.Parameters["@StartDate"].Value = startDate;
+                cmd.Parameters["@EndDate"].Value = endDate;
+                cmd.CommandTimeout = 60;
+                _logger.Trace(Logging.DbCmdString(cmd));
+                using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
+                {
+                    while (reader.Read())
+                    {
+                        var line = new ProductionLine();
+                        dates.Add(CastDbNull.To(reader["CalendarDate"], new DateTime(1900,1,1)));
+                    }
+
+                    reader.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            return dates;
+        }
+
         /*********************************************************************************
          * Shift Summary
          *******************************************************************************/
@@ -1119,19 +1170,19 @@ namespace BIServices.Common.Managers.ShopFloor
                         // Internal Reject
                         agg.InternalCutRejectedLites =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Lites);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Lites);
                         agg.InternalCutRejectedSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Sqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Sqft);
                         agg.InternalCutRejectedActualSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.ActualSqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.ActualSqft);
                         agg.InternalCutRejectedBillableSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.BillableSqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.BillableSqft);
                         agg.InternalCutRejectedTons =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Tons);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Tons);
 
                         // Net
                         agg.NetCutProducedLites = agg.GrossCutProducedLites - agg.GrossCutRejectedLites;
@@ -1164,6 +1215,243 @@ namespace BIServices.Common.Managers.ShopFloor
                     }
 
                     aggs.Add(agg);
+                }
+            }
+            catch (Exception err)
+            {
+                throw new Exception(err.ToString());
+            }
+
+            return aggs;
+        }
+
+
+        public CutAggregates GetCutSummaryByDate(Plant plant, SqlConnection cn, string dateCode, DateTime startDate, DateTime endDate)
+        {
+            var aggs = new CutAggregates();
+            try
+            {
+                if (!string.IsNullOrEmpty(dateCode))
+                {
+                    var dtArray = DateCodeManager.GetDateCodeRange(dateCode);
+                    startDate = dtArray[0];
+                    endDate = dtArray[1];
+                }
+
+                var dates = GetProductionDates(cn, plant, startDate, endDate);
+
+                _logger.Info($"Consumed Sheets {plant.PlantCode} {DateTime.Now}");
+                var consumedSheetsAll = GetConsumedSheets(cn, plant, dateCode, startDate, endDate);
+                _logger.Info($"Consumed Offal {plant.PlantCode} {DateTime.Now}");
+                var consumedOffalAll = GetConsumedOffal(cn, plant, dateCode, startDate, endDate);
+                _logger.Info($"Produced Lites {plant.PlantCode} {DateTime.Now}");
+                var producedLitesAll = GetProducedLites(cn, plant, dateCode, startDate, endDate);
+                _logger.Info($"Rejected Lites {plant.PlantCode} {DateTime.Now}");
+                var rejectedLitesAll = GetRejectedLites(cn, plant, dateCode, startDate, endDate);
+                _logger.Info($"Done {DateTime.Now}");
+
+                //var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVCutMono")).ToList();
+                var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVCut")).ToList();
+                switch (plant.PlantCode)
+                {
+                    case "TWCG":
+                        lines.RemoveAll(x => x.ProductionLineCode == "CUTLV4");
+                        break;
+                    //case "GTCG":
+                    //    lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
+                    //    break;
+                    case "CGCG":
+                        lines.RemoveAll(x => x.ProductionLineCode == "CUTLV3");
+                        break;
+                    case "LLCG":
+                        lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
+                        break;
+                }
+
+                foreach (var line in lines)
+                {
+                    foreach (var productionDate in dates)
+                    {
+                        var agg = new CutAggregate();
+                        agg.PlantCode = plant.PlantCode;
+                        agg.PlantNum = plant.PlantNum;
+                        agg.StartDate = startDate;
+                        agg.EndDate = endDate;
+                        agg.ProductionDate = productionDate;
+                        agg.ProductionLineCode = line.ProductionLineCode;
+                        agg.WorkCenterId = line.WorkCenterId;
+                        agg.ProductionLineNum = line.LineCode;
+                        agg.ProductionLineGroupDesc = line.GroupDescription;
+                        agg.ProductionLineDesc = line.Description;
+
+                        var consumedSheetsLine = consumedSheetsAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode).ToList();
+                        var consumedOffalLine = consumedOffalAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode).ToList();
+                        var producedLitesLine = producedLitesAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode).ToList();
+                        var rejectedLitesLine = rejectedLitesAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode || x.ReportDate == productionDate && x.CutProductionLineCode == line.ProductionLineCode && x.RejectReasonBenchmarkDescription == "CUTTING").ToList();
+
+                        if (consumedSheetsLine.Any())
+                        {
+                            agg.StartDate = consumedSheetsLine.Min(x => x.ReportDate);
+                            agg.EndDate = consumedSheetsLine.Max(x => x.ReportDate);
+                            agg.ProductionDate = productionDate;
+
+                            // Consumed
+                            agg.ConsumedSheets = consumedSheetsLine.Sum(x => x.Sheets);
+                            agg.GlassTypes = consumedSheetsLine.Select(x => x.GlassTypeCode).Distinct().Count();
+                            agg.ConsumedSqft = consumedSheetsLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedActualSqft = consumedSheetsLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedBillableSqft = consumedSheetsLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedTons = consumedSheetsLine.Sum(x => x.Tons);
+                            agg.ConsumedOffalLites = consumedOffalLine.Sum(x => x.Lites);
+                            agg.ConsumedOffalSqft = consumedOffalLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedOffalActualSqft = consumedOffalLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedOffalBillableSqft = consumedOffalLine.Sum(x => x.ActualSqft);
+                            agg.ConsumedOffalTons = consumedOffalLine.Sum(x => x.Tons);
+
+                            // Produced
+                            agg.GrossCutProducedLites =
+                                producedLitesLine.Sum(x => x.Lites);
+                            agg.GrossCutProducedSqft =
+                                producedLitesLine.Sum(x => x.Sqft);
+                            agg.GrossCutProducedActualSqft =
+                                producedLitesLine.Sum(x => x.ActualSqft);
+                            agg.GrossCutProducedBillableSqft =
+                                producedLitesLine.Sum(x => x.BillableSqft);
+                            agg.GrossCutProducedTons =
+                                producedLitesLine.Sum(x => x.Tons);
+
+                            // Low Pro
+                            agg.LoProCutLites =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.Lites);
+                            agg.LoProCutSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.ActualSqft);
+                            agg.LoProCutActualSqft =
+                                producedLitesLine.Where(x => x.GroupDescription.StartsWith("LVCutMono") && x.OriginTypeCode == "LP")
+                                    .Sum(x => x.ActualSqft);
+                            agg.LoProCutBillableSqft =
+                                producedLitesLine.Where(x => x.GroupDescription.StartsWith("LVCutMono") && x.OriginTypeCode == "LP")
+                                    .Sum(x => x.BillableSqft);
+                            agg.LoProCutTons =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.Tons);
+
+                            // Rare
+                            agg.RareCutLites =
+                                producedLitesLine.Sum(x => x.RareLites);
+                            agg.RareCutSqft =
+                                producedLitesLine.Sum(x => x.RareSqft);
+                            agg.RareCutActualSqft =
+                                producedLitesLine.Sum(x => x.RareActualSqft);
+                            agg.RareCutBillableSqft =
+                                producedLitesLine.Sum(x => x.RareBillableSqft);
+                            agg.RareCutTons =
+                                producedLitesLine.Sum(x => x.RareTons);
+
+                            // Custom
+                            agg.CustomCutLites =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Lites);
+                            agg.CustomCutSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Sqft);
+                            agg.CustomCutActualSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.ActualSqft);
+                            agg.CustomCutBillableSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.BillableSqft);
+                            agg.CustomCutTons =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Tons);
+
+                            // Gross
+                            agg.GrossCutRejectedLites =
+                                rejectedLitesLine.Sum(x => x.Lites);
+                            agg.GrossCutRejectedSqft =
+                                rejectedLitesLine.Sum(x => x.Sqft);
+                            agg.GrossCutRejectedActualSqft =
+                                rejectedLitesLine.Sum(x => x.ActualSqft);
+                            agg.GrossCutRejectedBillableSqft =
+                                rejectedLitesLine.Sum(x => x.BillableSqft);
+                            agg.GrossCutRejectedTons =
+                                rejectedLitesLine.Sum(x => x.Tons);
+
+                            // Vendor Reject
+                            agg.VendorCutRejectedLites =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Lites);
+                            agg.VendorCutRejectedSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Sqft);
+                            agg.VendorCutRejectedActualSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.ActualSqft);
+                            agg.VendorCutRejectedBillableSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.BillableSqft);
+                            agg.VendorCutRejectedTons =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Tons);
+
+                            // Internal Reject
+                            agg.InternalCutRejectedLites =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Lites);
+                            agg.InternalCutRejectedSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Sqft);
+                            agg.InternalCutRejectedActualSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.ActualSqft);
+                            agg.InternalCutRejectedBillableSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.BillableSqft);
+                            agg.InternalCutRejectedTons =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Tons);
+
+                            // Net
+                            agg.NetCutProducedLites = agg.GrossCutProducedLites - agg.GrossCutRejectedLites;
+                            agg.NetCutProducedSqft = agg.GrossCutProducedSqft - agg.GrossCutRejectedSqft;
+                            agg.NetCutProducedActualSqft = agg.GrossCutProducedActualSqft - agg.GrossCutRejectedActualSqft;
+                            agg.NetCutProducedBillableSqft = agg.GrossCutProducedBillableSqft - agg.GrossCutRejectedBillableSqft;
+                            agg.NetCutProducedTons = agg.GrossCutProducedTons - agg.GrossCutRejectedTons;
+
+                            // Yield
+                            agg.CuttingYield = Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5);
+                            agg.CuttingActualYield = Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedActualSqft, 5);
+                            agg.CuttingBillableYield = Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
+                            agg.NetYield = Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5);
+                            agg.NetActualYield = Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5);
+                            agg.NetBillableYield = Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
+
+                            // Hours
+                            agg.CuttingHours =
+                                (decimal)Math.Round(consumedSheetsLine.GroupBy(x => new { x.ReportDate, x.Shift })
+                                    .Select(
+                                        lg =>
+                                            new
+                                            {
+                                                Date = lg.Key,
+                                                Hours =
+                                                    (lg.Max(x => x.MaxWrittenDate) - lg.Min(x => x.MinWrittenDate))
+                                                    .TotalHours
+                                            })
+                                    .Sum(a => a.Hours), 2);
+                        }
+
+                        aggs.Add(agg);
+                    }
                 }
             }
             catch (Exception err)
@@ -1311,19 +1599,19 @@ namespace BIServices.Common.Managers.ShopFloor
                         // Internal Rejected
                         agg.InternalTempRejectedLites =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Lites);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Lites);
                         agg.InternalTempRejectedSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Sqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Sqft);
                         agg.InternalTempRejectedActualSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.ActualSqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.ActualSqft);
                         agg.InternalTempRejectedBillableSqft =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.BillableSqft);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.BillableSqft);
                         agg.InternalTempRejectedTons =
                             rejectedLitesLine.Where(
-                                x => x.UpstreamTypeCode != "V").Sum(x => x.Tons);
+                                x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Tons);
 
                         // Net Produced
                         agg.NetTempProducedLites = agg.GrossTempProducedLites - agg.GrossTempRejectedLites;
@@ -1354,6 +1642,199 @@ namespace BIServices.Common.Managers.ShopFloor
                     }
 
                     aggs.Add(agg);
+                }
+            }
+            catch (Exception err)
+            {
+                throw new Exception(err.ToString());
+            }
+
+            return aggs;
+        }
+
+        public TemperAggregates GetTemperSummaryByDate(Plant plant, SqlConnection cn, string dateCode, DateTime startDate, DateTime endDate)
+        {
+            var aggs = new TemperAggregates();
+            try
+            {
+                if (!string.IsNullOrEmpty(dateCode))
+                {
+                    var dtArray = DateCodeManager.GetDateCodeRange(dateCode);
+                    startDate = dtArray[0];
+                    endDate = dtArray[1];
+                }
+
+                var dates = GetProductionDates(cn, plant, startDate, endDate);
+
+                var producedLitesAll = GetProducedLites(cn, plant, dateCode, startDate, endDate);
+                var rejectedLitesAll = GetRejectedLites(cn, plant, dateCode, startDate, endDate);
+
+                var lines = GetProductionLines(cn, plant).Where(x => x.GroupDescription.StartsWith("LVFurnace"));
+                foreach (var line in lines)
+                {
+                    foreach (var productionDate in dates)
+                    {
+                        var agg = new TemperAggregate();
+                        agg.PlantCode = plant.PlantCode;
+                        agg.PlantNum = plant.PlantNum;
+                        agg.StartDate = startDate;
+                        agg.EndDate = endDate;
+                        agg.ProductionDate = productionDate;
+                        agg.ProductionLineCode = line.ProductionLineCode;
+                        agg.WorkCenterId = line.WorkCenterId;
+                        agg.ProductionLineNum = line.LineCode;
+                        agg.ProductionLineGroupDesc = line.GroupDescription;
+                        agg.ProductionLineDesc = line.Description;
+
+                        var producedLitesLine =
+                            producedLitesAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode).ToList();
+                        var rejectedLitesLine =
+                            rejectedLitesAll.Where(x => x.ReportDate == productionDate && x.ProductionLineCode == line.ProductionLineCode &&
+                                                        x.RejectReasonBenchmarkDescription != "CUTTING").ToList();
+
+                        if (producedLitesLine.Any())
+                        {
+                            agg.StartDate = producedLitesLine.Min(x => x.ReportDate);
+                            agg.EndDate = producedLitesLine.Max(x => x.ReportDate);
+                            agg.ProductionDate = productionDate;
+
+                            // Gross Produced
+                            agg.GrossTempProducedLites =
+                                producedLitesLine.Sum(x => x.Lites);
+                            agg.GrossTempProducedSqft =
+                                producedLitesLine.Sum(x => x.Sqft);
+                            agg.GrossTempProducedActualSqft =
+                                producedLitesLine.Sum(x => x.ActualSqft);
+                            agg.GrossTempProducedBillableSqft =
+                                producedLitesLine.Sum(x => x.BillableSqft);
+                            agg.GrossTempProducedTons =
+                                producedLitesLine.Sum(x => x.Tons);
+
+                            // Low Pro
+                            agg.LoProTempLites =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.Lites);
+                            agg.LoProTempSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.Sqft);
+                            agg.LoProTempActualSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.ActualSqft);
+                            agg.LoProTempBillableSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.BillableSqft);
+                            agg.LoProTempTons =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "LP")
+                                    .Sum(x => x.Tons);
+
+                            // Custom
+                            agg.CustomTempLites =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Lites);
+                            agg.CustomTempSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Sqft);
+                            agg.CustomTempActualSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.ActualSqft);
+                            agg.CustomTempBillableSqft =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.BillableSqft);
+                            agg.CustomTempTons =
+                                producedLitesLine.Where(
+                                        x => x.OriginTypeCode == "C")
+                                    .Sum(x => x.Tons);
+
+                            // Gross Rejected
+                            agg.GrossTempRejectedLites =
+                                rejectedLitesLine.Where(
+                                    x => x.RejectReasonBenchmarkDescription != "CUTTING").Sum(x => x.Lites);
+                            agg.GrossTempRejectedSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.RejectReasonBenchmarkDescription != "CUTTING").Sum(x => x.Sqft);
+                            agg.GrossTempRejectedActualSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.RejectReasonBenchmarkDescription != "CUTTING").Sum(x => x.ActualSqft);
+                            agg.GrossTempRejectedBillableSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.RejectReasonBenchmarkDescription != "CUTTING").Sum(x => x.BillableSqft);
+                            agg.GrossTempRejectedTons =
+                                rejectedLitesLine.Where(
+                                    x => x.RejectReasonBenchmarkDescription != "CUTTING").Sum(x => x.Tons);
+
+                            // Vendor Rejected
+                            agg.VendorTempRejectedLites =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Lites);
+                            agg.VendorTempRejectedSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Sqft);
+                            agg.VendorTempRejectedActualSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.ActualSqft);
+                            agg.VendorTempRejectedBillableSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.BillableSqft);
+                            agg.VendorTempRejectedTons =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode == "V" || x.RejectReasonBenchmarkDescription == "VENDOR").Sum(x => x.Tons);
+
+                            // Internal Rejected
+                            agg.InternalTempRejectedLites =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Lites);
+                            agg.InternalTempRejectedSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Sqft);
+                            agg.InternalTempRejectedActualSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.ActualSqft);
+                            agg.InternalTempRejectedBillableSqft =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.BillableSqft);
+                            agg.InternalTempRejectedTons =
+                                rejectedLitesLine.Where(
+                                    x => x.UpstreamTypeCode != "V" && x.RejectReasonBenchmarkDescription != "VENDOR").Sum(x => x.Tons);
+
+                            // Net Produced
+                            agg.NetTempProducedLites = agg.GrossTempProducedLites - agg.GrossTempRejectedLites;
+                            agg.NetTempProducedSqft = agg.GrossTempProducedSqft - agg.GrossTempRejectedSqft;
+                            agg.NetTempProducedActualSqft = agg.GrossTempProducedActualSqft - agg.GrossTempRejectedActualSqft;
+                            agg.NetTempProducedBillableSqft = agg.GrossTempProducedBillableSqft - agg.GrossTempRejectedBillableSqft;
+                            agg.NetTempProducedTons = agg.GrossTempProducedTons - agg.GrossTempRejectedTons;
+
+                            // Yield
+                            agg.TempYield = Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5);
+                            agg.TempActualYield = Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5);
+                            agg.TempBillableYield = Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5);
+
+                            // Hours
+                            agg.TemperingHours =
+                                (decimal)Math.Round(producedLitesLine.GroupBy(x => new { x.ReportDate, x.Shift })
+                                    //(decimal)Math.Round(producedLitesLine.GroupBy(x => x.ReportDate)
+                                    .Select(
+                                        lg =>
+                                            new
+                                            {
+                                                Date = lg.Key,
+                                                Hours =
+                                                    (lg.Max(x => x.MaxWrittenDate) - lg.Min(x => x.MinWrittenDate))
+                                                    .TotalHours
+                                            })
+                                    .Sum(a => a.Hours), 2);
+                        }
+
+                        aggs.Add(agg);
+                    }
                 }
             }
             catch (Exception err)

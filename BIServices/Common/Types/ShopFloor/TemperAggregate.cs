@@ -24,6 +24,9 @@ namespace BIServices.Common.Types.ShopFloor
         [DataMember(Order = 13)]
         public DateTime EndDate { get; set; }
 
+        [DataMember(Order = 14)]
+        public DateTime ProductionDate { get; set; }
+
         [DataMember(Order = 15)]
         public string ProductionLineCode { get; set; }
 

@@ -447,6 +447,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 568, EmitDefaultValue = true)]
         public string BarDescription { get; set; }
 
+        [DataMember(Order = 569, EmitDefaultValue = true)]
+        public decimal BarGap { get; set; }
+
         [DataMember(Order = 570, EmitDefaultValue = true)]
         public string IsLami { get; set; }
 

@@ -177,6 +177,20 @@ namespace BIServices.CtoSvc
             }
         }
 
+        public CutAggregates GetCutSummaryByDate(string plants, string dateCode, string startDate, string endDate)
+        {
+            var processor = new CtoProcessor();
+            dateCode = (string.IsNullOrEmpty(dateCode)) ? "" : dateCode.Replace("'", "");
+            try
+            {
+                return processor.GetCutSummaryByDate(plants, dateCode, Data.ParseStringToDateTime(startDate), Data.ParseStringToDateTime(endDate));
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(e.Message);
+            }
+        }
+
         public TemperAggregates GetTemperSummary(string plants, string dateCode, string startDate, string endDate)
         {
             var processor = new CtoProcessor();
@@ -184,6 +198,20 @@ namespace BIServices.CtoSvc
             try
             {
                 return processor.GetTemperSummary(plants, dateCode, Data.ParseStringToDateTime(startDate), Data.ParseStringToDateTime(endDate));
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(e.Message);
+            }
+        }
+
+        public TemperAggregates GetTemperSummaryByDate(string plants, string dateCode, string startDate, string endDate)
+        {
+            var processor = new CtoProcessor();
+            dateCode = (string.IsNullOrEmpty(dateCode)) ? "" : dateCode.Replace("'", "");
+            try
+            {
+                return processor.GetTemperSummaryByDate(plants, dateCode, Data.ParseStringToDateTime(startDate), Data.ParseStringToDateTime(endDate));
             }
             catch (Exception e)
             {

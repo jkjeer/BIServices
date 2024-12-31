@@ -459,6 +459,9 @@ namespace BIServices.Common.Types.Enterprise
         public string BarDescription { get; set; }
 
         [DataMember(Order = 1004, EmitDefaultValue = false)]
+        public decimal BarGap { get; set; }
+
+        [DataMember(Order = 1004, EmitDefaultValue = false)]
         public string Air1MCode1 { get; set; }
 
         [DataMember(Order = 1004, EmitDefaultValue = false)]
