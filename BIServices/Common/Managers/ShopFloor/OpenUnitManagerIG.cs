@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using BIServices.Common.Managers.E1;
-using BIServices.Common.Managers.Enterprise;
 using BIServices.Common.Types.E1;
 using BIServices.Common.Types.Enterprise;
 using BIServices.Common.Utilities;
@@ -1153,6 +1151,12 @@ namespace BIServices.Common.Managers.ShopFloor
                         //unit.QcInspect = reader.Get<String>("QcInspect"], String.Empty).Trim();
                         unit.GlassWeight = reader.Get<Decimal>("UnitWeight");
 
+                        unit.Units = CastDbNull.To<int>(reader["Units"], 0); ;
+                        unit.OnHand = CastDbNull.To<int>(reader["PickUnitsAvl"], 0);
+                        unit.UnrackedUnits = CastDbNull.To<int>(reader["UnrackedUnits"], 0);
+                        unit.UncompletedUnits = CastDbNull.To<int>(reader["UncompletedUnits"], 0);
+                        unit.CompletedUnits = CastDbNull.To<int>(reader["CompletedUnits"], 0);
+                        unit.ShippedUnits = CastDbNull.To<int>(reader["ShippedUnits"], 0);
                         unit.Tubes = reader.Get<int>("TubeUnits");
                         unit.Shapes = reader.Get<int>("ShapeUnits");
                         unit.Preserve = reader.Get<int>("PreserveUnits");
@@ -1160,6 +1164,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.Bars = reader.Get<int>("BarUnits");
                         unit.Picks = reader.Get<int>("PickUnits");
                         unit.Purchases = reader.Get<int>("PurLiteUnits");
+
                         unit.IGLineRun = reader.Get<int>("IGLineRun");
                         unit.LastLine = reader.Get<String>("LastProductionLine");
                         unit.Lite1Routing = reader.Get<String>("Lite1Routing");
