@@ -58,7 +58,7 @@ namespace BIServices.QuerySvc
                 (
                     SELECT
                         A.RackId,
-                        A.StatusCode,
+                        --A.StatusCode,
                         A.StatusDesc,
                         CAST(A.TransactionDate AS DATE)   AS TransactionDate,
                         DATEPART(HOUR, A.TransactionDate) AS TransactionHour,
@@ -79,7 +79,7 @@ namespace BIServices.QuerySvc
                                 END                     AS StatusDesc,
                                 MAX(rl.TransactionDate) AS TransactionDate
                             FROM
-                                INTEGRATION.EBS.RackLedger rl
+                                ShopFloor.EBS.RackArchive rl
                             WHERE
                                 {filterString}
                                 --rl.TransactionDate > GETDATE() - 7 AND
@@ -91,11 +91,11 @@ namespace BIServices.QuerySvc
                                 rl.RackId,
                                 rl.StatusCode
                         )                                              A
-                        INNER JOIN ShopFloor.EBS.RackItem              ri
+                        INNER JOIN ShopFloor.EBS.RackDetail              ri
                         ON  ri.RackId = A.RackId AND
-                            ri.WorkOrderNum > 0
+                            ri.WOrderNum > 0
                         LEFT OUTER JOIN ShopFloor.EBS.ScheduledOrders ord
-                        ON  ord.WorkOrderNum = ri.WorkOrderNum
+                        ON  ord.WorkOrderNum = ri.WOrderNum
                     GROUP BY
                         A.RackId,
                         A.StatusCode,

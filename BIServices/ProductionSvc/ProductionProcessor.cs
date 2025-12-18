@@ -95,7 +95,7 @@ namespace BIServices.ProductionSvc
             {
                 var plant = PlantManager.GetPlant(plantCode);
 
-                if (plant.PlantCode == "OCLG")
+                if (plant.PlantCode.EndsWith("LG"))
                 {
                     cn = ConnectionManager.GetSqlConnectionFromKey($"{plant.PlantCode}.SHOPFLOOR");
                     cn.Open();

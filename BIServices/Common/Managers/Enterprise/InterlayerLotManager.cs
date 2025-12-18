@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BIServices.Common.Managers.E1;
@@ -35,6 +37,88 @@ namespace BIServices.Common.Managers.Enterprise
           * Stock Orders
           *******************************************************************************/
         public iDB2Command GetLots(List<string> filters)
+        {
+            var filterString = new StringBuilder();
+            foreach (string filter in filters)
+            {
+                filterString.Append(filter);
+            }
+
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+            SELECT
+                LIMCU,
+                LILOTN,
+                LILOCN,
+                LIITM,
+                IBSRP4,
+                IBSTKT,
+                IBGLPT,
+                IMDSC1,
+                IMDSC2,
+                LIPQOH,
+                IMUOM1,
+                IMUOM2,
+                COALESCE(UMCONV / 10000000, 1.00) AS UMCONV,
+                CASE WHEN UMCONV IS NULL THEN LIPQOH / 1000 ELSE LIPQOH / 1000 * UMCONV / 10000000 END AS SQFT,
+	            LILRCJ,
+	            LIUPMJ,
+	            LITDAY,
+	            IA0.IADVAL AS PRODUCT_CODE,
+	            IA1.IADVAL AS THICKNESS,
+	            IA2.IADVAL AS MATERIAL,
+	            IA4.IADVAL AS COLOR,
+	            IA8.IADVAL AS DIRECTION,
+	            IA14.IADVAL AS BASEDIM,
+	            IA15.IADVAL AS LEFTDIM,
+	            AB1.ABAN8 AS SUPPLIER_NUM,
+	            AB1.ABALPH AS SUPPLIER_NAME,
+	            (SELECT MIN(ILTRDJ) AS ILTRDJ FROM F4111 WHERE ILLOTN = LILOTN and ILMCU = LIMCU) AS ILTRDJ
+            FROM
+                F41021
+                INNER JOIN F4102
+                ON  IBMCU = LIMCU AND
+                    IBITM = LIITM
+                INNER JOIN F4101
+                ON  IMITM = IBITM
+                LEFT OUTER JOIN F41002
+                ON  UMMCU = IBMCU AND
+                    UMITM = IBITM AND
+                    UMUM = IMUOM1 AND
+                    UMRUM = 'SF'
+	            LEFT OUTER JOIN F580002 IA0
+                ON  IA0.IAITM = LIITM AND
+                    IA0.IAZ58ATNM = 'Z5871100'	
+	            LEFT OUTER JOIN F580002 IA1
+                ON  IA1.IAITM = LIITM AND
+                    IA1.IAZ58ATNM = 'Z5871101'	
+	            LEFT OUTER JOIN F580002 IA2
+                ON  IA2.IAITM = LIITM AND
+                    IA2.IAZ58ATNM = 'Z5871102'	
+	            LEFT OUTER JOIN F580002 IA4
+                ON  IA4.IAITM = LIITM AND
+                    IA4.IAZ58ATNM = 'Z5871104'	
+	            LEFT OUTER JOIN F580002 IA8
+                ON  IA8.IAITM = LIITM AND
+                    IA8.IAZ58ATNM = 'Z5871108'	
+	            LEFT OUTER JOIN F580002 IA14
+                ON  IA14.IAITM = LIITM AND
+                    IA14.IAZ58ATNM = 'Z581BDEC'	
+	            LEFT OUTER JOIN F580002 IA15
+                ON  IA15.IAITM = LIITM AND
+                    IA15.IAZ58ATNM = 'Z581LDEC'						
+	            LEFT OUTER JOIN F0101 AB1
+                ON  AB1.ABAN8 = IBVEND
+            WHERE 
+                {filterString}
+	            LIGLPT IN ('INLR') AND
+	            LILOTN <> ''
+            FOR READ ONLY";
+            return cmd;
+        }
+
+        public iDB2Command GetLots1(List<string> filters)
         {
             var filterString = new StringBuilder();
             foreach (string filter in filters)
@@ -161,6 +245,7 @@ namespace BIServices.Common.Managers.Enterprise
 
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
+                    Logger.Info("Reader Open");
                     while (reader.Read())
                     {
                         var lot = new InterlayerLot();
@@ -195,11 +280,12 @@ namespace BIServices.Common.Managers.Enterprise
                         lot.SupplierNum = Data.CastDbNull.To<decimal>(reader["SUPPLIER_NUM"], 0);
                         lot.SupplierName = CastDbNull.To(reader["SUPPLIER_NAME"], string.Empty).Trim();
                         var rcdj = Data.CastDbNull.To<decimal>(reader["LILRCJ"], 0);
-                        lot.ReceivedDate = (rcdj > 0) ? (DateTime?) E1TimeManager.CastToDateTime(rcdj) : null;
+                        var trdj = Data.CastDbNull.To<decimal>(reader["ILTRDJ"], 0);
+                        lot.ReceivedDate = (rcdj > 0) ? (DateTime?)E1TimeManager.CastToDateTime(rcdj) : (DateTime?)E1TimeManager.CastToDateTime(trdj);
                         lots.Add(lot);
                     }
-
                     reader.Close();
+                    Logger.Info("Reader Close");
                 }
             }
             catch (Exception e)

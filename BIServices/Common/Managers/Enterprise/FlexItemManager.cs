@@ -178,11 +178,11 @@ namespace BIServices.Common.Managers.Enterprise
                     reader.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 sb.Append(" [ERROR IN FLEX DESC]");
                 lines.Add(sb.ToString());
-                //throw new ApplicationException(err.ToString());
+                throw new Exception(e.ToString());
             }
             return lines;
         }
@@ -244,11 +244,11 @@ namespace BIServices.Common.Managers.Enterprise
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 sb.Append(" [ERROR IN FLEX DESC]");
                 lines.Add(sb.ToString());
-                //throw new ApplicationException(err.ToString());
+                throw new Exception(e.ToString());
             }
             return lines;
         }
@@ -258,80 +258,102 @@ namespace BIServices.Common.Managers.Enterprise
         *******************************************************************************/
         public string GetUnitConstruction(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
-            sb.Append(GetLiteGlassTypeCondensed(GetLite1GlassType(atts)));
-
-            var spacer1Type = GetSpacerType(atts);
-            if (!String.IsNullOrEmpty(spacer1Type))
+            try
             {
-                sb.Append(" / ");
-                sb.Append(spacer1Type);
-            }
+                var sb = new StringBuilder();
+                sb.Append(GetLiteGlassTypeCondensed(GetLite1GlassType(atts)));
 
-            var glass2Type = GetLiteGlassTypeCondensed(GetLite2GlassType(atts));
-            if (!String.IsNullOrEmpty(glass2Type))
-            {
-                sb.Append(" / ");
-                sb.Append(glass2Type);
-            }
+                var spacer1Type = GetSpacerType(atts);
+                if (!String.IsNullOrEmpty(spacer1Type))
+                {
+                    sb.Append(" / ");
+                    sb.Append(spacer1Type);
+                }
 
-            var glass3Type = GetLiteGlassTypeCondensed(GetLite3GlassType(atts));
-            var spacer2Type = GetSpacerType(atts);
-            if (!String.IsNullOrEmpty(glass3Type))
-            {
-                sb.Append(" / ");
-                sb.Append(spacer2Type);
-                sb.Append(" / ");
-                sb.Append(glass3Type);
-            }
+                var glass2Type = GetLiteGlassTypeCondensed(GetLite2GlassType(atts));
+                if (!String.IsNullOrEmpty(glass2Type))
+                {
+                    sb.Append(" / ");
+                    sb.Append(glass2Type);
+                }
 
+                var glass3Type = GetLiteGlassTypeCondensed(GetLite3GlassType(atts));
+                var spacer2Type = GetSpacerType(atts);
+                if (!String.IsNullOrEmpty(glass3Type))
+                {
+                    sb.Append(" / ");
+                    sb.Append(spacer2Type);
+                    sb.Append(" / ");
+                    sb.Append(glass3Type);
+                }
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLite1GlassType(ItemAttributes atts)
         {
-            var sb = new StringBuilder();
-            sb.Append(atts.GetDecimalAttributeValue("Z58L1TK"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeDesc2("Z58L1CL"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeValue("Z58L1HT"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeValue("Z58L11C"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeValue("Z58L12C"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeValue("Z58L1PX"));
-            sb.Append(":");
-            sb.Append(atts.GetStringAttributeDesc1("Z58L1LPT"));
-            return sb.ToString();
+            try
+            {
+                var sb = new StringBuilder();
+                sb.Append(atts.GetDecimalAttributeValue("Z58L1TK"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeDesc2("Z58L1CL"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeValue("Z58L1HT"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeValue("Z58L11C"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeValue("Z58L12C"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeValue("Z58L1PX"));
+                sb.Append(":");
+                sb.Append(atts.GetStringAttributeDesc1("Z58L1LPT"));
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLite2GlassType(ItemAttributes atts)
         {
-            var sb = new StringBuilder();
-            if (atts.GetDecimalAttributeValue("Z58L2TK") > 0)
+            try
             {
-                sb.Append(atts.GetDecimalAttributeValue("Z58L2TK"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeDesc2("Z58L2CL"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeValue("Z58L2HT"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeValue("Z58L23C"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeValue("Z58L24C"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeValue("Z58L2PX"));
-                sb.Append(":");
-                sb.Append(atts.GetStringAttributeDesc1("Z58L2LPT"));
+                var sb = new StringBuilder();
+                if (atts.GetDecimalAttributeValue("Z58L2TK") > 0)
+                {
+                    sb.Append(atts.GetDecimalAttributeValue("Z58L2TK"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeDesc2("Z58L2CL"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeValue("Z58L2HT"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeValue("Z58L23C"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeValue("Z58L24C"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeValue("Z58L2PX"));
+                    sb.Append(":");
+                    sb.Append(atts.GetStringAttributeDesc1("Z58L2LPT"));
+                }
+                return sb.ToString();
             }
-            return sb.ToString();
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLite3GlassType(ItemAttributes atts)
         {
-            var sb = new StringBuilder();
+                    try
+                    {
+                        var sb = new StringBuilder();
             if (atts.GetDecimalAttributeValue("Z58L3TK") > 0)
             {
                 sb.Append(atts.GetDecimalAttributeValue("Z58L3TK"));
@@ -349,178 +371,206 @@ namespace BIServices.Common.Managers.Enterprise
                 sb.Append(atts.GetStringAttributeDesc1("Z58L3LPT"));
             }
             return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLiteGlassTypeCondensed(string input)
         {
-            var tokens = input.Split(':').Where(s => !string.IsNullOrWhiteSpace(s));
-            return string.Join(" ", tokens);
+            try
+            {
+                var tokens = input.Split(':').Where(s => !string.IsNullOrWhiteSpace(s));
+                return string.Join(" ", tokens);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLiteRouting(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
-            if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L1RTG")))
+            try
             {
-                sb.Append("L1:");
-                sb.Append(atts.GetStringAttributeValue("Z58L1RTG"));
-                if (description)
+                var sb = new StringBuilder();
+                if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L1RTG")))
                 {
-                    sb.Append(" [");
-                    sb.Append(atts.GetStringAttributeDesc1("Z58L1RTG"));
-                    sb.Append("]");
+                    sb.Append("L1:");
+                    sb.Append(atts.GetStringAttributeValue("Z58L1RTG"));
+                    if (description)
+                    {
+                        sb.Append(" [");
+                        sb.Append(atts.GetStringAttributeDesc1("Z58L1RTG"));
+                        sb.Append("]");
+                    }
                 }
+                if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L2RTG")))
+                {
+                    sb.Append(" / ");
+                    sb.Append("L2:");
+                    sb.Append(atts.GetStringAttributeValue("Z58L2RTG"));
+                    if (description)
+                    {
+                        sb.Append(" [");
+                        sb.Append(atts.GetStringAttributeDesc1("Z58L2RTG"));
+                        sb.Append("]");
+                    }
+                }
+                if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L3RTG")))
+                {
+                    sb.Append(" / ");
+                    sb.Append("L3:");
+                    sb.Append(atts.GetStringAttributeValue("Z58L3RTG"));
+                    if (description)
+                    {
+                        sb.Append(" [");
+                        sb.Append(atts.GetStringAttributeDesc1("Z58L3RTG"));
+                        sb.Append("]");
+                    }
+                }
+                return sb.ToString().Trim();
             }
-            if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L2RTG")))
+            catch (Exception e)
             {
-                sb.Append(" / ");
-                sb.Append("L2:");
-                sb.Append(atts.GetStringAttributeValue("Z58L2RTG"));
-                if (description)
-                {
-                    sb.Append(" [");
-                    sb.Append(atts.GetStringAttributeDesc1("Z58L2RTG"));
-                    sb.Append("]");
-                }
+                throw new Exception(e.Message);
             }
-            if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L3RTG")))
-            {
-                sb.Append(" / ");
-                sb.Append("L3:");
-                sb.Append(atts.GetStringAttributeValue("Z58L3RTG"));
-                if (description)
-                {
-                    sb.Append(" [");
-                    sb.Append(atts.GetStringAttributeDesc1("Z58L3RTG"));
-                    sb.Append("]");
-                }
-            }
-            return sb.ToString().Trim();
         }
 
         public string GetDimension(ItemAttributes atts)
         {
-            var sb = new StringBuilder();
-            if (atts.GetDecimalAttributeValue("Z58L1BDM") + atts.GetDecimalAttributeValue("Z58L1BNM") > 0)
+            try
             {
-                if (atts.GetDecimalAttributeValue("Z58L1BDM") > 0)
+                var sb = new StringBuilder();
+                if (atts.GetDecimalAttributeValue("Z58L1BDM") + atts.GetDecimalAttributeValue("Z58L1BNM") > 0)
                 {
-                    sb.Append(atts.GetStringAttributeValue("Z58L1BDM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1BNM") > 0)
-                {
-                    sb.Append(" ");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1BNM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1BDN") > 0)
-                {
-                    sb.Append("/");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1BDN"));
-                }
-                sb.Append(" X ");
-            }
-
-            if (atts.GetDecimalAttributeValue("Z58L1LDM") + atts.GetDecimalAttributeValue("Z58L1LNM") > 0)
-            {
-                if (atts.GetDecimalAttributeValue("Z58L1LDM") > 0)
-                {
-                    sb.Append(atts.GetStringAttributeValue("Z58L1LDM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1LNM") > 0)
-                {
-                    sb.Append(" ");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1LNM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1LDN") > 0)
-                {
-                    sb.Append("/");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1LDN"));
-                }
-                sb.Append(" X ");
-            }
-
-            if (atts.GetDecimalAttributeValue("Z58L1RDM") + atts.GetDecimalAttributeValue("Z58L1RNM") > 0)
-            {
-                if (atts.GetDecimalAttributeValue("Z58L1RDM") > 0)
-                {
-                    sb.Append(atts.GetStringAttributeValue("Z58L1RDM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1RNM") > 0)
-                {
-                    sb.Append(" ");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1RNM"));
-                }
-                if (atts.GetDecimalAttributeValue("Z58L1RDN") > 0)
-                {
-                    sb.Append("/");
-                    sb.Append(atts.GetStringAttributeValue("Z58L1RDN"));
-                }
-                sb.Append(" X ");
-
-                if (atts.GetDecimalAttributeValue("Z58L1TDM") + atts.GetDecimalAttributeValue("Z58L1TNM") > 0)
-                {
-                    if (atts.GetDecimalAttributeValue("Z58L1TDM") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1BDM") > 0)
                     {
-                        sb.Append(atts.GetStringAttributeValue("Z58L1TDM"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1BDM"));
                     }
-                    if (atts.GetDecimalAttributeValue("Z58L1TNM") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1BNM") > 0)
                     {
                         sb.Append(" ");
-                        sb.Append(atts.GetStringAttributeValue("Z58L1TNM"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1BNM"));
                     }
-                    if (atts.GetDecimalAttributeValue("Z58L1TDN") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1BDN") > 0)
                     {
                         sb.Append("/");
-                        sb.Append(atts.GetStringAttributeValue("Z58L1TDN"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1BDN"));
                     }
                     sb.Append(" X ");
                 }
 
-                if (atts.GetDecimalAttributeValue("Z58L11DM") + atts.GetDecimalAttributeValue("Z58L11NM") > 0)
+                if (atts.GetDecimalAttributeValue("Z58L1LDM") + atts.GetDecimalAttributeValue("Z58L1LNM") > 0)
                 {
-                    if (atts.GetDecimalAttributeValue("Z58L11DM") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1LDM") > 0)
                     {
-                        sb.Append(atts.GetStringAttributeValue("Z58L11DM"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1LDM"));
                     }
-                    if (atts.GetDecimalAttributeValue("Z58L11NM") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1LNM") > 0)
                     {
                         sb.Append(" ");
-                        sb.Append(atts.GetStringAttributeValue("Z58L11NM"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1LNM"));
                     }
-                    if (atts.GetDecimalAttributeValue("Z58L11DN") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1LDN") > 0)
                     {
                         sb.Append("/");
-                        sb.Append(atts.GetStringAttributeValue("Z58L11DN"));
+                        sb.Append(atts.GetStringAttributeValue("Z58L1LDN"));
+                    }
+                    sb.Append(" X ");
+                }
+
+                if (atts.GetDecimalAttributeValue("Z58L1RDM") + atts.GetDecimalAttributeValue("Z58L1RNM") > 0)
+                {
+                    if (atts.GetDecimalAttributeValue("Z58L1RDM") > 0)
+                    {
+                        sb.Append(atts.GetStringAttributeValue("Z58L1RDM"));
+                    }
+                    if (atts.GetDecimalAttributeValue("Z58L1RNM") > 0)
+                    {
+                        sb.Append(" ");
+                        sb.Append(atts.GetStringAttributeValue("Z58L1RNM"));
+                    }
+                    if (atts.GetDecimalAttributeValue("Z58L1RDN") > 0)
+                    {
+                        sb.Append("/");
+                        sb.Append(atts.GetStringAttributeValue("Z58L1RDN"));
                     }
                     sb.Append(" X ");
 
-                    if (atts.GetDecimalAttributeValue("Z58L12DM") + atts.GetDecimalAttributeValue("Z58L12NM") > 0)
+                    if (atts.GetDecimalAttributeValue("Z58L1TDM") + atts.GetDecimalAttributeValue("Z58L1TNM") > 0)
                     {
-                        if (atts.GetDecimalAttributeValue("Z58L12DM") > 0)
+                        if (atts.GetDecimalAttributeValue("Z58L1TDM") > 0)
                         {
-                            sb.Append(atts.GetStringAttributeValue("Z58L12DM"));
+                            sb.Append(atts.GetStringAttributeValue("Z58L1TDM"));
                         }
-                        if (atts.GetDecimalAttributeValue("Z58L12NM") > 0)
+                        if (atts.GetDecimalAttributeValue("Z58L1TNM") > 0)
                         {
                             sb.Append(" ");
-                            sb.Append(atts.GetStringAttributeValue("Z58L12NM"));
+                            sb.Append(atts.GetStringAttributeValue("Z58L1TNM"));
                         }
-                        if (atts.GetDecimalAttributeValue("Z58L12DN") > 0)
+                        if (atts.GetDecimalAttributeValue("Z58L1TDN") > 0)
                         {
                             sb.Append("/");
-                            sb.Append(atts.GetStringAttributeValue("Z58L12DN"));
+                            sb.Append(atts.GetStringAttributeValue("Z58L1TDN"));
                         }
                         sb.Append(" X ");
                     }
-                }
+
+                    if (atts.GetDecimalAttributeValue("Z58L11DM") + atts.GetDecimalAttributeValue("Z58L11NM") > 0)
+                    {
+                        if (atts.GetDecimalAttributeValue("Z58L11DM") > 0)
+                        {
+                            sb.Append(atts.GetStringAttributeValue("Z58L11DM"));
+                        }
+                        if (atts.GetDecimalAttributeValue("Z58L11NM") > 0)
+                        {
+                            sb.Append(" ");
+                            sb.Append(atts.GetStringAttributeValue("Z58L11NM"));
+                        }
+                        if (atts.GetDecimalAttributeValue("Z58L11DN") > 0)
+                        {
+                            sb.Append("/");
+                            sb.Append(atts.GetStringAttributeValue("Z58L11DN"));
+                        }
+                        sb.Append(" X ");
+
+                        if (atts.GetDecimalAttributeValue("Z58L12DM") + atts.GetDecimalAttributeValue("Z58L12NM") > 0)
+                        {
+                            if (atts.GetDecimalAttributeValue("Z58L12DM") > 0)
+                            {
+                                sb.Append(atts.GetStringAttributeValue("Z58L12DM"));
+                            }
+                            if (atts.GetDecimalAttributeValue("Z58L12NM") > 0)
+                            {
+                                sb.Append(" ");
+                                sb.Append(atts.GetStringAttributeValue("Z58L12NM"));
+                            }
+                            if (atts.GetDecimalAttributeValue("Z58L12DN") > 0)
+                            {
+                                sb.Append("/");
+                                sb.Append(atts.GetStringAttributeValue("Z58L12DN"));
+                            }
+                            sb.Append(" X ");
+                        }
+                    }
             }
 
             return (sb.Length >= 3) ? sb.ToString().Substring(0, sb.Length - 3) : sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetAirspace(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                    try
+                                    {
+                                        var sb = new StringBuilder();
             if (atts.GetStringAttributeValue("Z58TA1") == "Y")
             {
                 sb.Append("TUBES:");
@@ -540,11 +590,18 @@ namespace BIServices.Common.Managers.Enterprise
                 sb.Append(" ");
             }
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetSpacerType(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                        try
+                                        {
+                                            var sb = new StringBuilder();
             if (atts.GetDecimalAttributeValue("Z58L1SSZ") > 0)
             {
                 sb.Append(atts.GetDecimalAttributeValue("Z58L1SSZ"));
@@ -558,11 +615,18 @@ namespace BIServices.Common.Managers.Enterprise
                 }
             }
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetBarAssembly(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                            try
+                                            {
+                                                var sb = new StringBuilder();
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58M1A1")))
             {
                 sb.Append("M1A1:");
@@ -587,11 +651,18 @@ namespace BIServices.Common.Managers.Enterprise
                 }
             }
             return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetGrid(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                                try
+                                                {
+                                                    var sb = new StringBuilder();
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58GSS1")))
             {
                 sb.Append(atts.GetStringAttributeValue("Z58GSS1"));
@@ -628,11 +699,18 @@ namespace BIServices.Common.Managers.Enterprise
                 }
             }
             return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetGridIndexes(ItemAttributes atts)
         {
-            var sb1 = new StringBuilder();
+                                                    try
+                                                    {
+                                                        var sb1 = new StringBuilder();
             if (atts.GetDecimalAttributeValue("Z58IGVP1") > 0)
             {
                 sb1.Append("V [");
@@ -695,11 +773,18 @@ namespace BIServices.Common.Managers.Enterprise
             }
 
             return $"{sb1} {sb2}".Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetPreserveProcessing(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                                        try
+                                                        {
+                                                            var sb = new StringBuilder();
 
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z587563")))
             {
@@ -776,11 +861,18 @@ namespace BIServices.Common.Managers.Enterprise
             }
 
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetLogo(ItemAttributes atts)
         {
-            var sb = new StringBuilder();
+                                                            try
+                                                            {
+                                                                var sb = new StringBuilder();
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L1ALT")))
             {
                 sb.Append("L1ALT:");
@@ -842,11 +934,18 @@ namespace BIServices.Common.Managers.Enterprise
                 sb.Append(" ");
             }
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetEdgeProcessing(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                                                try
+                                                                {
+                                                                    var sb = new StringBuilder();
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L1EW")) && atts.GetStringAttributeValue("Z58L1EW") != "NO")
             {
                 sb.Append("L1EW:");
@@ -946,11 +1045,18 @@ namespace BIServices.Common.Managers.Enterprise
             }
 
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetHoleProcessing(ItemAttributes atts, bool description = false)
         {
-            var sb = new StringBuilder();
+                                                                    try
+                                                                    {
+                                                                        var sb = new StringBuilder();
 
             if (!String.IsNullOrEmpty(atts.GetStringAttributeValue("Z58L1HL")))
             {
@@ -1010,11 +1116,18 @@ namespace BIServices.Common.Managers.Enterprise
             }
 
             return sb.ToString().Trim();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         public string GetHashValue(ItemAttributes atts)
         {
-            MD5 md5 = System.Security.Cryptography.MD5.Create();
+                                                                        try
+                                                                        {
+                                                                            MD5 md5 = System.Security.Cryptography.MD5.Create();
             string input = "";
 
 
@@ -1229,7 +1342,12 @@ namespace BIServices.Common.Managers.Enterprise
             {
                 sb.Append(hash[i].ToString("X2"));
             }
-            return sb.ToString();      
+            return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
  

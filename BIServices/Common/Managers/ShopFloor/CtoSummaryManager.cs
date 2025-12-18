@@ -809,12 +809,12 @@ namespace BIServices.Common.Managers.ShopFloor
                     agg.NetCutProducedTons = agg.GrossCutProducedTons - agg.GrossCutRejectedTons;
 
                     // Yield
-                    agg.CuttingYield = Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5);
-                    agg.CuttingActualYield = Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedSqft, 5);
-                    agg.CuttingBillableYield = Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedSqft, 5);
-                    agg.NetYield = Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5);
-                    agg.NetActualYield = Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5);
-                    agg.NetBillableYield = Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
+                    agg.CuttingYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                    agg.CuttingActualYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedSqft, 5) : 0;
+                    agg.CuttingBillableYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedSqft, 5) : 0;
+                    agg.NetYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                    agg.NetActualYield = (agg.ConsumedActualSqft > 0) ? Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5) : 0;
+                    agg.NetBillableYield = (agg.ConsumedBillableSqft > 0) ? Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5) : 0;
 
                     // Hours
                     agg.CuttingHours =
@@ -978,10 +978,10 @@ namespace BIServices.Common.Managers.ShopFloor
                     agg.NetTempProducedTons = agg.GrossTempProducedTons - agg.GrossTempRejectedTons;
 
                     // Yield
-                    agg.TempYield = Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5);
-                    agg.TempActualYield = Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5);
-                    agg.TempBillableYield = Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5);
-                    
+                    agg.TempYield = (agg.GrossTempProducedSqft > 0) ? Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5) : 0;
+                    agg.TempActualYield = (agg.GrossTempProducedActualSqft > 0) ? Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5) : 0;
+                    agg.TempBillableYield = (agg.GrossTempProducedBillableSqft > 0) ? Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5) : 0;
+
                 }
             }
             catch (Exception err)
@@ -1192,12 +1192,12 @@ namespace BIServices.Common.Managers.ShopFloor
                         agg.NetCutProducedTons = agg.GrossCutProducedTons - agg.GrossCutRejectedTons;
 
                         // Yield
-                        agg.CuttingYield = Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5);
-                        agg.CuttingActualYield = Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedActualSqft, 5);
-                        agg.CuttingBillableYield = Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
-                        agg.NetYield = Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5);
-                        agg.NetActualYield = Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5);
-                        agg.NetBillableYield = Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
+                        agg.CuttingYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                        agg.CuttingActualYield = (agg.ConsumedActualSqft > 0) ? Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedActualSqft, 5) : 0;
+                        agg.CuttingBillableYield = (agg.ConsumedBillableSqft > 0) ? Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedBillableSqft, 5) : 0;
+                        agg.NetYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                        agg.NetActualYield = (agg.ConsumedActualSqft > 0) ? Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5) : 0;
+                        agg.NetBillableYield = (agg.ConsumedBillableSqft > 0) ? Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5) : 0;
 
                         // Hours
                         agg.CuttingHours =
@@ -1428,12 +1428,12 @@ namespace BIServices.Common.Managers.ShopFloor
                             agg.NetCutProducedTons = agg.GrossCutProducedTons - agg.GrossCutRejectedTons;
 
                             // Yield
-                            agg.CuttingYield = Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5);
-                            agg.CuttingActualYield = Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedActualSqft, 5);
-                            agg.CuttingBillableYield = Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
-                            agg.NetYield = Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5);
-                            agg.NetActualYield = Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5);
-                            agg.NetBillableYield = Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5);
+                            agg.CuttingYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.GrossCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                            agg.CuttingActualYield = (agg.ConsumedActualSqft > 0) ? Math.Round(agg.GrossCutProducedActualSqft / agg.ConsumedActualSqft, 5) : 0;
+                            agg.CuttingBillableYield = (agg.ConsumedBillableSqft > 0) ? Math.Round(agg.GrossCutProducedBillableSqft / agg.ConsumedBillableSqft, 5) : 0;
+                            agg.NetYield = (agg.ConsumedSqft > 0) ? Math.Round(agg.NetCutProducedSqft / agg.ConsumedSqft, 5) : 0;
+                            agg.NetActualYield = (agg.ConsumedActualSqft > 0) ? Math.Round(agg.NetCutProducedActualSqft / agg.ConsumedActualSqft, 5) : 0;
+                            agg.NetBillableYield = (agg.ConsumedBillableSqft > 0) ? Math.Round(agg.NetCutProducedBillableSqft / agg.ConsumedBillableSqft, 5) : 0;
 
                             // Hours
                             agg.CuttingHours =
@@ -1621,9 +1621,9 @@ namespace BIServices.Common.Managers.ShopFloor
                         agg.NetTempProducedTons = agg.GrossTempProducedTons - agg.GrossTempRejectedTons;
 
                         // Yield
-                        agg.TempYield = Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5);
-                        agg.TempActualYield = Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5);
-                        agg.TempBillableYield = Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5);
+                        agg.TempYield = (agg.GrossTempProducedSqft > 0) ? Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5) : 0;
+                        agg.TempActualYield = (agg.GrossTempProducedActualSqft > 0) ? Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5) : 0;
+                        agg.TempBillableYield = (agg.GrossTempProducedBillableSqft > 0) ? Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5) : 0;
 
                         // Hours
                         agg.TemperingHours =
@@ -1813,9 +1813,9 @@ namespace BIServices.Common.Managers.ShopFloor
                             agg.NetTempProducedTons = agg.GrossTempProducedTons - agg.GrossTempRejectedTons;
 
                             // Yield
-                            agg.TempYield = Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5);
-                            agg.TempActualYield = Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5);
-                            agg.TempBillableYield = Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5);
+                            agg.TempYield = (agg.GrossTempProducedSqft > 0) ? Math.Round(agg.NetTempProducedSqft / agg.GrossTempProducedSqft, 5) : 0;
+                            agg.TempActualYield = (agg.GrossTempProducedActualSqft > 0) ? Math.Round(agg.NetTempProducedActualSqft / agg.GrossTempProducedActualSqft, 5) : 0;
+                            agg.TempBillableYield = (agg.GrossTempProducedBillableSqft > 0) ? Math.Round(agg.NetTempProducedBillableSqft / agg.GrossTempProducedBillableSqft, 5) : 0;
 
                             // Hours
                             agg.TemperingHours =

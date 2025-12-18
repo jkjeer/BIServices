@@ -30,31 +30,66 @@ namespace BIServices.Common.Types.Enterprise
             return attribute.Name;
         }
 
-        public Decimal GetIntAttributeValue(String attributeName)
+        public int GetIntAttributeValue(String attributeName)
         {
-            if (this.Contains(attributeName))
+            try
             {
-                return Convert.ToInt32(this[attributeName].Value.Trim());
+                if (this.Contains(attributeName))
+                {
+                    if (int.TryParse(this[attributeName].Value.Trim(), out int result))
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                return 0;
             }
-            return 0;
+            catch (Exception e)
+            {
+                throw new Exception($"{attributeName} {e.Message}");
+            }
         }
 
         public Decimal GetDecimalAttributeValue(String attributeName)
         {
-            if (this.Contains(attributeName))
+            try
             {
-                return Convert.ToDecimal(this[attributeName].Value.Trim());
+                if (this.Contains(attributeName))
+                {
+                    if (decimal.TryParse(this[attributeName].Value.Trim(), out decimal result))
+                    {
+                        return result;
+                    }                     
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                return 0;
             }
-            return 0;
+            catch (Exception e)
+            {
+                throw new Exception($"{attributeName} {e.Message}");
+            }
         }
 
         public String GetStringAttributeValue(String attributeName, String defaultValue = null)
         {
-            if (this.Contains(attributeName))
+            try
             {
-                return this[attributeName].Value.Trim();
+                if (this.Contains(attributeName))
+                {
+                    return this[attributeName].Value.Trim();
+                }
+                return defaultValue ?? null;
             }
-            return defaultValue ?? null;
+            catch (Exception e)
+            {
+                throw new Exception($"{attributeName} {e.Message}");
+            }
         }
 
         public String GetStringAttributeDesc1(String attributeName, String defaultValue = null)
