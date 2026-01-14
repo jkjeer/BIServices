@@ -84,6 +84,7 @@ namespace BIServices.Common.Managers.E1
                 SDAEXP,
                 SDRCD,
                 SDIR04,
+                SDPSN,
 	            ATZ58PT,
 	            ATZ58CP2,
 	            ATZ58CP3,
@@ -201,6 +202,7 @@ namespace BIServices.Common.Managers.E1
                         SDRCD,
                         SDIR04,
                         SDDSC1,
+                        SDPSN,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -304,6 +306,7 @@ namespace BIServices.Common.Managers.E1
                         SDRCD,
                         SDIR04,
                         SDDSC1,
+                        SDPSN,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -491,6 +494,7 @@ namespace BIServices.Common.Managers.E1
                         SDRCD,
                         SDIR04,
                         SDDSC1,
+                        SDPSN,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -890,6 +894,7 @@ namespace BIServices.Common.Managers.E1
                             line.OrderNum = CastDbNull.To<decimal>(reader["SDDOCO"], 0);
                             line.OrderType = CastDbNull.To(reader["SDDCTO"], string.Empty).Trim();
                             line.OrderLineNum = CastDbNull.To<decimal>(reader["SDLNID"], 0) / 1000;
+                            line.LoadNum = CastDbNull.To<decimal>(reader["SDPSN"], 0);
                             line.LastStatus = CastDbNull.To(reader["SDLTTR"], string.Empty).Trim();
                             line.NextStatus = CastDbNull.To(reader["SDNXTR"], string.Empty).Trim();
                             line.CustomerNum = CastDbNull.To<decimal>(reader["SDAN8"], 0);
@@ -1304,6 +1309,7 @@ namespace BIServices.Common.Managers.E1
                         line.OrderNum = CastDbNull.To<decimal>(reader["SDDOCO"], 0);
                         line.OrderType = CastDbNull.To(reader["SDDCTO"], string.Empty).Trim();
                         line.OrderLineNum = CastDbNull.To<decimal>(reader["SDLNID"], 0) / 1000;
+                        line.LoadNum = CastDbNull.To<decimal>(reader["SDPSN"], 0);
                         line.LastStatus = CastDbNull.To(reader["SDLTTR"], string.Empty).Trim();
                         line.NextStatus = CastDbNull.To(reader["SDNXTR"], string.Empty).Trim();
                         line.CustomerNum = CastDbNull.To<decimal>(reader["SDAN8"], 0);
