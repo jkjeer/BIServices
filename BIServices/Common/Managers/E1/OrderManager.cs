@@ -84,7 +84,6 @@ namespace BIServices.Common.Managers.E1
                 SDAEXP,
                 SDRCD,
                 SDIR04,
-                SDPSN,
 	            ATZ58PT,
 	            ATZ58CP2,
 	            ATZ58CP3,
@@ -104,6 +103,8 @@ namespace BIServices.Common.Managers.E1
 				UMCONV,
                 CP1.CPZ58CCV05,
                 CP2.CPZ58GAL1,
+                LHLDNM,
+                LHZ58LDS,
 			    ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY SLUPMJ ASC, SLTDAY ASC) AS RN
             FROM
 	            F4211
@@ -145,6 +146,15 @@ namespace BIServices.Common.Managers.E1
 				LEFT OUTER JOIN F580430 CP2
 				ON	CP2.CPAN8 = SDSHAN AND
                     CP2.CPMCU = SDMCU
+                LEFT OUTER JOIN F580056 
+					INNER JOIN F580055 
+					ON	RHZ58RID = RDZ58RID
+					INNER JOIN F580150
+					ON	LHLDNM = RHPSN
+                ON  RDDOCO = SDDOCO and 
+					RDDCTO = SDDCTO AND 
+					RDLNID = SDLNID  AND
+					RDKCOO = SDKCOO
             WHERE
                 {filterString}
                 SDLNTY != 'W' AND
@@ -172,6 +182,7 @@ namespace BIServices.Common.Managers.E1
             var cmd = new iDB2Command();
             cmd.CommandType = CommandType.Text;
             cmd.CommandText = $@"
+                    SELECT * FROM (
                     SELECT
 	                    SDMCU,
 	                    SDAN8,
@@ -202,7 +213,6 @@ namespace BIServices.Common.Managers.E1
                         SDRCD,
                         SDIR04,
                         SDDSC1,
-                        SDPSN,
 	                    ATZ58PT,
 	                    ATZ58CP2,
 	                    ATZ58CP3,
@@ -222,7 +232,10 @@ namespace BIServices.Common.Managers.E1
                         SDTDAY AS SLTDAY,
                         CP1.CPZ58CCV05,
                         CP2.CPZ58GAL1,
-						(select CMCFGID from F3201 where CMDOCO = ATZ58WODC and CMDCTO = 'WO' order by CMUPMJ DESC FETCH FIRST 1 ROWS ONLY) AS CMCFGID
+                        LHLDNM,
+                        LHZ58LDS,
+						(select CMCFGID from F3201 where CMDOCO = ATZ58WODC and CMDCTO = 'WO' order by CMUPMJ DESC FETCH FIRST 1 ROWS ONLY) AS CMCFGID,
+			            ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY SDUPMJ ASC, SDTDAY ASC) AS RN
                     FROM
 	                    F4211
                         INNER JOIN F4201
@@ -253,412 +266,29 @@ namespace BIServices.Common.Managers.E1
 				        LEFT OUTER JOIN F580430 CP2
 				        ON	CP2.CPAN8 = SDSHAN AND
                             CP2.CPMCU = SDMCU
+
+                        LEFT OUTER JOIN F580056 
+					        INNER JOIN F580055 
+					        ON	RHZ58RID = RDZ58RID
+					        INNER JOIN F580150
+					        ON	LHLDNM = RHPSN
+                        ON  RDDOCO = SDDOCO and 
+					        RDDCTO = SDDCTO AND 
+					        RDLNID = SDLNID  AND
+					        RDKCOO = SDKCOO
                     WHERE
                         {filterString}
                         SDLNTY IN ('W') AND
                         SDDCTO NOT IN ('SQ') AND
-                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ','LUWT','MSAL','MSCR')
-                        
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ','LUWT','MSAL','MSCR')) A
+                    WHERE A.RN = 1                       
             ORDER BY
 	            1,2
             FOR READ ONLY";
             return cmd;
         }
 
-        public iDB2Command GetCustomOrders1(List<string> filters)
-        {
-            var filterString = new StringBuilder();
-            foreach (string filter in filters)
-            {
-                filterString.Append(filter);
-            }
 
-            var cmd = new iDB2Command();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = $@"
-                    SELECT
-	                    SDMCU,
-	                    SDAN8,
-	                    AB1.ABALPH AS SDAN8ALPH,
-	                    SDSHAN,
-	                    AB2.ABALPH AS SDSHANALPH,
-                        SDITWT,
-                        SDPPDJ,
-	                    SDDRQJ,
-                        SDTRDJ,
-	                    SDIVD,
-	                    SDLTTR,
-	                    SDNXTR,
-                        SDKCOO,
-	                    SDDOCO,
-	                    SDDCTO,
-	                    SDLNID,
-                        SDRORN,
-                        SHVR01,
-	                    SDVR01,
-	                    SDURCD,
-	                    SDITM,
-	                    SDUORG,
-                        SDUNCS,
-                        SDECST,
-                        SDUPRC,
-                        SDAEXP,
-                        SDRCD,
-                        SDIR04,
-                        SDDSC1,
-                        SDPSN,
-	                    ATZ58PT,
-	                    ATZ58CP2,
-	                    ATZ58CP3,
-	                    ATZ58CP4,
-                        ATZ58CSQNO,
-	                    ATZ58LPR,
-	                    ATZ58RT,
-                        ATZ5840460,
-                        ATZ58WODC,
-	                    COALESCE(IBSTKT, IMSTKT) AS IBSTKT,
-	                    COALESCE(IBGLPT, IMGLPT) AS IBGLPT,
-	                    COALESCE(IBSRP4, IMSRP4) AS IBSRP4,
-	                    IMDSC1,
-	                    IMDSC2,
-                        DRDL01,
-                        SAZ58L1TK,
-                        SAZ58L11C,
-                        SAZ58L1CL,
-                        SAZ58L1HT,
-                        SAZ58L12C,
-                        SAZ58L1PX,
-                        SAZ5800495,
-                        SAZ58L1LPT,
-                        SAZ5800522,
-                        SAZ5800524,
-                        SAZ5800536,
-                        SAZ5800537,
-                        SAZ5800538,
-                        SAZ5800539,
-                        SAZ58SHAPE,
-                        SAZ58L1BDM,
-                        SAZ58L1BNM,
-                        SAZ58L1BDN,
-                        SAZ58L1LDM,
-                        SAZ58L1LNM,
-                        SAZ58L1LDN,
-                        SAZ58L1RDM,
-                        SAZ58L1RNM,
-                        SAZ58L1RDN,
-                        SAZ58L1VG,
-                        SAZ58L1HL,
-                        SAZ58L1EW,
-                        SAZ58L1PQL,
-                        SADRQJ,
-                        SAZ58L1SSZ,
-                        SAZ58L1STP,
-                        SAZ58L2TK,
-                        SAZ58L23C,
-                        SAZ58L2CL,
-                        SAZ58L2HT,
-                        SAZ58L24C,
-                        SAZ58L2PX,
-                        SAZ58L2LPT,
-                        SAZ58L2VG,
-                        SAZ58L2HL,
-                        SAZ58L3TK,
-                        SAZ58L35C,
-                        SAZ58L3CL,
-                        SAZ58L3HT,
-                        SAZ58L36C,
-                        SAZ58L3PX,
-                        SAZ58L3LPT,
-                        SAZ58L3VG,
-                        SAZ58L3HL,
-                        SAZ58L3EW,
-                        SAZ58M1A1,
-                        SAZ58OOA1,
-                        SAZ58CCA1,
-                        SAZ58GSS1,
-                        SAZ58RT,
-                        SAZ587563,
-                        SAZ587569,
-                        SAZ587575,
-                        SAZ587581,
-                        SAZ5840275,
-                        SAZ58PT,
-                        SAZ5840460,
-                        SAZ58USF / 10000 AS SAZ58USF,
-                        SAZ58L1RTG,
-                        SAZ58L2RTG,
-                        SAZ58L3RTG,
-                        SAAN8DR,
-                        SAZ5852020,
-                        SAZ5852021,
-                        SAZ5852022,
-                        SAZ5852060,
-                        SAZ5852061,
-                        SAZ5852062,
-                        SAZ5852075,
-                        SAZ5852076,
-                        SAZ5852077,
-                        SDUPMJ AS SLUPMJ,
-                        SDTDAY AS SLTDAY,
-                        CP1.CPZ58CCV05,
-                        CP2.CPZ58GAL1,
-						(select CMCFGID from F3201 where CMDOCO = ATZ58WODC and CMDCTO = 'WO' order by CMUPMJ DESC FETCH FIRST 1 ROWS ONLY) AS CMCFGID
-                    FROM
-	                    F4211
-                        INNER JOIN F4201
-                        ON  SHKCOO = SDKCOO AND
-                            SHDOCO = SDDOCO AND
-                            SHDCTO = SDDCTO
-	                    LEFT OUTER JOIN F4102 
-	                    INNER JOIN F4101
-	                    ON  IMITM = IBITM
-	                    ON	IBMCU = SDMCU AND
-		                    IBITM = SDITM
-	                    INNER JOIN F0101 AB1
-	                    ON	AB1.ABAN8 = SDAN8
-	                    INNER JOIN F0101 AB2
-	                    ON	AB2.ABAN8 = SDSHAN
-	                    INNER JOIN F580032
-	                    ON	ATKCOO = SDKCOO AND
-		                    ATDOCO = SDDOCO AND
-		                    ATDCTO = SDDCTO AND
-		                    ATLNID = SDLNID 
-						INNER JOIN F5834A15
-							ON SADOCO = SDDOCO AND
-							SADCTO = SDDCTO AND
-							SALNID = SDLNID AND
-							SAKCOO = SDKCOO
-                        LEFT OUTER JOIN {ConfigurationManager.AppSettings["ControlLib"]}.F0005
-                            ON  DRSY = '42' 
-                            AND DRRT = 'RC' 
-                            AND TRIM(DRKY) = SDRCD                  
-                        LEFT OUTER JOIN F580375 CP1
-                        ON  CP1.CPMCU = SDMCU AND
-                            CP1.CPSHAN = SDSHAN
-				        LEFT OUTER JOIN F580430 CP2
-				        ON	CP2.CPAN8 = SDSHAN AND
-                            CP2.CPMCU = SDMCU
-                    WHERE
-                        {filterString}
-                        SDLNTY IN ('W') AND
-                        SDDCTO NOT IN ('SQ') AND
-                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ','LUWT','MSAL','MSCR')
-                        
-            ORDER BY
-	            1,2
-            FOR READ ONLY";
-            return cmd;
-        }
-
-        public iDB2Command GetCustomOrders0(List<string> filters)
-        {
-            var filterString = new StringBuilder();
-            foreach (string filter in filters)
-            {
-                filterString.Append(filter);
-            }
-
-            var cmd = new iDB2Command();
-            cmd.CommandType = CommandType.Text;
-            cmd.CommandText = $@"
-            SELECT 
-	            *
-            FROM (
-                    SELECT
-	                    SDMCU,
-	                    SDAN8,
-	                    AB1.ABALPH AS SDAN8ALPH,
-	                    SDSHAN,
-	                    AB2.ABALPH AS SDSHANALPH,
-                        SDITWT,
-                        SDPPDJ,
-	                    SDDRQJ,
-                        SDTRDJ,
-	                    SDIVD,
-	                    SDLTTR,
-	                    SDNXTR,
-                        SDKCOO,
-	                    SDDOCO,
-	                    SDDCTO,
-	                    SDLNID,
-                        SDRORN,
-                        SHVR01,
-	                    SDVR01,
-	                    SDURCD,
-	                    SDITM,
-	                    SDUORG,
-                        SDUNCS,
-                        SDECST,
-                        SDUPRC,
-                        SDAEXP,
-                        SDRCD,
-                        SDIR04,
-                        SDDSC1,
-                        SDPSN,
-	                    ATZ58PT,
-	                    ATZ58CP2,
-	                    ATZ58CP3,
-	                    ATZ58CP4,
-                        ATZ58CSQNO,
-	                    ATZ58LPR,
-	                    ATZ58RT,
-                        ATZ5840460,
-                        ATZ58WODC,
-	                    IBSTKT,
-	                    IBGLPT,
-                        IBSRP4,
-	                    IMDSC1,
-	                    IMDSC2,
-                        DRDL01,
-                        SAZ58L1TK,
-                        SAZ58L11C,
-                        SAZ58L1CL,
-                        SAZ58L1HT,
-                        SAZ58L12C,
-                        SAZ58L1PX,
-                        SAZ5800495,
-                        SAZ58L1LPT,
-                        SAZ5800522,
-                        SAZ5800524,
-                        SAZ5800536,
-                        SAZ5800537,
-                        SAZ5800538,
-                        SAZ5800539,
-                        SAZ58SHAPE,
-                        SAZ58L1BDM,
-                        SAZ58L1BNM,
-                        SAZ58L1BDN,
-                        SAZ58L1LDM,
-                        SAZ58L1LNM,
-                        SAZ58L1LDN,
-                        SAZ58L1RDM,
-                        SAZ58L1RNM,
-                        SAZ58L1RDN,
-                        SAZ58L1VG,
-                        SAZ58L1HL,
-                        SAZ58L1EW,
-                        SAZ58L1PQL,
-                        SADRQJ,
-                        SAZ58L1SSZ,
-                        SAZ58L1STP,
-                        SAZ58L2TK,
-                        SAZ58L23C,
-                        SAZ58L2CL,
-                        SAZ58L2HT,
-                        SAZ58L24C,
-                        SAZ58L2PX,
-                        SAZ58L2LPT,
-                        SAZ58L2VG,
-                        SAZ58L2HL,
-                        SAZ58L3TK,
-                        SAZ58L35C,
-                        SAZ58L3CL,
-                        SAZ58L3HT,
-                        SAZ58L36C,
-                        SAZ58L3PX,
-                        SAZ58L3LPT,
-                        SAZ58L3VG,
-                        SAZ58L3HL,
-                        SAZ58L3EW,
-                        SAZ58M1A1,
-                        SAZ58OOA1,
-                        SAZ58CCA1,
-                        SAZ58GSS1,
-                        SAZ58RT,
-                        SAZ587563,
-                        SAZ587569,
-                        SAZ587575,
-                        SAZ587581,
-                        SAZ5840275,
-                        SAZ58PT,
-                        SAZ5840460,
-                        SAZ58USF / 10000 AS SAZ58USF,
-                        SAZ58L1RTG,
-                        SAZ58L2RTG,
-                        SAZ58L3RTG,
-                        SAAN8DR,
-                        SAZ5852020,
-                        SAZ5852021,
-                        SAZ5852022,
-                        SAZ5852060,
-                        SAZ5852061,
-                        SAZ5852062,
-                        SAZ5852075,
-                        SAZ5852076,
-                        SAZ5852077,
-                        SDUPMJ AS SLUPMJ,
-                        SDTDAY AS SLTDAY,
-                        CP1.CPZ58CCV05,
-                        CP2.CPZ58GAL1,
-                        COALESCE(CMCFGID, 0) AS CMCFGID,
-                        CAST(0 AS DECIMAL(6,0)) AS ROUPMJ,
-			            --(	SELECT 
-					    --        MIN(ROUPMJ) 
-				        --    FROM 
-					    --        F580400 where ROKCOO = SDKCOO AND
-					    --        RODOCO = SDDOCO AND
-					    --        RODCTO = SDDCTO AND
-					    --        ROLNID = SDLNID AND
-					    --        ROEDTR = 'S') AS ROUPMJ,
-			            ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY CMUPMJ DESC, SDUPMJ ASC, SDTDAY ASC) AS RN
-                    FROM
-	                    F4211
-                        INNER JOIN F4201
-                        ON  SHKCOO = SDKCOO AND
-                            SHDOCO = SDDOCO AND
-                            SHDCTO = SDDCTO
-	                    INNER JOIN F4102 
-	                    INNER JOIN F4101
-	                    ON  IMITM = IBITM
-	                    ON	IBMCU = SDMCU AND
-		                    IBITM = SDITM
-	                    INNER JOIN F0101 AB1
-	                    ON	AB1.ABAN8 = SDAN8
-	                    INNER JOIN F0101 AB2
-	                    ON	AB2.ABAN8 = SDSHAN
-	                    LEFT OUTER JOIN F580032
-	                    ON	ATKCOO = SDKCOO AND
-		                    ATDOCO = SDDOCO AND
-		                    ATDCTO = SDDCTO AND
-		                    ATLNID = SDLNID 
-                        LEFT OUTER JOIN F3201
-	                    ON	CMKCOO = SDKCOO AND
-		                    CMDOCO = SDDOCO AND
-		                    CMDCTO = SDDCTO AND
-		                    CMLNID = SDLNID
-						LEFT OUTER JOIN F5834A15
-							ON SADOCO = SDDOCO AND
-							SADCTO = SDDCTO AND
-							SALNID = SDLNID AND
-							SAKCOO = SDKCOO
-                        LEFT OUTER JOIN {ConfigurationManager.AppSettings["ControlLib"]}.F0005
-                            ON  DRSY = '42' 
-                            AND DRRT = 'RC' 
-                            AND TRIM(DRKY) = SDRCD
-                        --LEFT OUTER JOIN F42199
-	                    --ON	SLKCOO = SDKCOO AND
-		                --    SLDOCO = SDDOCO AND
-		                --    SLDCTO = SDDCTO AND
-		                --    SLLNID = SDLNID                    
-                        LEFT OUTER JOIN F580375 CP1
-                        ON  CP1.CPMCU = SDMCU AND
-                            CP1.CPSHAN = SDSHAN
-				        LEFT OUTER JOIN F580430 CP2
-				        ON	CP2.CPAN8 = SDSHAN AND
-                            CP2.CPMCU = SDMCU
-                    WHERE
-                        {filterString}
-                        SDLNTY = 'W' AND
-                        SDDCTO NOT IN ('SQ') AND
-                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
-                        ) A
-            WHERE 
-	            A.RN = 1
-            ORDER BY
-	            1,2
-            FOR READ ONLY";
-            return cmd;
-        }
 
 
         public SalesOrderLines GetStockOrders(BusinessSystemSession session, string plants, string customerSoldNums, string customerShipNums, string dateCode, string startDate, string endDate, string dateProperty, string stockTypes, string lastStatusCodes, string nextStatusCodes, string documentTypes, string options, string racks)
@@ -894,7 +524,8 @@ namespace BIServices.Common.Managers.E1
                             line.OrderNum = CastDbNull.To<decimal>(reader["SDDOCO"], 0);
                             line.OrderType = CastDbNull.To(reader["SDDCTO"], string.Empty).Trim();
                             line.OrderLineNum = CastDbNull.To<decimal>(reader["SDLNID"], 0) / 1000;
-                            line.LoadNum = CastDbNull.To<decimal>(reader["SDPSN"], 0);
+                            line.LoadNum = CastDbNull.To<decimal>(reader["LHLDNM"], 0);
+                            line.LoadStatus = CastDbNull.To(reader["LHZ58LDS"], string.Empty).Trim();
                             line.LastStatus = CastDbNull.To(reader["SDLTTR"], string.Empty).Trim();
                             line.NextStatus = CastDbNull.To(reader["SDNXTR"], string.Empty).Trim();
                             line.CustomerNum = CastDbNull.To<decimal>(reader["SDAN8"], 0);
@@ -1309,7 +940,8 @@ namespace BIServices.Common.Managers.E1
                         line.OrderNum = CastDbNull.To<decimal>(reader["SDDOCO"], 0);
                         line.OrderType = CastDbNull.To(reader["SDDCTO"], string.Empty).Trim();
                         line.OrderLineNum = CastDbNull.To<decimal>(reader["SDLNID"], 0) / 1000;
-                        line.LoadNum = CastDbNull.To<decimal>(reader["SDPSN"], 0);
+                        line.LoadNum = CastDbNull.To<decimal>(reader["LHLDNM"], 0);
+                        line.LoadStatus = CastDbNull.To(reader["LHZ58LDS"], string.Empty).Trim();
                         line.LastStatus = CastDbNull.To(reader["SDLTTR"], string.Empty).Trim();
                         line.NextStatus = CastDbNull.To(reader["SDNXTR"], string.Empty).Trim();
                         line.CustomerNum = CastDbNull.To<decimal>(reader["SDAN8"], 0);
@@ -1968,6 +1600,404 @@ namespace BIServices.Common.Managers.E1
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public iDB2Command GetCustomOrders1(List<string> filters)
+        {
+            var filterString = new StringBuilder();
+            foreach (string filter in filters)
+            {
+                filterString.Append(filter);
+            }
+
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+                    SELECT
+	                    SDMCU,
+	                    SDAN8,
+	                    AB1.ABALPH AS SDAN8ALPH,
+	                    SDSHAN,
+	                    AB2.ABALPH AS SDSHANALPH,
+                        SDITWT,
+                        SDPPDJ,
+	                    SDDRQJ,
+                        SDTRDJ,
+	                    SDIVD,
+	                    SDLTTR,
+	                    SDNXTR,
+                        SDKCOO,
+	                    SDDOCO,
+	                    SDDCTO,
+	                    SDLNID,
+                        SDRORN,
+                        SHVR01,
+	                    SDVR01,
+	                    SDURCD,
+	                    SDITM,
+	                    SDUORG,
+                        SDUNCS,
+                        SDECST,
+                        SDUPRC,
+                        SDAEXP,
+                        SDRCD,
+                        SDIR04,
+                        SDDSC1,
+                        SDPSN,
+	                    ATZ58PT,
+	                    ATZ58CP2,
+	                    ATZ58CP3,
+	                    ATZ58CP4,
+                        ATZ58CSQNO,
+	                    ATZ58LPR,
+	                    ATZ58RT,
+                        ATZ5840460,
+                        ATZ58WODC,
+	                    COALESCE(IBSTKT, IMSTKT) AS IBSTKT,
+	                    COALESCE(IBGLPT, IMGLPT) AS IBGLPT,
+	                    COALESCE(IBSRP4, IMSRP4) AS IBSRP4,
+	                    IMDSC1,
+	                    IMDSC2,
+                        DRDL01,
+                        SAZ58L1TK,
+                        SAZ58L11C,
+                        SAZ58L1CL,
+                        SAZ58L1HT,
+                        SAZ58L12C,
+                        SAZ58L1PX,
+                        SAZ5800495,
+                        SAZ58L1LPT,
+                        SAZ5800522,
+                        SAZ5800524,
+                        SAZ5800536,
+                        SAZ5800537,
+                        SAZ5800538,
+                        SAZ5800539,
+                        SAZ58SHAPE,
+                        SAZ58L1BDM,
+                        SAZ58L1BNM,
+                        SAZ58L1BDN,
+                        SAZ58L1LDM,
+                        SAZ58L1LNM,
+                        SAZ58L1LDN,
+                        SAZ58L1RDM,
+                        SAZ58L1RNM,
+                        SAZ58L1RDN,
+                        SAZ58L1VG,
+                        SAZ58L1HL,
+                        SAZ58L1EW,
+                        SAZ58L1PQL,
+                        SADRQJ,
+                        SAZ58L1SSZ,
+                        SAZ58L1STP,
+                        SAZ58L2TK,
+                        SAZ58L23C,
+                        SAZ58L2CL,
+                        SAZ58L2HT,
+                        SAZ58L24C,
+                        SAZ58L2PX,
+                        SAZ58L2LPT,
+                        SAZ58L2VG,
+                        SAZ58L2HL,
+                        SAZ58L3TK,
+                        SAZ58L35C,
+                        SAZ58L3CL,
+                        SAZ58L3HT,
+                        SAZ58L36C,
+                        SAZ58L3PX,
+                        SAZ58L3LPT,
+                        SAZ58L3VG,
+                        SAZ58L3HL,
+                        SAZ58L3EW,
+                        SAZ58M1A1,
+                        SAZ58OOA1,
+                        SAZ58CCA1,
+                        SAZ58GSS1,
+                        SAZ58RT,
+                        SAZ587563,
+                        SAZ587569,
+                        SAZ587575,
+                        SAZ587581,
+                        SAZ5840275,
+                        SAZ58PT,
+                        SAZ5840460,
+                        SAZ58USF / 10000 AS SAZ58USF,
+                        SAZ58L1RTG,
+                        SAZ58L2RTG,
+                        SAZ58L3RTG,
+                        SAAN8DR,
+                        SAZ5852020,
+                        SAZ5852021,
+                        SAZ5852022,
+                        SAZ5852060,
+                        SAZ5852061,
+                        SAZ5852062,
+                        SAZ5852075,
+                        SAZ5852076,
+                        SAZ5852077,
+                        SDUPMJ AS SLUPMJ,
+                        SDTDAY AS SLTDAY,
+                        CP1.CPZ58CCV05,
+                        CP2.CPZ58GAL1,
+                        LHZ58LDS
+						(select CMCFGID from F3201 where CMDOCO = ATZ58WODC and CMDCTO = 'WO' order by CMUPMJ DESC FETCH FIRST 1 ROWS ONLY) AS CMCFGID
+                    FROM
+	                    F4211
+                        INNER JOIN F4201
+                        ON  SHKCOO = SDKCOO AND
+                            SHDOCO = SDDOCO AND
+                            SHDCTO = SDDCTO
+	                    LEFT OUTER JOIN F4102 
+	                    INNER JOIN F4101
+	                    ON  IMITM = IBITM
+	                    ON	IBMCU = SDMCU AND
+		                    IBITM = SDITM
+	                    INNER JOIN F0101 AB1
+	                    ON	AB1.ABAN8 = SDAN8
+	                    INNER JOIN F0101 AB2
+	                    ON	AB2.ABAN8 = SDSHAN
+	                    INNER JOIN F580032
+	                    ON	ATKCOO = SDKCOO AND
+		                    ATDOCO = SDDOCO AND
+		                    ATDCTO = SDDCTO AND
+		                    ATLNID = SDLNID 
+						INNER JOIN F5834A15
+							ON SADOCO = SDDOCO AND
+							SADCTO = SDDCTO AND
+							SALNID = SDLNID AND
+							SAKCOO = SDKCOO
+                        LEFT OUTER JOIN {ConfigurationManager.AppSettings["ControlLib"]}.F0005
+                            ON  DRSY = '42' 
+                            AND DRRT = 'RC' 
+                            AND TRIM(DRKY) = SDRCD                  
+                        LEFT OUTER JOIN F580375 CP1
+                        ON  CP1.CPMCU = SDMCU AND
+                            CP1.CPSHAN = SDSHAN
+				        LEFT OUTER JOIN F580430 CP2
+				        ON	CP2.CPAN8 = SDSHAN AND
+                            CP2.CPMCU = SDMCU
+                        LEFT OUTER JOIN F580150
+                        ON  LHLDNM = SDPSN
+                    WHERE
+                        {filterString}
+                        SDLNTY IN ('W') AND
+                        SDDCTO NOT IN ('SQ') AND
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ','LUWT','MSAL','MSCR')
+                        
+            ORDER BY
+	            1,2
+            FOR READ ONLY";
+            return cmd;
+        }
+
+        public iDB2Command GetCustomOrders0(List<string> filters)
+        {
+            var filterString = new StringBuilder();
+            foreach (string filter in filters)
+            {
+                filterString.Append(filter);
+            }
+
+            var cmd = new iDB2Command();
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = $@"
+            SELECT 
+	            *
+            FROM (
+                    SELECT
+	                    SDMCU,
+	                    SDAN8,
+	                    AB1.ABALPH AS SDAN8ALPH,
+	                    SDSHAN,
+	                    AB2.ABALPH AS SDSHANALPH,
+                        SDITWT,
+                        SDPPDJ,
+	                    SDDRQJ,
+                        SDTRDJ,
+	                    SDIVD,
+	                    SDLTTR,
+	                    SDNXTR,
+                        SDKCOO,
+	                    SDDOCO,
+	                    SDDCTO,
+	                    SDLNID,
+                        SDRORN,
+                        SHVR01,
+	                    SDVR01,
+	                    SDURCD,
+	                    SDITM,
+	                    SDUORG,
+                        SDUNCS,
+                        SDECST,
+                        SDUPRC,
+                        SDAEXP,
+                        SDRCD,
+                        SDIR04,
+                        SDDSC1,
+                        SDPSN,
+	                    ATZ58PT,
+	                    ATZ58CP2,
+	                    ATZ58CP3,
+	                    ATZ58CP4,
+                        ATZ58CSQNO,
+	                    ATZ58LPR,
+	                    ATZ58RT,
+                        ATZ5840460,
+                        ATZ58WODC,
+	                    IBSTKT,
+	                    IBGLPT,
+                        IBSRP4,
+	                    IMDSC1,
+	                    IMDSC2,
+                        DRDL01,
+                        SAZ58L1TK,
+                        SAZ58L11C,
+                        SAZ58L1CL,
+                        SAZ58L1HT,
+                        SAZ58L12C,
+                        SAZ58L1PX,
+                        SAZ5800495,
+                        SAZ58L1LPT,
+                        SAZ5800522,
+                        SAZ5800524,
+                        SAZ5800536,
+                        SAZ5800537,
+                        SAZ5800538,
+                        SAZ5800539,
+                        SAZ58SHAPE,
+                        SAZ58L1BDM,
+                        SAZ58L1BNM,
+                        SAZ58L1BDN,
+                        SAZ58L1LDM,
+                        SAZ58L1LNM,
+                        SAZ58L1LDN,
+                        SAZ58L1RDM,
+                        SAZ58L1RNM,
+                        SAZ58L1RDN,
+                        SAZ58L1VG,
+                        SAZ58L1HL,
+                        SAZ58L1EW,
+                        SAZ58L1PQL,
+                        SADRQJ,
+                        SAZ58L1SSZ,
+                        SAZ58L1STP,
+                        SAZ58L2TK,
+                        SAZ58L23C,
+                        SAZ58L2CL,
+                        SAZ58L2HT,
+                        SAZ58L24C,
+                        SAZ58L2PX,
+                        SAZ58L2LPT,
+                        SAZ58L2VG,
+                        SAZ58L2HL,
+                        SAZ58L3TK,
+                        SAZ58L35C,
+                        SAZ58L3CL,
+                        SAZ58L3HT,
+                        SAZ58L36C,
+                        SAZ58L3PX,
+                        SAZ58L3LPT,
+                        SAZ58L3VG,
+                        SAZ58L3HL,
+                        SAZ58L3EW,
+                        SAZ58M1A1,
+                        SAZ58OOA1,
+                        SAZ58CCA1,
+                        SAZ58GSS1,
+                        SAZ58RT,
+                        SAZ587563,
+                        SAZ587569,
+                        SAZ587575,
+                        SAZ587581,
+                        SAZ5840275,
+                        SAZ58PT,
+                        SAZ5840460,
+                        SAZ58USF / 10000 AS SAZ58USF,
+                        SAZ58L1RTG,
+                        SAZ58L2RTG,
+                        SAZ58L3RTG,
+                        SAAN8DR,
+                        SAZ5852020,
+                        SAZ5852021,
+                        SAZ5852022,
+                        SAZ5852060,
+                        SAZ5852061,
+                        SAZ5852062,
+                        SAZ5852075,
+                        SAZ5852076,
+                        SAZ5852077,
+                        SDUPMJ AS SLUPMJ,
+                        SDTDAY AS SLTDAY,
+                        CP1.CPZ58CCV05,
+                        CP2.CPZ58GAL1,
+                        COALESCE(CMCFGID, 0) AS CMCFGID,
+                        CAST(0 AS DECIMAL(6,0)) AS ROUPMJ,
+			            --(	SELECT 
+					    --        MIN(ROUPMJ) 
+				        --    FROM 
+					    --        F580400 where ROKCOO = SDKCOO AND
+					    --        RODOCO = SDDOCO AND
+					    --        RODCTO = SDDCTO AND
+					    --        ROLNID = SDLNID AND
+					    --        ROEDTR = 'S') AS ROUPMJ,
+			            ROW_NUMBER() OVER (PARTITION BY SDDOCO, SDDCTO, SDLNID ORDER BY CMUPMJ DESC, SDUPMJ ASC, SDTDAY ASC) AS RN
+                    FROM
+	                    F4211
+                        INNER JOIN F4201
+                        ON  SHKCOO = SDKCOO AND
+                            SHDOCO = SDDOCO AND
+                            SHDCTO = SDDCTO
+	                    INNER JOIN F4102 
+	                    INNER JOIN F4101
+	                    ON  IMITM = IBITM
+	                    ON	IBMCU = SDMCU AND
+		                    IBITM = SDITM
+	                    INNER JOIN F0101 AB1
+	                    ON	AB1.ABAN8 = SDAN8
+	                    INNER JOIN F0101 AB2
+	                    ON	AB2.ABAN8 = SDSHAN
+	                    LEFT OUTER JOIN F580032
+	                    ON	ATKCOO = SDKCOO AND
+		                    ATDOCO = SDDOCO AND
+		                    ATDCTO = SDDCTO AND
+		                    ATLNID = SDLNID 
+                        LEFT OUTER JOIN F3201
+	                    ON	CMKCOO = SDKCOO AND
+		                    CMDOCO = SDDOCO AND
+		                    CMDCTO = SDDCTO AND
+		                    CMLNID = SDLNID
+						LEFT OUTER JOIN F5834A15
+							ON SADOCO = SDDOCO AND
+							SADCTO = SDDCTO AND
+							SALNID = SDLNID AND
+							SAKCOO = SDKCOO
+                        LEFT OUTER JOIN {ConfigurationManager.AppSettings["ControlLib"]}.F0005
+                            ON  DRSY = '42' 
+                            AND DRRT = 'RC' 
+                            AND TRIM(DRKY) = SDRCD
+                        --LEFT OUTER JOIN F42199
+	                    --ON	SLKCOO = SDKCOO AND
+		                --    SLDOCO = SDDOCO AND
+		                --    SLDCTO = SDDCTO AND
+		                --    SLLNID = SDLNID                    
+                        LEFT OUTER JOIN F580375 CP1
+                        ON  CP1.CPMCU = SDMCU AND
+                            CP1.CPSHAN = SDSHAN
+				        LEFT OUTER JOIN F580430 CP2
+				        ON	CP2.CPAN8 = SDSHAN AND
+                            CP2.CPMCU = SDMCU
+                    WHERE
+                        {filterString}
+                        SDLNTY = 'W' AND
+                        SDDCTO NOT IN ('SQ') AND
+                        SDGLC IN ('GLAS','GLAF','GLAX','GLAZ')
+                        ) A
+            WHERE 
+	            A.RN = 1
+            ORDER BY
+	            1,2
+            FOR READ ONLY";
+            return cmd;
         }
 
 

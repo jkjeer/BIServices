@@ -386,6 +386,9 @@ namespace BIServices.Common.Types.Enterprise
         [DataMember(Order = 260, EmitDefaultValue = false)]
         public decimal LoadNum { get; set; }
 
+        [DataMember(Order = 261, EmitDefaultValue = false)]
+        public string LoadStatus { get; set; }
+
         [DataMember(Order = 262, EmitDefaultValue = false)]
         public string CarrierFlag { get; set; }
 

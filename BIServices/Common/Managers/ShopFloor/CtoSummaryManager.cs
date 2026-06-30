@@ -103,7 +103,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 cmd.Connection = cn;
                 cmd.Parameters["@StartDate"].Value = startDate;
                 cmd.Parameters["@EndDate"].Value = endDate;
-                cmd.CommandTimeout = 60;
+                cmd.CommandTimeout = 0;
                 _logger.Trace(Logging.DbCmdString(cmd));
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
@@ -203,7 +203,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 cmd.Connection = cn;
                 cmd.Parameters["@StartDate"].Value = startDate;
                 cmd.Parameters["@EndDate"].Value = endDate;
-                cmd.CommandTimeout = 60;
+                cmd.CommandTimeout = 0;
                 _logger.Trace(Logging.DbCmdString(cmd));
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
@@ -327,7 +327,7 @@ namespace BIServices.Common.Managers.ShopFloor
 
                 var cmd = GetProducedLites();
                 cmd.Connection = cn;
-                cmd.CommandTimeout = 60;
+                cmd.CommandTimeout = 0;
                 cmd.Parameters["@StartDate"].Value = startDate;
                 cmd.Parameters["@EndDate"].Value = endDate;
                 _logger.Trace(Logging.DbCmdString(cmd));
@@ -479,7 +479,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 cmd.Connection = cn;
                 cmd.Parameters["@StartDate"].Value = startDate;
                 cmd.Parameters["@EndDate"].Value = endDate;
-                cmd.CommandTimeout = 60;
+                cmd.CommandTimeout = 0;
                 _logger.Trace(Logging.DbCmdString(cmd));
                 using (IDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleResult))
                 {
