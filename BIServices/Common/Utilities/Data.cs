@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace BIServices.Common.Utilities
@@ -125,6 +127,38 @@ namespace BIServices.Common.Utilities
                 return sb.ToString();
             }
 
+        }
+
+
+        public static class UnboxParm
+        {
+            public static T To<T>(Dictionary<string, object> parms, string name, T defaultValue)
+            {
+                try
+                {
+                    var value = CollectionUtils.GetValueOrDefault(parms, name);
+                    return (value != null) ? (T)value : defaultValue;
+                }
+                catch
+                {
+                    throw new Exception($"Unboxing Error for Column {name}");
+                }
+            }
+
+            public static List<string> ToStringList(Dictionary<string, object> parms, string name)
+            {
+                var value = CollectionUtils.GetValueOrDefault(parms, name);
+                return (value != null) ? value.ToString().Split(',').ToList() : new List<string>();
+            }
+
+            public static void Validate(Dictionary<string, object> parms, string[] validNames)
+            {
+                var invalidParms = parms.Keys.Where(x => validNames.All(x2 => x2 != x)).ToList();
+                if (invalidParms.Any())
+                {
+                    throw new Exception($"Invalid Parameters {string.Join(",", invalidParms)}");
+                }
+            }
         }
     }
 

@@ -1,7 +1,11 @@
-﻿using BIServices.Common.Types.Enterprise;
+﻿using BIServices.Common.Managers.E1;
+using BIServices.Common.Types.Enterprise;
 using NLog;
 using SoaCore.Wcf;
 using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
 
 namespace BIServices.OrderSvc
 {
@@ -203,6 +207,54 @@ namespace BIServices.OrderSvc
             {
                 throw new Exception(e.Message);
             }
+        }
+
+        public ExternalFacingSalesOrderLines GetExternalFacingSalesOrderLines(decimal customerNum, string plants, string customerPoNum, string customerPoLine, string customerSeq,
+            string customerPartNum1, string requestedDate, string productType, decimal scheduleNum, string orderStatus, string priorityCode,
+            string genericSeq, string customerPartNum2, string customerPartNum3, string message1, string message2, string message3, string message4, string message5,
+            string unitStatus, decimal salesOrderNum)
+        {
+            DateTime? reqDate = null;
+            if (!String.IsNullOrEmpty(requestedDate))
+            {
+                DateTime outVal;
+                if (DateTime.TryParse(requestedDate, out outVal))
+                {
+                    reqDate = (DateTime?)outVal;
+                }
+                else
+                {
+                    throw new Exception("Requested Date is INVALID");
+                }
+            }
+
+            //if (customerNum == 0)
+            //{
+            //    throw new Exception("Customer Number is REQUIRED");
+            //}
+
+            var parms = new Dictionary<string, object>();
+            parms.Add("CustomerNum", customerNum);
+            parms.Add("Plants", plants?.Split(',').ToList());
+            parms.Add("DueDate", requestedDate);
+            parms.Add("CustomerSeqNum", customerSeq);
+            parms.Add("GenericSeqNum", genericSeq);
+            parms.Add("ProductType", productType);
+            parms.Add("CustomerPONum", customerPoNum);
+            parms.Add("CustomerPart1", customerPartNum1);
+            parms.Add("CustomerPart2", customerPartNum2);
+            parms.Add("CustomerPart3", customerPartNum3);
+            parms.Add("Message1", message1);
+            parms.Add("Message2", message2);
+            parms.Add("Message3", message3);
+            parms.Add("Message4", message4);
+            parms.Add("Message5", message5);
+            parms.Add("PriorityCode", priorityCode);
+            parms.Add("ScheduleNum", scheduleNum);
+            parms.Add("SOrderNum", salesOrderNum);
+            parms.Add("SOrderStatuses", orderStatus?.Split(',').ToList());
+            var session = BusinessSystemSessionManager.GetBusinessSessionEnvironment(ConfigurationManager.AppSettings["ReplicationEnvironment"]);
+            return OrderProcessor.GetExternalFacingSalesOrderLines(session, parms);
         }
 
 

@@ -83,6 +83,26 @@ namespace BIServices.Common.Managers.E1
             return e1Session;
         }
 
+        public static BusinessSystemSession GetBusinessSessionEnvironment(string environment = null, bool ping = true)
+        {
+            var e1Session = new BusinessSystemSession();
+            try
+            {
+                var dbConnectionString = ConnectionManager.GetDb2ConnectionString(environment);
+                e1Session.DbConnection = ConnectionManager.GetDb2Connection(dbConnectionString, ping);
+                e1Session.DbCommands = new Dictionary<string, iDB2Command>();
+                e1Session.DbConnection.Open();
+                e1Session.IsOpen = true;
+                Logger.Info($@"{e1Session.DbConnection.ConnectionString} JobName: {e1Session.DbConnection.JobName}");
+            }
+            catch (Exception e)
+            {
+                Logger.Info($"ERROR: {e.Message}: {e.StackTrace}");
+                throw new Exception($"{e.Message}: {e.StackTrace}");
+            }
+            return e1Session;
+        }
+
         public void CloseBusinessSession(BusinessSystemSession e1Session)
         {
             try

@@ -61,5 +61,14 @@ namespace BIServices.OrderSvc
         [OperationContract, OperationInvokerLogger]
         [WebGet(UriTemplate = "/GetPriceAuditOrders?Plant={plant}")]
         SalesOrderLines GetPriceAuditOrders(string plant);
+
+        [OperationContract, OperationInvokerLogger]
+        [WebGet(UriTemplate = "/GetExternalFacingSalesOrderLines?CustomerNum={customerNum}&Plant={plants}&CustomerPoNum={customerPoNum}&CustomerPoLine={customerPoLine}&CustomerSeq={customerSeq}&CustomerPartNum1={customerPartNum1}&RequestedDate={requestedDate}&ProductType={productType}&ScheduleNum={scheduleNum}&OrderStatus={orderStatus}&PriorityCode={priorityCode}&GenericSeq={genericSeq}&CustomerPartNum2={customerPartNum2}&CustomerPartNum3={customerPartNum3}&Message1={message1}&Message2={message2}&Message3={message3}&Message4={message4}&Message5={message5}&UnitStatus={unitStatus}&SalesOrderNum={salesOrderNum}", ResponseFormat = WebMessageFormat.Json)]
+        ExternalFacingSalesOrderLines GetExternalFacingSalesOrderLines(decimal customerNum, string plants,
+            string customerPoNum, string customerPoLine, string customerSeq, string customerPartNum1,
+            string requestedDate, string productType, decimal scheduleNum, string orderStatus,
+            string priorityCode, string genericSeq, string customerPartNum2, string customerPartNum3,
+            string message1, string message2, string message3, string message4, string message5,
+            string unitStatus, decimal salesOrderNum);
     }
 }

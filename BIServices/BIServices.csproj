@@ -70,12 +70,14 @@
     <Compile Include="CgHvSvc\CgHvProcessor.cs" />
     <Compile Include="CgHvSvc\CgHvService.cs" />
     <Compile Include="Common\Managers\E1\CustomerOrderManager.cs" />
+    <Compile Include="Common\Managers\E1\ExternalFacingCustomerOrderManager.cs" />
     <Compile Include="Common\Managers\E1\F4102Manager.cs" />
     <Compile Include="Common\Managers\E1\ItemAttributeManager.cs" />
     <Compile Include="Common\Managers\E1\OpenRackManager.cs" />
     <Compile Include="Common\Managers\E1\OpenUnitManagerIG.cs" />
     <Compile Include="Common\Managers\Enterprise\AgcOpenOrderManager.cs" />
     <Compile Include="Common\Managers\Enterprise\BulkCopyManager.cs" />
+    <Compile Include="Common\Managers\Enterprise\CustomerHierarchyManager.cs" />
     <Compile Include="Common\Managers\Enterprise\HighWaterMarkManager.cs" />
     <Compile Include="Common\Managers\ShopFloor\OpenOrderManager.cs" />
     <Compile Include="Common\Managers\ShopFloor\OpenOrderManagerIG.cs" />
@@ -101,6 +103,7 @@
     <Compile Include="Common\Types\E1\F0005.cs" />
     <Compile Include="Common\Types\E1\F580030A.cs" />
     <Compile Include="Common\Types\Enterprise\DWManager.cs" />
+    <Compile Include="Common\Types\Enterprise\ExternalFacingSalesOrderLine.cs" />
     <Compile Include="Common\Types\Enterprise\InterlayerLot.cs" />
     <Compile Include="Common\Types\Enterprise\ProdLite.cs" />
     <Compile Include="Common\Types\Enterprise\ProdUnit.cs" />

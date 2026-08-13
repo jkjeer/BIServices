@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Globalization;
-using BIServices.Common.Managers.E1;
+﻿using BIServices.Common.Managers.E1;
 using BIServices.Common.Managers.Enterprise;
 using BIServices.Common.Types.E1;
 using BIServices.Common.Types.Enterprise;
+using BIServices.Common.Utilities;
 using NLog;
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Globalization;
 
 namespace BIServices.OrderSvc
 {
@@ -229,5 +230,43 @@ namespace BIServices.OrderSvc
                 session.Close();
             }
         }
+
+        public static ExternalFacingSalesOrderLines GetExternalFacingSalesOrderLines(BusinessSystemSession session, Dictionary<string, object> parms)
+        {
+            var orders = new ExternalFacingSalesOrderLines();
+            try
+            {
+                var customerNum = Data.UnboxParm.To<decimal>(parms, "CustomerNum", 0);
+                var plants = Data.UnboxParm.To(parms, "Plants", new List<string>());
+                var dueDate = Data.UnboxParm.To(parms, "DueDate", new DateTime(1900, 1, 1));
+                var customerSeqNum = Data.UnboxParm.To(parms, "CustomerSeqNum", "");
+                var genericSeqNum = Data.UnboxParm.To(parms, "GenericSeqNum", "");
+                var customerPONum = Data.UnboxParm.To(parms, "CustomerPONum", "");
+                var customerPart1 = Data.UnboxParm.To(parms, "CustomerPart1", "");
+                var customerPart2 = Data.UnboxParm.To(parms, "CustomerPart2", "");
+                var customerPart3 = Data.UnboxParm.To(parms, "CustomerPart3", "");
+                var message1 = Data.UnboxParm.To(parms, "Message1", "");
+                var message2 = Data.UnboxParm.To(parms, "Message2", "");
+                var message3 = Data.UnboxParm.To(parms, "Message3", "");
+                var message4 = Data.UnboxParm.To(parms, "Message4", "");
+                var message5 = Data.UnboxParm.To(parms, "Message5", "");
+                var priorityCode = Data.UnboxParm.To(parms, "PriorityCode", "");
+                var productType = Data.UnboxParm.To(parms, "ProductType", "");
+                var scheduleNum = Data.UnboxParm.To<decimal>(parms, "ScheduleNum", 0);
+                var sOrderNum = Data.UnboxParm.To<decimal>(parms, "SOrderNum", 0);
+                var sOrderStatuses = Data.UnboxParm.To(parms, "SOrderStatuses", new List<string>());
+                orders = ExternalFacingCustomerOrderManager.GetOpenOrders(session, customerNum, plants, customerPONum, customerSeqNum, customerPart1, dueDate, productType, scheduleNum, sOrderStatuses, priorityCode, genericSeqNum, customerPart2, customerPart3, message1, message2, message3, message4, message5, sOrderNum);
+            }
+            catch (Exception err)
+            {
+                throw new Exception(err.ToString());
+            }
+            finally
+            {
+                session.Close();
+            }
+            return orders;
+        }
+
     }
 }
