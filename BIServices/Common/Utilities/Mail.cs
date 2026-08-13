@@ -1,12 +1,13 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
-using NLog;
 
 namespace BIServices.Common.Utilities
 {
@@ -64,6 +65,23 @@ namespace BIServices.Common.Utilities
                 msg.IsBodyHtml = true;
                 msg.Body = body;
                 sc.SendMailAsync(msg);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+        }
+
+        public static void StoreResponse(string plantPathName, string subject, string xslOutput)
+        {
+            try
+            {
+                Directory.CreateDirectory(plantPathName);
+                //subject = subject.Replace(".", "").Replace(":", "").Replace("[", "").Replace("]", "");
+                subject = string.Join("_", subject.Split(Path.GetInvalidFileNameChars()));
+                var fileName = $@"{plantPathName}\{subject} {DateTime.Now:yyyyMMdd} {DateTime.Now:hhmmss}.htm";
+                File.Delete(fileName);
+                File.WriteAllText(fileName, xslOutput);
             }
             catch (Exception e)
             {

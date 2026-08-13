@@ -22,6 +22,7 @@ namespace BIServices.RackSvc
             {
                 session = BusinessSystemSessionManager.GetBusinessSession();
                 var plantList = plantCode.Replace("'", "").Split(',').ToList();
+                //var plantList = String.IsNullOrEmpty(plantCode) ? null : plantCode.Replace("'", "").Split(',').ToList();
                 var statusList = String.IsNullOrEmpty(status) ? new List<string>() : status.Replace("'", "").Split(',').ToList();
                 var mgr = new StockRackManager(session);
                 racks = mgr.GetStockRacks(session, plantList, agingDays, statusList);
