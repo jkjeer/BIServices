@@ -1028,10 +1028,10 @@ namespace BIServices.Common.Managers.ShopFloor
                     //case "GTCG":
                     //    lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
                     //    break;
-                    case "CGCG":
+                    case "CGCG": case "CGCT":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV3");
                         break;
-                    case "LLCG":
+                    case "LLCG": case "LLCT":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
                         break;
                 }
@@ -1260,10 +1260,10 @@ namespace BIServices.Common.Managers.ShopFloor
                     //case "GTCG":
                     //    lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
                     //    break;
-                    case "CGCG":
+                    case "CGCG": case "CGCT":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV3");
                         break;
-                    case "LLCG":
+                    case "LLCG": case "LLCT":
                         lines.RemoveAll(x => x.ProductionLineCode == "CUTLV2");
                         break;
                 }

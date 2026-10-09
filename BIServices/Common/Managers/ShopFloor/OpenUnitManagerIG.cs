@@ -980,7 +980,7 @@ namespace BIServices.Common.Managers.ShopFloor
                 }
 
                 // Schedule Nums
-                if (rackIdsList.Count > 0)
+                if (scheduleNumList.Count > 0)
                 {
                     string strInClause = "";
                     foreach (decimal scheduleNum in scheduleNumList)
