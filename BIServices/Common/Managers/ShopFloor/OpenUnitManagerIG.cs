@@ -1111,6 +1111,7 @@ namespace BIServices.Common.Managers.ShopFloor
                         unit.CustomerPart2 = reader.Get<String>("CustomerPart2");
                         unit.CustomerPart3 = reader.Get<String>("CustomerPart3");
                         unit.PriorityCode = reader.Get<String>("PriorityCode");
+                        unit.VolumeCode = reader.Get<String>("VolumeCode");
                         unit.CustomerSeqNum = reader.Get<String>("CustomerSeqNum");
                         unit.CustomerProductionDate = reader.Get<DateTime>("CustomerProductionDate");
                         unit.CustomerOrigProductionDate = CastDbNull.To<DateTime>(reader["CustomerOrigProductionDate"], DateTime.MinValue);
